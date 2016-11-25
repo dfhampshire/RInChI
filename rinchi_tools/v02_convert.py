@@ -94,9 +94,8 @@ def gen_rauxinfo(rinchi):
     # Construct and return the RAuxInfo
     if auxinfo_gp3:
         auxinfo_gp3 = '///' + auxinfo_gp3
-    rauxinfo = 'RAuxInfo=%s.%s/%s///%s%s' % ("", auxinfo_vers, auxinfo_gp1, auxinfo_gp2, auxinfo_gp3)
+    rauxinfo = 'RAuxInfo=%s.%s/%s///%s%s' % ("0.02", auxinfo_vers, auxinfo_gp1, auxinfo_gp2, auxinfo_gp3)
     return rauxinfo
-
 
 
 def convert_rauxinfo(rauxinfo):
