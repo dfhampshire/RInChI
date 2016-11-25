@@ -5,7 +5,7 @@ Performs SQLite3 operations on a database
 import argparse
 import sqlite3
 
-from rinchi_tools import v02_convert
+from rinchi_tools import v02_convert, utils
 
 
 def gen_rauxinfo(db_filename, table_name):
@@ -24,7 +24,8 @@ def gen_rauxinfo(db_filename, table_name):
         return rauxinfo
 
     db.create_function("convert", 1, converter)
-    cursor.execute("UPDATE ? SET rauxinfo = convert(rinchi) WHERE rauxinfo IS NULL or rauxinfo = '';", [table_name])
+    cursor.execute("UPDATE {} SET rauxinfo = convert(rinchi) WHERE rauxinfo IS NULL or rauxinfo = '';".format(table_name))
+    db.commit()
     return
 
 if __name__ == "__main__":
@@ -37,5 +38,7 @@ if __name__ == "__main__":
 
     if True:
         print("Generating RAuxInfos")
-        gen_rauxinfo(args.database,args.tablename)
+        utils.spinner.start()
+        gen_rauxinfo(args.database, args.tablename)
+        utils.spinner.stop()
         print("Done")
