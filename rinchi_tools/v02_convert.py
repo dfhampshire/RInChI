@@ -4,8 +4,11 @@ RInChI v0.02 to 0.03 conversion scripts.
 D.F. Hampshire 2016
 """
 
-from rinchi_tools import tools
+from rinchi_tools import tools, utils, inchi_tools
 
+
+class Error(Exception):
+    pass
 
 class VersionError(Exception):
     pass
@@ -23,6 +26,77 @@ def convert_rinchi(rinchi):
     layer2_inchis, layer3_inchis, layer4_inchis, direction, u_structs = split_rinchi(rinchi)
     rinchi = tools.build_rinchi(layer2_inchis, layer3_inchis, layer4_inchis, direction, u_structs)
     return rinchi
+
+
+def gen_rauxinfo(rinchi):
+    """Create RAuxInfo for a RInChI using a conversion function.
+
+    Args:
+        rinchi: The RInChI of which to create the RAuxInfo.
+
+    Returns:
+        The RAuxInfo of the RinChI.
+
+    Raises:
+        VersionError: If the generated AuxInfos are not of the same version.
+    """
+    # Split the RInChI into constituent InChIs
+    gp1_inchis, gp2_inchis, gp3_inchis, direct, u = split_rinchi(rinchi)
+
+    # Look up the AuxInfo for the InChIs.
+    def auxinfo_convert(inchis):
+        auxinfos = []
+        for inchi in inchis:
+            auxinfo = inchi_tools.inchi_2_auxinfo(inchi)
+            auxinfos.append(auxinfo)
+        return auxinfos
+
+    gp1_auxinfo = auxinfo_convert(gp1_inchis)
+    gp2_auxinfo = auxinfo_convert(gp2_inchis)
+    gp3_auxinfo = auxinfo_convert(gp3_inchis)
+
+    # Format the AuxInfos for inclusion in the RAuxInfo.
+    def rauxinfofy(auxinfos):
+        """Process a group of AuxInfos for inclusion in a RAuxInfo.
+
+        Args:
+            auxinfos: A list of InChI AuxInfos. An empty string in this list is
+                interpreted as representing the AuxInfo of a structure which
+                is unable to be described by an InChI.
+
+        Returns:
+            versions: A list of the version identifiers of the AuxInfos.
+            auxinfo_group: A string of AuxInfo bodies delimited by double-
+                slashes ("//") ready for inclusion in a RAuxInfo.
+        """
+        versions = []
+        bodies = []
+        for auxinfo in auxinfos:
+            if auxinfo:
+                split_auxinfo = auxinfo.split('=')[1].split('/', 1)
+                version = split_auxinfo[0]
+                versions.append(version)
+                body = split_auxinfo[1]
+            else:
+                body = 'X'
+            bodies.append(body)
+        auxinfo_group = '//'.join(bodies)
+        return versions, auxinfo_group
+
+    auxinfo_gp1_verss, auxinfo_gp1 = rauxinfofy(gp1_auxinfo)
+    auxinfo_gp2_verss, auxinfo_gp2 = rauxinfofy(gp2_auxinfo)
+    auxinfo_gp3_verss, auxinfo_gp3 = rauxinfofy(gp3_auxinfo)
+    # Check that all the auxinfo groups have the same version info.
+    try:
+        auxinfo_vers = utils.consolidate(auxinfo_gp1_verss + auxinfo_gp2_verss + auxinfo_gp3_verss)
+    except Error:
+        raise VersionError("RAuxInfo can only be made from same-version AuxInfos")
+    # Construct and return the RAuxInfo
+    if auxinfo_gp3:
+        auxinfo_gp3 = '///' + auxinfo_gp3
+    rauxinfo = 'RAuxInfo=%s.%s/%s///%s%s' % ("", auxinfo_vers, auxinfo_gp1, auxinfo_gp2, auxinfo_gp3)
+    return rauxinfo
+
 
 
 def convert_rauxinfo(rauxinfo):
