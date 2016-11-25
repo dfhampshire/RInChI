@@ -1,0 +1,12 @@
+INSERT OR REPLACE INTO rinchis02(rinchi, rauxinfo, longkey, shortkey)
+SELECT rinchi,
+    COALESCE(
+    CASE 
+        WHEN rxninfo like "{'paragraph%" 
+        THEN NULL 
+        ELSE rxninfo 
+    END,(SELECT rxninfo FROM rinchis02 WHERE longkey = orig.longkey)),
+    orig.longkey
+    ,COALESCE(orig.shortkey,(SELECT shortkey FROM rinchis02 WHERE longkey = orig.longkey),NULL) 
+FROM rinchis AS orig;
+

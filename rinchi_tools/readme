@@ -1,0 +1,5 @@
+Ensure that the default path variable in the rinchi_lib.py interfacing file is set to the location of the librinchi.so.1.0.0 library file.
+
+To ensure that the rinchi_lib is referenced properly include the following in each module file created to ensure the programs runs correctly
+import rinchi_lib
+rinchi_handle = rinchi_lib.RInChI()
