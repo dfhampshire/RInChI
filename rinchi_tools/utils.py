@@ -20,6 +20,9 @@ This module provides functions that perform various non rinchi specific tasks.
 
 import os
 import subprocess
+import sys
+import threading
+import time
 
 
 class Error(Exception):
@@ -79,10 +82,6 @@ def consolidate(items):
                 value = item
     return value
 
-
-import sys
-import time
-import threading
 
 class Spinner:
     busy = False
