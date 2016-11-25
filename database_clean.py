@@ -38,7 +38,8 @@ if __name__ == "__main__":
 
     if True:
         print("Generating RAuxInfos")
-        utils.Spinner.start()
+        spinner = utils.Spinner()
+        spinner.start()
         gen_rauxinfo(args.database, args.tablename)
-        utils.Spinner.stop()
+        spinner.stop()
         print("Done")
