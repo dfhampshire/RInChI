@@ -35,11 +35,16 @@ The input RInChI file should contain the RInChIs representing the steps of the
 reaction IN ORDER and separated by line breaks.
 """
 
+import argparse
 import sys
 
 from rinchi_tools import utils, tools
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="RInChI addition \n{}".format(__doc__))
+    parser.add_argument("input_path", help="Path of file to file to imput")
+    action = parser.add_mutually_exclusive_group()
+    action.add_argument("-f","--fileout",action="store_true", help="Output to file instead of printing")
     if len(sys.argv) > 1:
         input_path = sys.argv[1]
         input_name = input_path.split('/')[-1].split('.')[0]

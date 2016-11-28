@@ -29,7 +29,7 @@ def gen_rauxinfo(db_filename, table_name):
     return
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Database Tools - Duncan Hampshire 2016")
+    parser = argparse.ArgumentParser(description="Database Tools - Duncan Hampshire 2016 \n{}".format(__doc__))
     parser.add_argument("database", help="Database File")
     parser.add_argument("tablename", help="Table Name")
 

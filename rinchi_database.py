@@ -448,12 +448,12 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    try:
-        if args.lkey2rxninfo and args.input.startswith("RInChI"):
+    if args.lkey2rxninfo and args.input.startswith("RInChI"):
+        try:
             args.input = rinchi_handle.rinchikey_from_rinchi(args.input, "L")
-    except ValueError:
-        print("Could not convert RInChI to Long-RInChI-key")
-        pass
+        except ValueError:
+            print("Could not convert RInChI to Long-RInChI-key")
+            pass
 
     if args.rdf2csv:
         rdf_to_csv(args.input, return_longkey=True, return_rxninfo=True)

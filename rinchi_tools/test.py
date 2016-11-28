@@ -38,10 +38,10 @@ three_reactions_unknown = (
     "RInChI=0.03.1S/AAA<>BBB!CCC/d-/u1-0-0", "RInChI=0.03.1S/AAA<>DDD/d+", "RInChI=0.03.1S/DDD<>EEE!FFF/d+")
 # Define an arbitrary (and impossible!) three step reaction, inchis names "AAA" , "BBB" etc. but with unknown structures
 # Print results
-print(rinchi_tools.tools.add(three_reactions))
+print(tools.add(three_reactions))
 try:
-    print(rinchi_tools.tools.add(three_reactions_unknown))
-except addition.Error:
+    print(tools.add(three_reactions_unknown))
+except tools.Error:
     print("Addition Error raised successfully")
 print("================")
 
