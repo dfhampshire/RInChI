@@ -9,7 +9,7 @@
 import argparse
 
 import rinchi_database
-import rinchi_rings
+from rinchi_tools import rinchi
 
 
 def advanced_search(db_filename, inchis=None, hyb=None, val=None, rings=None, formula=None):
@@ -27,7 +27,7 @@ def advanced_search(db_filename, inchis=None, hyb=None, val=None, rings=None, fo
 
     counter = 0
     for rin in rinchis:
-        r = rinchi_rings.Reaction(rin)
+        r = rinchi.Reaction(rin)
         if r.detect_reaction(hyb_i=hyb, val_i=val, rings_i=rings, formula_i=formula):
             counter += 1
             # print r.rinchi
