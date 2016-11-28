@@ -23,11 +23,7 @@ auspices of the International Union of Pure and Applied Chemistry (IUPAC).
 
 """
 
-from rinchi_tools import addition
-from rinchi_tools import analysis
-from rinchi_tools import conversion
-from rinchi_tools import inchi_tools
-from rinchi_tools import tools, rinchi_lib
+from rinchi_tools import tools, rinchi_lib, inchi_tools,conversion, analysis
 
 
 rinchi_interface = rinchi_lib.RInChI()
@@ -42,9 +38,9 @@ three_reactions_unknown = (
     "RInChI=0.03.1S/AAA<>BBB!CCC/d-/u1-0-0", "RInChI=0.03.1S/AAA<>DDD/d+", "RInChI=0.03.1S/DDD<>EEE!FFF/d+")
 # Define an arbitrary (and impossible!) three step reaction, inchis names "AAA" , "BBB" etc. but with unknown structures
 # Print results
-print(addition.add(three_reactions))
+print(rinchi_tools.tools.add(three_reactions))
 try:
-    print(addition.add(three_reactions_unknown))
+    print(rinchi_tools.tools.add(three_reactions_unknown))
 except addition.Error:
     print("Addition Error raised successfully")
 print("================")

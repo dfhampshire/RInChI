@@ -37,7 +37,7 @@ reaction IN ORDER and separated by line breaks.
 
 import sys
 
-from rinchi_tools import addition, utils
+from rinchi_tools import utils, tools
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
@@ -45,7 +45,7 @@ if __name__ == "__main__":
         input_name = input_path.split('/')[-1].split('.')[0]
         input_file = open('%s' % input_path).read()
         input_rinchis = input_file.strip().splitlines()
-        overall_rinchi = addition.add(input_rinchis)
+        overall_rinchi = tools.add(input_rinchis)
         s_out = True
         for arg in sys.argv[2:]:
             if arg.startswith('-f'):
