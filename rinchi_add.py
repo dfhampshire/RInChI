@@ -9,7 +9,7 @@ RInChI addition script.
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+    http://www.apache.org/licenses/LICENSE-2.0 .
 
     Unless required by applicable law or agreed to in writing, software
     distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,36 +25,23 @@ by the InChI trust.
 The RInChI library and programs are free software developed under the
 auspices of the International Union of Pure and Applied Chemistry (IUPAC).
 
-Sample use:
-    ./rinchi_addition.py /some/path/steps.rinchi -f
-
-Options:
-    -fileout: Save the RInChI to the file
-
 The input RInChI file should contain the RInChIs representing the steps of the
 reaction IN ORDER and separated by line breaks.
+
 """
 
 import argparse
-import sys
 
 from rinchi_tools import utils, tools
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="RInChI addition \n{}".format(__doc__))
-    parser.add_argument("input_path", help="Path of file to file to imput")
+    parser.add_argument("input_path", help="Path of file to input")
     action = parser.add_mutually_exclusive_group()
     action.add_argument("-f","--fileout",action="store_true", help="Output to file instead of printing")
-    if len(sys.argv) > 1:
-        input_path = sys.argv[1]
-        input_name = input_path.split('/')[-1].split('.')[0]
-        input_file = open('%s' % input_path).read()
+    args = parser.parse_args()
+    if args.input_path:
+        input_file = open('%s' % args.input_path).read()
         input_rinchis = input_file.strip().splitlines()
         overall_rinchi = tools.add(input_rinchis)
-        s_out = True
-        for arg in sys.argv[2:]:
-            if arg.startswith('-f'):
-                s_out = False
-        utils.output(overall_rinchi, s_out, "rinchi")
-    else:
-        print(__doc__)
+        utils.output(overall_rinchi, not args.fileout, "rinchi")
