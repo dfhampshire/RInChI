@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-
-"""RInChI Conversion Script.
+"""
+RInChI Conversion Script.
 
     Copyright 2016 D.F. Hampshire
 
@@ -22,227 +22,69 @@ interfaces with the RInChI v0.03 software as provided by the InChI trust.
 
 The RInChI library and programs are free software developed under the
 auspices of the International Union of Pure and Applied Chemistry (IUPAC).
-
-
-RXN-to-RInChI conversion:
-
-    Invoked by having -rxn2rinchi as the script's first argument.
-
-    Sample use:
-        ./rinchi_convert.py -rxn2rinchi /some/path/myfile -options
-
-    Options:
-        -equilibrium
-            Force output to be an equilibrium reaction
-        -rauxinfo
-            Generate and return RAuxInfo along with the RInChI.
-        -longkey
-            Generate and return the Long-RInChIKey along with the RInChI.
-        -shortkey
-            Generate and return the Short-RInChIKey along with the RInChI.
-        -webkey
-            Generate and return the Web-RInChIKey along with the RInChI.
-        -fout
-            Save the output to disk, rather than printing to the terminal.
-
-RDF-to-RInChI conversion:
-
-    Invoked by having -rdf2rinchi as the script's first argument.
-
-    Sample use:
-        ./rinchi_convert.py -rdf2rinchi /some/path/myfile -options
-
-    Options:
-        -equilibrium
-            Force output to be an equilibrium reaction
-        -rauxinfo
-            Generate and return RAuxInfo along with the RInChI.
-        -longkey
-            Generate and return the Long-RInChIKey along with the RInChI.
-        -shortkey
-            Generate and return the Short-RInChIKey along with the RInChI.
-        -webkey
-            Generate and return the Web-RInChIKey along with the RInChI.
-        -fout
-            Save the output to disk, rather than printing to the terminal.
-
-
-RInChI-to-File conversion:
-
-    Invoked by having -rinchi2file as the script's first argument. Accepts
-    any file containing a rinchi and optionally rauxinfo. Only if the rauxinfo
-    is directly after a rinchi is it paired for the conversion process.
-
-    Sample use:
-        ./rinchi_convert.py -rinchi2file /some/path/myrinchi.rinchi -options
-
-    Options:
-        -stdout
-            Print the file to the terminal, rather than saving to disk.
-
-RInChi-to-Key conversion:
-
-    Invoked by having -rinchi2key as the script's first argument.
-
-    Sample use:
-        ./rinchi_convert.py -rinchi2key /some/path/myrinchi.rinchi -options
-
-    Options:
-        -longkey
-            Generate and return the Long-RInChIKey along with the RInChI.
-        -shortkey
-            Generate and return the Short-RInChIKey along with the RInChI.
-        -webkey
-            Generate and return the Web-RInChIKey along with the RInChI.
-        -fout
-            Save the output to disk, rather than printing to the terminal.
-        -inc
-            Include original RInChI in the output.
 """
 
-import sys
+import argparse
 
 from rinchi_tools import rinchi_lib, conversion, utils
 
 rinchi_handle = rinchi_lib.RInChI()
 
 
-def __rdf2rinchi(args):
+def __rdf2rinchi(input_path, rauxinfo=False, longkey=False, shortkey=False, webkey=False, equilibrium=False,
+                 fileout=False):
     """Called when -rdf2rinchi is given as the 1st argument of the script."""
-    if not args:
-        print("Please specify an file for conversion.")
-        return
-        # Parse RDfile input.
-    input_path = args[0]
     input_name = input_path.split('/')[-1].split('.')[0]
     try:
         input_file = open(input_path).read()
     except IOError:
         print('Could not open file "%s".' % input_path)
         return
-    # Parse optional arguments
-    return_rauxinfo = False
-    return_longkey = False
-    return_shortkey = False
-    return_webkey = False
-    force_equilibrium = False
-    file_out = False
-    for arg in args[1:]:
-        if arg.startswith('-e'):
-            force_equilibrium = True
-        if arg.startswith('-r'):
-            return_rauxinfo = True
-        if arg.startswith('-l'):
-            return_longkey = True
-        if arg.startswith('-s'):
-            return_shortkey = True
-        if arg.startswith('-w'):
-            return_webkey = True
-        if arg.startswith('-f'):
-            file_out = True
 
     # Generate the requested data.
-    results = conversion.rdf_2_rinchis(
-        input_file,
-        0,
-        0,
-        force_equilibrium,
-        return_rauxinfo,
-        return_longkey,
-        return_shortkey,
-        return_webkey,
-        False)
-
+    results = conversion.rdf_2_rinchis(input_file, 0, 0, equilibrium, rauxinfo, longkey, shortkey, webkey, False)
+    rinchi_text = ""
     # Construct output string
-    rinchi_text = ''
     for entry in list(zip(*results)):
-
-        read_index = 0  # Ensures correct element referencing
-        rinchi_text += str(entry[read_index]) + '\n'
-        read_index += 1
-        if return_rauxinfo:
-            rinchi_text += str(entry[read_index]) + '\n'
-            read_index += 1
-        if return_longkey:
-            rinchi_text += str(entry[read_index]) + '\n'
-            read_index += 1
-        if return_shortkey:
-            rinchi_text += str(entry[read_index]) + '\n'
-            read_index += 1
-        if return_webkey:
-            rinchi_text += str(entry[read_index]) + '\n'
-            read_index += 1
-
-    # Uses the output utility
-    utils.output(rinchi_text, not file_out, "rinchi", input_name)
+        for item in entry:
+            rinchi_text += str(item)
+            # Uses the output utility
+    utils.output(rinchi_text, not fileout, "rinchi", input_name)
 
     return
 
 
-def __rxn2rinchi(args):
+def __rxn2rinchi(input_path, ret_rauxinfo=False, longkey=False, shortkey=False, webkey=False, force_equilibrium=False,
+                 file_out=False):
     """Called when -rxn2rinchi is given as the 1st argument of the script."""
-    # Check that an file is given.
-    if not args:
-        print("Please specify an file for conversion.")
-        return
-        # Parse RXNfile input.
-    input_path = args[0]
     input_name = input_path.split('/')[-1].split('.')[0]
+
     try:
         input_file = open(input_path).read()
     except IOError:
         print('Could not open file "%s".' % input_path)
         return
-    # Parse optional arguments
-    return_rauxinfo = False
-    return_longkey = False
-    return_shortkey = False
-    return_webkey = False
-    force_equilibrium = False
-    file_out = False
-    for arg in args[1:]:
-        if arg.startswith('-e'):
-            force_equilibrium = True
-        if arg.startswith('-r'):
-            return_rauxinfo = True
-        if arg.startswith('-l'):
-            return_longkey = True
-        if arg.startswith('-s'):
-            return_shortkey = True
-        if arg.startswith('-w'):
-            return_webkey = True
-        if arg.startswith('-f'):
-            file_out = True
 
     # Generate the requested data.
-    rinchi, rauxinfo = rinchi_handle.rinchi_from_file_text(
-        "RXN", input_file, force_equilibrium)
-
+    rinchi, rauxinfo = rinchi_handle.rinchi_from_file_text("RXN", input_file, force_equilibrium)
     rinchi_text = ''
     rinchi_text += rinchi + '\n'
-    if return_rauxinfo:
+    if ret_rauxinfo:
         rinchi_text += rauxinfo + '\n'
-    if return_longkey:
+    if longkey:
         rinchi_text += rinchi_handle.rinchikey_from_rinchi(rinchi, "L") + '\n'
-    if return_shortkey:
+    if shortkey:
         rinchi_text += rinchi_handle.rinchikey_from_rinchi(rinchi, "S") + '\n'
-    if return_webkey:
+    if webkey:
         rinchi_text += rinchi_handle.rinchikey_from_rinchi(rinchi, "W") + '\n'
-
     # Uses the output utility
     utils.output(rinchi_text, not file_out, "rinchi", input_name)
-
     return
 
 
-def __rinchi2file(args):
+def __rinchi2file(input_path, rxnout=True, rdout=False, fileout=True):
     """Called when -rinchi2rxn is given as the 1st argument of the script."""
-    # Check that a RInChI file is given.
-    if not args:
-        print('Please specify a RInChI file for conversion.')
-        return
     # Parse RInChI file input.
-    input_path = args[0]
     input_name = input_path.split('/')[-1].split('.')[0]
     try:
         input_file = open(input_path)
@@ -252,7 +94,6 @@ def __rinchi2file(args):
     input_rinchis = []
     input_rauxinfos = []
     rinchi_last = False  # Ensure rinchis are appended correctly
-
     for line in input_file.readlines():
         if line.startswith('RInChI'):
             input_rinchis.append(line.strip())
@@ -267,41 +108,22 @@ def __rinchi2file(args):
         input_rauxinfos.append("")
 
     input_file.close()
-    # Parse optional arguments.
-    std_out = False
-    rxnout = True
-    rdout = False
-    for arg in args[1:]:
-        if arg.startswith('-s'):
-            std_out = True
-        if arg.startswith('-rd'):
-            rxnout = False
-            rdout = True
-        if arg.startswith('-rx'):
-            rxnout = True
 
     # Generate RXN file.
-    if rxnout:
+    if rxnout or not (rxnout or rdout):
         for index, rinchi_in in enumerate(input_rinchis):
-            rxn = rinchi_handle.file_text_from_rinchi(
-                rinchi_in, input_rauxinfos[index], "RXN")
-            utils.output(rxn, std_out, "rxn", input_name)
+            rxn = rinchi_handle.file_text_from_rinchi(rinchi_in, input_rauxinfos[index], "RXN")
+            utils.output(rxn, not fileout, "rxn", input_name)
     if rdout:
         for index, rinchi_in in enumerate(input_rinchis):
-            rd = rinchi_handle.file_text_from_rinchi(
-                rinchi_in, input_rauxinfos[index], "RD")
-            utils.output(rd, std_out, "rdf", input_name)
+            rd = rinchi_handle.file_text_from_rinchi(rinchi_in, input_rauxinfos[index], "RD")
+            utils.output(rd, not fileout, "rdf", input_name)
     return
 
 
-def __rinchi2key(args):
+def __rinchi2key(input_path, longkey=False, shortkey=False, webkey=False, inc_rinchi=False, file_out=False):
     """Called when -rinchi2key is given as the 1st argument of the script."""
-    # Check that a RInChI file is given.
-    if not args:
-        print('Please specify a RInChI file for conversion.')
-        return
     # Parse RInChI file input.
-    input_path = args[0]
     input_name = input_path.split('/')[-1].split('.')[0]
     try:
         input_file = open(input_path)
@@ -327,59 +149,59 @@ def __rinchi2key(args):
 
     input_file.close()
     # Parse optional arguments.
-    return_longkey = False
-    return_shortkey = False
-    return_webkey = False
-    inc_rinchi = False
-    file_out = False
-
-    for arg in args[1:]:
-        if arg.startswith('-l'):
-            return_longkey = True
-        if arg.startswith('-s'):
-            return_shortkey = True
-        if arg.startswith('-w'):
-            return_webkey = True
-        if arg.startswith('-f'):
-            file_out = True
-        if arg.startswith('-i'):
-            inc_rinchi = True
 
     # Generate the requested data.
     rinchi_text = ''
     for index, rinchi_in in enumerate(input_rinchis):
         if inc_rinchi:
             rinchi_text += rinchi_in + '\n'
-        if return_longkey:
-            rinchi_text += rinchi_handle.rinchikey_from_rinchi(
-                rinchi_in, "L") + '\n'
-        if return_shortkey:
-            rinchi_text += rinchi_handle.rinchikey_from_rinchi(
-                rinchi_in, "S") + '\n'
-        if return_webkey:
-            rinchi_text += rinchi_handle.rinchikey_from_rinchi(
-                rinchi_in, "W") + '\n'
+        if longkey:
+            rinchi_text += rinchi_handle.rinchikey_from_rinchi(rinchi_in, "L") + '\n'
+        if shortkey:
+            rinchi_text += rinchi_handle.rinchikey_from_rinchi(rinchi_in, "S") + '\n'
+        if webkey:
+            rinchi_text += rinchi_handle.rinchikey_from_rinchi(rinchi_in, "W") + '\n'
 
     utils.output(rinchi_text, not file_out, "rinchi", input_name)
     return
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        command_line_args = sys.argv[2:]
-        if sys.argv[1] == '-rxn2rinchi':
-            __rxn2rinchi(command_line_args)
-        elif sys.argv[1] == '-rinchi2file':
-            __rinchi2file(command_line_args)
-        elif sys.argv[1] == '-rdf2rinchi':
-            __rdf2rinchi(command_line_args)
-        elif sys.argv[1] == '-rinchi2key':
-            __rinchi2key(command_line_args)
-        else:
-            print('First argument must be one of:')
-            print('-rxn2rinchi: To convert an RXNfile to a RInChI.')
-            print('-rinchi2rxn: To convert a RInChI to an RXNfile.')
-            print('-rdf2rinchi: To convert an RDfile to RInChI(s).')
-            print('-rinchi2key: To convert a RInChI to an RInChI key.')
+    parser = argparse.ArgumentParser(description="RInChI Conversion tools \n{}".format(__doc__))
+    parser.add_argument("inputpath", help="The path of the file to be converted")
+    action = parser.add_argument_group('Main Arguments',
+                                       'Choose an argument from those below.').add_mutually_exclusive_group(
+        required=True)
+    action.add_argument("-rx", "--rxn2rinchi", action="store_true", help="RXN to RInChI conversion")
+    action.add_argument("-rd", "--rdf2rinchi", action="store_true", help="RDF-to-RInChI conversion")
+    action.add_argument("-ri", "--rinchi2file", action="store_true",
+                        help="RInChI-to-File conversion. Accepts any file containing a rinchi and optionally rauxinfo. "
+                             "Only if the rauxinfo is directly after a rinchi is it paired for the conversion process.")
+    action.add_argument("-k", "--rinchi2key", action="store_true", help="RInChi-to-Key conversion")
+    optional = parser.add_argument_group("Optional Arguments", "n.b. Some arguments only apply to certain operations.")
+    optional.add_argument("-e", "--equilibrium", action="store_true", help="Force output to be an equilibrium reaction")
+    optional.add_argument("-ra", "--rauxinfo", action="store_true", help="Generate and return RAuxInfo")
+    optional.add_argument("-l", "--longkey", action="store_true",
+                          help="Generate and return the Long-RInChIKey along with the RInChI")
+    optional.add_argument("-s", "--shortkey", action="store_true",
+                          help="Generate and return the Short-RInChIKey along with the RInChI")
+    optional.add_argument("-w", "--webkey", action="store_true",
+                          help="Generate and return the Web-RInChIKey along with the RInChI")
+    optional.add_argument("-f", "--fileout", action="store_true", help="Save the output to disk")
+    optional.add_argument("-i", "--include", action="store_true", help="Include original RInChI in the output")
+    optional.add_argument("-rdo", "rdfileoutput", action="store_true", help="Output as RDFile")
+    optional.add_argument("-ro", "--rxnoutput", action="store_true", help="Output as RXN file(s)")
+    args = parser.parse_args()
+
+    if args.rxn2rinchi:
+        __rxn2rinchi(args.inputpath, args.rauxinfo, args.longkey, args.shortkey, args.webkey, args.equilibrium,
+                     args.fileout)
+    elif args.rdf2rinchi:
+        __rdf2rinchi(args.inputpath, args.rauxinfo, args.longkey, args.shortkey, args.webkey, args.equilibrium,
+                     args.fileout)
+    elif args.rinchi2file:
+        __rinchi2file(args.inputpath, args.rxnoutput, args.rdfileoutput, args.fileout)
+    elif args.rinchi2key:
+        __rinchi2key(args.inputpath, args.longkey, args.shortkey, args.webkey, args.include, args.fileout)
     else:
-        print(__doc__)
+        parser.print_help()

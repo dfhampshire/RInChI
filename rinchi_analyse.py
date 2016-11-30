@@ -21,117 +21,33 @@ RInChI analysis script.
 This script analyses RInChI databases.  These are files containing RInChIs
 separated by newlines.  This script has been tested on a database of c. 2500
 RInChIs.
-
-
-Substance search:
-
-    Invoked by having -search as the script's first argument.
-
-    Sample use:
-        ./rinchi_analysis -search /some/path/query.inchi
-            /some/path/database.rinchi -options
-
-    Options:
-        -reactant
-            Specifies searching for the query substance as a reactant.
-        -product
-            Specifies searching for the query substance as a product.
-        -eq
-            Specifies searching for the query substance as an equilibrium
-            reagent.
-        -agent
-            Specifies searching for the query substance as a reaction agent;
-            i.e. a substance present at the start and end of the reaction, like
-            a catalyst or solvent.
-        -list
-            List the RInChIs found matching the query.
-
-    N.B. The options can be used in tandem (e.g. use -product and -eq to search
-        for the query substance as either a product or equilibrium agent.
-        Specifying none has the same effect as specifying them all.
-
-
-Stereochemical Analysis:
-
-    Invoked by having -stereochem as the script's first argument.
-
-    Sample use:
-        ./rinchi_analysis -stereochem /some/path/database.rinchi -options
-
-    Options:
-        -list
-            List the RInChIs found.
-        -wd
-            Ignore undefined or omitted stereocentres.
-        -sp2
-            Only search for sp2 centres.
-        -sp3
-            Only search for sp3 centres.
-        -pm
-            Return stereochanges-per-molecule.
-        -psm
-            Return stereochanges-per-stereochemical-molecule.
-        -search:n
-            Return only those reactions which create n stereocentres.  Use
-            negative n to search for reactions which destroy stereocentres.
-
-
-Cyclic Analysis:
-
-    Invoked by having -cyclic as the script's first argument.
-
-    Sample use:
-        ./rinchi_analysis -cyclic /some/path/database.rinchi -options
-
-    Options:
-        -list
-            List the RInChIs found.
-        -pm
-            Return cyclic changes-per-molecule.
-        -pcm
-            Return cyclic changes-per-cyclic-molecule.
-        -search:n
-            Return only those reactions which create n rings.  Use negative n
-            to search for reactions which destroy rings.
 """
 
-import sys
+import argparse
 import textwrap
 
 from rinchi_tools import analysis
 
 
-def __search(args):
-    """Called when module run as a script."""
-    # Check that a RInChI file is specified.
-    if not len(args) > 1:
-        print("Please specify both an InChI and a RInChI file.")
-        return
-    reactant = False
-    product = False
-    equilib = False
-    agent = False
-    list_rinchis = False
-    for arg in args[2:]:
-        if arg.startswith('-r'):
-            reactant = True
-        if arg.startswith('-p'):
-            product = True
-        if arg.startswith('-e'):
-            equilib = True
-        if arg.startswith('-a'):
-            agent = True
-        if arg.startswith('-l'):
-            list_rinchis = True
-    if not (reactant or product or equilib or agent):
+def __search(rinchi_path, inchi_path, reactant=False, product=False, eqm=False, agent=False, list_rinchis=False):
+    """
+    :param rinchi_path: Th path to the list of rinchis
+    :param inchi_path: the path to the file containing the inchi to be searched for
+    :param reactant: Look for inchi in reactants
+    :param product: Look for inchi in products
+    :param eqm: Look for inchi in reactants or products
+    :param agent: look for inchi in agents layer
+    :param list_rinchis: list the rinchis containing the inchi
+    :return: none
+    """
+    if not (reactant or product or eqm or agent):
         reactant = True
         product = True
-        equilib = True
+        eqm = True
         agent = True
-    inchi_path = args[0]
+
     inchi_file = open('%s' % inchi_path).read()
     inchi = inchi_file.strip()
-    rinchi_path = args[1]
     rinchi_file = open('%s' % rinchi_path).read()
     rinchis = rinchi_file.splitlines()
 
@@ -148,33 +64,27 @@ def __search(args):
         results_publisher('r', 'reactant')
     if product:
         results_publisher('p', 'product')
-    if equilib:
+    if eqm:
         results_publisher('e', 'equilibrium reagent')
     if agent:
         results_publisher('a', 'reaction agent')
     return
 
 
-def __cyclic(args):
-    """Called when module run as a script."""
-    # Check that a RInChI file is specified.
-    if not args:
-        print("Please specify a RInChI file for analysis.")
-        return
-    list_rinchis = False
-    search = False
-    pm = (False, False)
-    for arg in args[1:]:
-        if arg.startswith('-l'):
-            list_rinchis = True
-        if arg.startswith('-search:'):
-            search = True
-            search_num = int(arg[8:])
-        if arg == '-pm':
-            pm = (True, False)
-        if arg == '-pcm':
-            pm = (True, True)
-    input_path = args[0]
+def __cyclic(input_path, list_rinchis=False, search=False, permol=False, perspecmol=False):
+    """
+    :param input_path:
+    :param list_rinchis:
+    :param search:
+    :param permol:
+    :param perspecmol:
+    :return:
+    """
+    pm = [False, False]
+    if permol:
+        pm[0] = True
+    if perspecmol:
+        pm[1] = True
     input_file = open('%s' % input_path).read()
     rinchis = input_file.splitlines()
     results = analysis.rxns_ring_changes(rinchis, pm)
@@ -186,13 +96,13 @@ def __cyclic(args):
             qualifier = ' per molecule'
     if search:
         try:
-            result = results[search_num]
-            print('Found %d reaction(s) creating %d ring(s)%s.' % (len(result), search_num, qualifier))
+            result = results[search]
+            print('Found %d reaction(s) creating %d ring(s)%s.' % (len(result), search, qualifier))
             if list_rinchis:
                 for rinchi in result:
                     print(rinchi)
         except KeyError:
-            print('Could not find any reactions creating %d ring(s)%s.' % (search_num, qualifier))
+            print('Could not find any reactions creating %d ring(s)%s.' % (search, qualifier))
     else:
         for ring_change in results:
             print('Reactions creating %d ring(s)%s: %d' % (ring_change, qualifier, len(results[ring_change])))
@@ -202,45 +112,34 @@ def __cyclic(args):
     return
 
 
-def __stereochem(args):
-    """Called when module run as a script."""
-    # Check that a RInChI file is specified.
-    if not args:
-        print("Please specify a RInChI file for analysis.")
-        return
-    list_rinchis = False
-    well_defined = False
-    sp2 = True
-    sp3 = True
-    search = False
-    pm = (False, False)
-    for arg in args[1:]:
-        if arg.startswith('-l'):
-            list_rinchis = True
-        if arg.startswith('-wd'):
-            well_defined = True
-        if arg.startswith('-sp2'):
-            sp3 = False
-        if arg.startswith('-sp3'):
-            sp2 = False
-        if arg.startswith('-search:'):
-            search = True
-            search_num = int(arg[8:])
-        if arg == '-pm':
-            pm = (True, False)
-        if arg == '-psm':
-            pm = (True, True)
-    if not (sp2 or sp3):
-        print(textwrap.fill('''Cannot search for sp3-only AND sp2-only
-            stereochemical changes simultaneously...  Try again.''', 79))
-        return
+def __stereochem(input_path, list_rinchis=False, well_defined=False, sp2=True, sp3=True, search=False, permol=False,
+                 perspecmol=False):
+    """
+    :param input_path:
+    :param list_rinchis:
+    :param well_defined:
+    :param sp2:
+    :param sp3:
+    :param search:
+    :param permol:
+    :param perspecmol:
+    :return:
+    """
+    pm = [False, False]
+    if permol:
+        pm[0] = True
+    if perspecmol:
+        pm[1] = True
     if sp2 and sp3:
         label = 'sp2 or sp3'
     elif sp2:
         label = 'sp2'
     elif sp3:
         label = 'sp3'
-    input_path = args[0]
+    else:
+        print(textwrap.fill('''Cannot search for sp3-only AND sp2-only
+        stereochemical changes simultaneously...  Try again.''', 79))
+        return
     input_file = open('%s' % input_path).read()
     rinchis = input_file.splitlines()
     results = analysis.rxns_stereochem_changes(rinchis, well_defined, pm, sp2, sp3)
@@ -252,14 +151,13 @@ def __stereochem(args):
             qualifier = ' per molecule'
     if search:
         try:
-            result = results[search_num]
-            print(
-                'Found %d reaction(s) creating %d %s stereocentre(s)%s.' % (len(result), search_num, label, qualifier))
+            result = results[search]
+            print('Found %d reaction(s) creating %d %s stereocentre(s)%s.' % (len(result), search, label, qualifier))
             if list_rinchis:
                 for rinchi in result:
                     print(rinchi)
         except KeyError:
-            print('Could not find any reactions creating %d %s stereocentre(s)%s.' % (search_num, label, qualifier))
+            print('Could not find any reactions creating %d %s stereocentre(s)%s.' % (search, label, qualifier))
     else:
         for stereochange in results:
             print('Reaction(s) creating %d %s stereocentre(s)%s: %d' % (
@@ -271,18 +169,42 @@ def __stereochem(args):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        command_line_args = sys.argv[2:]
-        if sys.argv[1] == '-cyclic':
-            __cyclic(command_line_args)
-        elif sys.argv[1] == '-search':
-            __search(command_line_args)
-        elif sys.argv[1] == '-stereochem':
-            __stereochem(command_line_args)
-        else:
-            print('First argument must be one of:')
-            print('-search')
-            print('-cyclic')
-            print('-stereochem')
+    parser = argparse.ArgumentParser(description="RInChI Analytical tools \n{}".format(__doc__))
+    parser.add_argument("database", help="The existing database path to be analysed or searched")
+
+    action = parser.add_argument_group('Main Arguments',
+                                       'Choose an argument from those below.').add_mutually_exclusive_group(
+        required=True)
+    action.add_argument("-c", "--cyclic", action="store_true", help="Get cyclic changes in a reaction")
+    action.add_argument("-st", "--stereochem", action="store_true", help="Analyse stereochemical changes")
+    action.add_argument("-se", "--search", help="Search for an inchi in a list of rinchis")
+    optional = parser.add_argument_group("Optional Arguments", "n.b. Some arguments only apply to certain operations.")
+    optional.add_argument("-r", "--reactant", action="store_true",
+                          help="Specifies searching for the query substance as a reactant")
+    optional.add_argument("-p", "--product", action="store_true",
+                          help="Specifies searching for the query substance as a product")
+    optional.add_argument("-e", "--equilibrium", action="store_true",
+                          help="Specifies searching for the query substance as an equilibrium reagent")
+    optional.add_argument("-a", "--agent", action="store_true",
+                          help="Specifies searching for the query substance as a reaction agent; i.e. a substance "
+                               "present at the start and end of the reaction, like a catalyst or solvent.")
+    optional.add_argument("-l", "--list", action="store_true", help="List the RInChIs found")
+    optional.add_argument("-w", "--welldefined", action="store_true", help="Ignore undefined or omitted stereocentres")
+    optional.add_argument("-sp2", "--sp2", action="store_false", help="Only search for sp2 centres.")
+    optional.add_argument("-sp3", "--sp3", action="store_false", help="Only search for sp3 centres.")
+    optional.add_argument("-pm", "--permol", action="store_true", help="Return changes per molecule.")
+    optional.add_argument("-psm", "--perspecmol", action="store_true",
+                          help="Return changes per specified type of molecule (cyclic or stereocentered)")
+    optional.add_argument("-n", "--number", type=int,
+                          help='Return only those reactions which create n features. Use negative n to search for '
+                               'reactions which destroy features.')
+    args = parser.parse_args()
+
+    if args.cyclic:
+        __cyclic(args.database, args.list, args.search, args.pm, args.psm)
+    elif args.search:
+        __search(args.database, args.search, args.reactant, args.product, args.equilibrium, args.agent, args.list)
+    elif args.stereochem:
+        __stereochem(args.database, args.list, args.welldefined, args.sp3, args.sp2, args.search, args.pm, args.psm)
     else:
-        print(__doc__)
+        parser.print_help()
