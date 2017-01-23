@@ -558,3 +558,32 @@ def add(rinchis):
                 present.add(extra)
     # Construct the overall InChI.
     return tools.build_rinchi(used, made, present, '+')
+
+
+def rinchi_file_to_list(input_path):
+    """Creates a list of rinchis and rauxinfos from a flat file containing rinchis and rauxinfos. The lists are matched
+    by index - so a list(zip()) on the output will reuturn the results pair-wise """
+    # Parse RInChI file input.
+    try:
+        input_file = open(input_path)
+    except IOError:
+        print('Could not open file "%s".' % input_path)
+        return
+    input_rinchis = []
+    input_rauxinfos = []
+    rinchi_last = False  # Ensure rinchis are appended correctly
+    for line in input_file.readlines():
+        if line.startswith('RInChI'):
+            input_rinchis.append(line.strip())
+            if rinchi_last:
+                input_rauxinfos.append("")
+            rinchi_last = True
+        elif line.startswith('RAux') and rinchi_last:
+            input_rauxinfos.append(line.strip())
+            rinchi_last = False
+
+    while len(input_rinchis) > len(input_rauxinfos):
+        input_rauxinfos.append("")
+
+    input_file.close()
+    return input_rinchis, input_rauxinfos
