@@ -189,7 +189,7 @@ if __name__ == "__main__":
                           help="Generate and return the Web-RInChIKey along with the RInChI")
     optional.add_argument("-f", "--fileout", action="store_true", help="Save the output to disk")
     optional.add_argument("-i", "--include", action="store_true", help="Include original RInChI in the output")
-    optional.add_argument("-rdo", "rdfileoutput", action="store_true", help="Output as RDFile")
+    optional.add_argument("-rdo", "--rdfileoutput", action="store_true", help="Output as RDFile")
     optional.add_argument("-ro", "--rxnoutput", action="store_true", help="Output as RXN file(s)")
     args = parser.parse_args()
 
