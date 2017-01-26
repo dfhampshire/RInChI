@@ -9,15 +9,16 @@
 
 import argparse
 import csv
+import logging
 import os
 import pickle
+import queue
 import sqlite3
 import sys
 import threading
 import time
 from ast import literal_eval
 from heapq import nsmallest
-from queue import Queue
 
 from scipy.spatial import distance
 
@@ -440,6 +441,8 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
     """
 
     # Create database connections including for a temperary database
+    logging.basicConfig(filename='conv0203.log', level=logging.DEBUG)
+    logging.info("========\nStarting Conversion Process\n========")
 
     def checkTableExists(tablename,dbcur):
         tb_exists = "SELECT name FROM sqlite_master WHERE type='table' AND name= ?"
@@ -472,7 +475,7 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
         raise ValueError("Cannot create empty table")
 
     #Define base commands
-    select_command = "SELECT {}, {} FROM rinchis02".format(v02_rinchi,v02_rauxinfo)
+    select_command = "SELECT {}, {} FROM rinchis02 limit 1".format(v02_rinchi,v02_rauxinfo)
     create_command = "CREATE TABLE IF NOT EXISTS {} ({})".format(table_name, cols_to_create)
     insert_command = "INSERT INTO {} VALUES (".format(table_name) + ", ".join(["?"]*colcount) + ")"
 
@@ -497,7 +500,7 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
             main_q.put(data_to_add)
             while main_q.qsize() > 1000:
                 time.sleep(0.05)
-        print("finished_populating")
+        logging.info("finished_populating")
         db.close()
 
     def depopulate_list(main_q, c_command, i_command):
@@ -510,12 +513,12 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
                 db_temp.commit()
                 # Waits for 20 seconds, otherwise throws `Queue.Empty`
             except queue.Empty:
-                print("Finished depopulating")
+                logging.info("Finished depopulating")
                 break
         db_temp.close()
         return
 
-    q = Queue()
+    q = queue.Queue()
     popul8 = threading.Thread(target=populate_list, args=(q,db_filename, table_name, select_command, v03_rinchi, v03_rauxinfo,
                     v03_longkey, v03_shortkey, v03_webkey))
     depopul8 = threading.Thread(target=depopulate_list, args=(q,create_command,insert_command))
@@ -533,7 +536,7 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
     cursor.execute("INSERT INTO {0} SELECT * FROM db2.{0}".format(table_name))
     db.commit()
     db.close()
-    print("Finished conversion")
+    logging.info("Finished conversion")
 
 
 
