@@ -442,7 +442,7 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
 
     # Create database connections including for a temperary database
     logging.basicConfig(filename='conv0203.log', level=logging.DEBUG)
-    logging.info("========\nStarting Conversion Process\n========")
+    logging.info("\n========\nStarting Conversion Process\n========")
 
     def checkTableExists(tablename,dbcur):
         tb_exists = "SELECT name FROM sqlite_master WHERE type='table' AND name= ?"
@@ -484,6 +484,7 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
         db = sqlite3.connect(db_filename)
         cursornew = db.cursor()
         drop_table_if_needed(table_name, cursornew)
+        logging.info("populating")
         for row in cursornew.execute(s_command):
             the_rinchi = v02_convert.convert_rinchi(row[0])
             data_to_add = []
@@ -500,6 +501,7 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
             main_q.put(data_to_add)
             while main_q.qsize() > 1000:
                 time.sleep(0.05)
+                logging.log("Queue over 1000 - sleeping for 0.05s")
         logging.info("finished_populating")
         db.close()
 
@@ -507,6 +509,7 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
         db_temp = sqlite3.connect("rinchi_temp.db")
         temp_cursor = db_temp.cursor()
         temp_cursor.execute(c_command)
+        logging.info("depopulating")
         while True:
             try:
                 temp_cursor.execute(i_command, main_q.get(True, 5))
