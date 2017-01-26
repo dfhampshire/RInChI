@@ -17,6 +17,7 @@ import threading
 import time
 from ast import literal_eval
 from heapq import nsmallest
+from queue import Queue
 
 from scipy.spatial import distance
 
@@ -439,10 +440,6 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
     """
 
     # Create database connections including for a temperary database
-    db = sqlite3.connect(db_filename)
-    db_temp = sqlite3.connect("rinchi_temp.db")
-    cursor = db.cursor()
-    temp_cursor = db_temp.cursor()
 
     def checkTableExists(tablename,dbcur):
         tb_exists = "SELECT name FROM sqlite_master WHERE type='table' AND name= ?"
@@ -450,13 +447,15 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
             return False
         return True
 
-    if checkTableExists(table_name,cursor):
-        approved = input("Table {} will be deleted and recreated. Continue? (type YES) :".format(table_name))
-        if approved == "YES":
-            cursor.execute('drop table if exists {}'.format(table_name))
-        else:
-            print("Operation Aborted")
-            return
+    def drop_table_if_needed(table_name,dbcur):
+        if checkTableExists(table_name,dbcur):
+            approved = input("Table {} will be deleted and recreated. Continue? (type 'yes') :".format(table_name))
+            if approved == "yes":
+                dbcur.execute('drop table if exists {}'.format(table_name))
+            else:
+                sys.exit("Operation Aborted")
+        return
+
 
     # Construct SQL strings
     col_list = [v03_rinchi,v03_rauxinfo,v03_longkey,v03_shortkey,v03_webkey]
@@ -473,19 +472,16 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
         raise ValueError("Cannot create empty table")
 
     #Define base commands
-    select_command = "SELECT ?, ? FROM rinchis02 LIMIT 5"
+    select_command = "SELECT {}, {} FROM rinchis02".format(v02_rinchi,v02_rauxinfo)
     create_command = "CREATE TABLE IF NOT EXISTS {} ({})".format(table_name, cols_to_create)
-    insert_command = "INSERT INTO {} VALUES (" + ", ".join(["?"]*colcount) + ")"
+    insert_command = "INSERT INTO {} VALUES (".format(table_name) + ", ".join(["?"]*colcount) + ")"
 
-    print(insert_command,create_command,select_command)
-
-    data_list = []
-    finished_populating = False
-
-    def populate_list():
-        global finished_populating
-        data = cursor.execute(select_command, (v02_rinchi, v02_rauxinfo))
-        for row in data:
+    def populate_list(main_q, db_filename, table_name, s_command, v03_rinchi, v03_rauxinfo,
+                    v03_longkey, v03_shortkey, v03_webkey):
+        db = sqlite3.connect(db_filename)
+        cursornew = db.cursor()
+        drop_table_if_needed(table_name, cursornew)
+        for row in cursornew.execute(s_command):
             the_rinchi = v02_convert.convert_rinchi(row[0])
             data_to_add = []
             if v03_rinchi:
@@ -498,38 +494,46 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
                 data_to_add.append(rinchi_handle.rinchikey_from_rinchi(the_rinchi, "S"))
             if v03_webkey:
                 data_to_add.append(rinchi_handle.rinchikey_from_rinchi(the_rinchi, "W"))
-            data_list.append(tuple(data_to_add))
-            while len(data_list) > 1000:
-                time.sleep(0.01)
-        finished_populating = True
+            main_q.put(data_to_add)
+            while main_q.qsize() > 1000:
+                time.sleep(0.05)
+        print("finished_populating")
+        db.close()
 
-
-    def depopulate_list():
-        global finished_populating
-        temp_cursor.execute(create_command)
-        while finished_populating:
-            if data_list:
-                temp_cursor.execute(insert_command,data_list.pop())
+    def depopulate_list(main_q, c_command, i_command):
+        db_temp = sqlite3.connect("rinchi_temp.db")
+        temp_cursor = db_temp.cursor()
+        temp_cursor.execute(c_command)
+        while True:
+            try:
+                temp_cursor.execute(i_command, main_q.get(True, 5))
                 db_temp.commit()
-            else:
-                time.sleep(0.01)
+                # Waits for 20 seconds, otherwise throws `Queue.Empty`
+            except queue.Empty:
+                print("Finished depopulating")
+                break
+        db_temp.close()
+        return
 
-    popul8 = threading.Thread(target=populate_list)
-    depopul8 = threading.Thread(target=depopulate_list)
-
+    q = Queue()
+    popul8 = threading.Thread(target=populate_list, args=(q,db_filename, table_name, select_command, v03_rinchi, v03_rauxinfo,
+                    v03_longkey, v03_shortkey, v03_webkey))
+    depopul8 = threading.Thread(target=depopulate_list, args=(q,create_command,insert_command))
     depopul8.start()
     popul8.start()
     depopul8.join()
     popul8.join()
 
-    db_temp.close()
+    db = sqlite3.connect(db_filename)
+    cursor = db.cursor()
     cursor.execute("ATTACH DATABASE ? AS db2", ("rinchi_temp.db",))
     cursor.execute("SELECT sql FROM db2.sqlite_master WHERE type='table' AND name=?",(table_name,))
-    cursor.execute(cursor.fetchone()[0])  # Contains: CREATE TABLE current (framenum INTEGER, nextKanji INTEGER)
-    cursor.execute("INSERT INTO rinchi.{0} SELECT * FROM db2.{0}".format(table_name))
-
+    newsql = cursor.fetchone()[0]
+    cursor.execute(newsql)
+    cursor.execute("INSERT INTO {0} SELECT * FROM db2.{0}".format(table_name))
     db.commit()
     db.close()
+    print("Finished conversion")
 
 
 
