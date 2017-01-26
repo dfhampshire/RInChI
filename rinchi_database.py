@@ -13,12 +13,14 @@ import os
 import pickle
 import sqlite3
 import sys
+import threading
+import time
 from ast import literal_eval
 from heapq import nsmallest
 
 from scipy.spatial import distance
 
-from rinchi_tools import conversion, rinchi_lib, rinchi
+from rinchi_tools import conversion, rinchi_lib, rinchi, v02_convert
 
 # Define a handle for the RInChI class within the C++ library
 rinchi_handle = rinchi_lib.RInChI()
@@ -416,10 +418,128 @@ def compare_fingerprints(lk1, db_filename):
     print("\n", out)
 
 
+def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=False, v03_rinchi=False, v03_rauxinfo = False,
+                    v03_longkey = False, v03_shortkey = False, v03_webkey=False):
+    """
+    Converts a database of v02 rinchis into a database of v03 rinchis and associated information. N.B keys for v02 are
+    not required as new keys must be generated for the database. Because of the nature of this problem, this is achieved
+    by creating a new database for the processed data and then transferring back to the original
+
+    Parameters:
+    :param db_filename: The database filename to which the changes should be made. The new database is added as a new table
+    :param table_name: the name for the new v03 rinchi table.
+    :param v02_rinchi: The name of the v02 rinchi column. Defaults to False (No rinchi in database).
+    :param v02_rauxinfo: The name of the v02 rauxinfo column. Defaults to False (No rauxinfos in database).
+    :param v03_rinchi: The name of the v03 new rinchi column. Defaults to False (No rinchi column will be created).
+    :param v03_rauxinfo: The name of the v03 new rinchi column. Defaults to False (No rauxinfo column will be created).
+    :param v03_longkey: The name of the v03 new rinchi column. Defaults to False (No longkey column will be created).
+    :param v03_shortkey: The name of the v03 new rinchi column. Defaults to False (No shortkey column will be created).
+    :param v03_webkey: The name of the v03 new webkey column. Defaults to False (No webkey column will be created).
+
+    """
+
+    # Create database connections including for a temperary database
+    db = sqlite3.connect(db_filename)
+    db_temp = sqlite3.connect("rinchi_temp.db")
+    cursor = db.cursor()
+    temp_cursor = db_temp.cursor()
+
+    def checkTableExists(tablename,dbcur):
+        tb_exists = "SELECT name FROM sqlite_master WHERE type='table' AND name= ?"
+        if not dbcur.execute(tb_exists,(tablename,)).fetchone():
+            return False
+        return True
+
+    if checkTableExists(table_name,cursor):
+        approved = input("Table {} will be deleted and recreated. Continue? (type YES) :".format(table_name))
+        if approved == "YES":
+            cursor.execute('drop table if exists {}'.format(table_name))
+        else:
+            print("Operation Aborted")
+            return
+
+    # Construct SQL strings
+    col_list = [v03_rinchi,v03_rauxinfo,v03_longkey,v03_shortkey,v03_webkey]
+    cols_to_create = []
+    cols_to_insert = []
+    colcount = 0
+    for column in col_list:
+        if column:
+            cols_to_create.append(column + " text")
+            colcount += 1
+    cols_to_create = ", ".join(cols_to_create)
+
+    if colcount == 0:
+        raise ValueError("Cannot create empty table")
+
+    #Define base commands
+    select_command = "SELECT ?, ? FROM rinchis02 LIMIT 5"
+    create_command = "CREATE TABLE IF NOT EXISTS {} ({})".format(table_name, cols_to_create)
+    insert_command = "INSERT INTO {} VALUES (" + ", ".join(["?"]*colcount) + ")"
+
+    print(insert_command,create_command,select_command)
+
+    data_list = []
+    finished_populating = False
+
+    def populate_list():
+        global finished_populating
+        data = cursor.execute(select_command, (v02_rinchi, v02_rauxinfo))
+        for row in data:
+            the_rinchi = v02_convert.convert_rinchi(row[0])
+            data_to_add = []
+            if v03_rinchi:
+                data_to_add.append(the_rinchi)
+            if v03_rauxinfo:
+                data_to_add.append(v02_convert.convert_rauxinfo(row[1]))
+            if v03_longkey:
+                data_to_add.append(rinchi_handle.rinchikey_from_rinchi(the_rinchi, "L"))
+            if v03_shortkey:
+                data_to_add.append(rinchi_handle.rinchikey_from_rinchi(the_rinchi, "S"))
+            if v03_webkey:
+                data_to_add.append(rinchi_handle.rinchikey_from_rinchi(the_rinchi, "W"))
+            data_list.append(tuple(data_to_add))
+            while len(data_list) > 1000:
+                time.sleep(0.01)
+        finished_populating = True
+
+
+    def depopulate_list():
+        global finished_populating
+        temp_cursor.execute(create_command)
+        while finished_populating:
+            if data_list:
+                temp_cursor.execute(insert_command,data_list.pop())
+                db_temp.commit()
+            else:
+                time.sleep(0.01)
+
+    popul8 = threading.Thread(target=populate_list)
+    depopul8 = threading.Thread(target=depopulate_list)
+
+    depopul8.start()
+    popul8.start()
+    depopul8.join()
+    popul8.join()
+
+    db_temp.close()
+    cursor.execute("ATTACH DATABASE ? AS db2", ("rinchi_temp.db",))
+    cursor.execute("SELECT sql FROM db2.sqlite_master WHERE type='table' AND name=?",(table_name,))
+    cursor.execute(cursor.fetchone()[0])  # Contains: CREATE TABLE current (framenum INTEGER, nextKanji INTEGER)
+    cursor.execute("INSERT INTO rinchi.{0} SELECT * FROM db2.{0}".format(table_name))
+
+    db.commit()
+    db.close()
+
+
+
+
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="A collection of RInChI Tools - Benjamin Hammond 2014")
     parser.add_argument("input",
-                        help="Input - the RDFile or directory to be processed, or the search parameter for a search")
+                        help="Input - the RDFile or directory to be processed, or the search parameter for a search, or new table to be created")
     parser.add_argument("database", nargs="?",
                         help="The existing database to be modified or searched, or the name of new database to be created")
     parser.add_argument("arg3", nargs="?", help="optional arg 3")
@@ -445,6 +565,8 @@ if __name__ == "__main__":
     action.add_argument('--rfingerprints', action='store_true', help='Returns the fingerprint of a given key')
     action.add_argument('--cfingerprints', action='store_true',
                         help='Returns all RInChIs containing the given InChI to STDOUT')
+    action.add_argument('--conv0203',action='store_true',
+                        help='Creates a new table of v.03 rinchis from a table of v.02 rinchis')
 
     args = parser.parse_args()
 
@@ -487,3 +609,9 @@ if __name__ == "__main__":
     if args.inchisearch:
         print("start")
         search_for_inchi(args.input, args.database)
+    if args.conv0203:
+        # Names hardcoded because significant modification of the arparse system would be needed and would be complex
+        v02_column_names = ["rinchi","rauxinfo"]
+        v03_column_names = ["rinchi","rauxinfo","longkey","shortkey","webkey"]
+        column_names = v02_column_names + v03_column_names
+        convert_v02_v03(args.database, args.input,*column_names)

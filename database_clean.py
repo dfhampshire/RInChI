@@ -24,7 +24,7 @@ def gen_rauxinfo(db_filename, table_name):
         return rauxinfo
 
     db.create_function("convert", 1, converter)
-    cursor.execute("UPDATE {} SET rauxinfo = convert(rinchi) WHERE rauxinfo IS NULL or rauxinfo = '';".format(table_name))
+    cursor.execute("UPDATE ? SET rauxinfo = convert(rinchi) WHERE rauxinfo IS NULL or rauxinfo = '';", (table_name,))
     db.commit()
     return
 

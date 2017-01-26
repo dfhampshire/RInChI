@@ -557,7 +557,7 @@ def add(rinchis):
             else:
                 present.add(extra)
     # Construct the overall InChI.
-    return tools.build_rinchi(used, made, present, '+')
+    return build_rinchi(used, made, present, '+')
 
 
 def rinchi_file_to_list(input_path):
