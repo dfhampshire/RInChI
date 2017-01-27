@@ -294,14 +294,14 @@ def sql_key_to_rinchi(longkey, db_filename):
     return rinchi
 
 
-def search_for_inchi(inchi, db_filename):
+def search_for_inchi(inchi, db_filename,table_name):
     """ Searches for an inchi within a rinchi database.
     Approx. 20x faster than the version in rinchi_tools.analyse
     """
     db = sqlite3.connect(db_filename)
     cursor = db.cursor()
     query = "%" + "/".join(inchi.split("/")[1:]) + "%"
-    cursor.execute('''SELECT rinchi FROM rinchis WHERE rinchi LIKE ?''', (query,))
+    cursor.execute('''SELECT rinchi FROM {} WHERE rinchi LIKE ?'''.format(table_name), (query,))
     for r in cursor:
         print((r[0]))
 
@@ -549,19 +549,37 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
     db.close()
     os.remove("rinchi_temp.db")
     logging.info("Finished conversion in {} seconds".format(time.time()-starttime))
+    return
 
 
+def gen_rauxinfo(db_filename, table_name):
+    """
+    Updates a table in a database to give rauxinfos where teh column is null
+    :param db_filename: Database filename
+    :param table_name: name of table
+    :return: None
+    """
+    db = sqlite3.connect(db_filename)
+    cursor = db.cursor()
 
-
+    def converter(rinchi):
+        """Interfaces the rauxinfo converter in v02_convert.py"""
+        rauxinfo = v02_convert.gen_rauxinfo(rinchi)
+        return rauxinfo
+    # Creating SQL function increases performance
+    db.create_function("convert", 1, converter)
+    cursor.execute("UPDATE {} SET rauxinfo = convert(rinchi) WHERE rauxinfo IS NULL or rauxinfo = '';".format(table_name))
+    db.commit()
+    return
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="A collection of RInChI Tools - Benjamin Hammond 2014")
+    parser = argparse.ArgumentParser(description="A collection of RInChI Tools")
     parser.add_argument("input",
                         help="Input - the RDFile or directory to be processed, or the search parameter for a search, or new table to be created")
     parser.add_argument("database", nargs="?",
                         help="The existing database to be modified or searched, or the name of new database to be created")
-    parser.add_argument("arg3", nargs="?", help="optional arg 3")
+    parser.add_argument("tablename", nargs="?", help="The table name")
 
     action = parser.add_mutually_exclusive_group(required=True)
     action.add_argument('--rdf2csv', action='store_true', help='Create a new .csv from an rdfile')
@@ -586,6 +604,7 @@ if __name__ == "__main__":
                         help='Returns all RInChIs containing the given InChI to STDOUT')
     action.add_argument('--conv0203',action='store_true',
                         help='Creates a new table of v.03 rinchis from a table of v.02 rinchis')
+    action.add_argument('--genrauxinfo',action='store_true',help='Generate RAuxinfos from rinchis within a SQL database')
 
     args = parser.parse_args()
 
@@ -619,7 +638,7 @@ if __name__ == "__main__":
                    "InChI=1S/C3H5I/c1-2-3-4/h2H,1,3H2", "InChI=1S/C3H6O/c1-2-3-4/h2,4H,1,3H2",
                    "InChI=1S/C3H5F/c1-2-3-4/h2H,1,3H2", "InChI=1S/C3H6/c1-3-2/h3H,1H2,2H3"]
         for inchi in tinchis:
-            print(inchi, len(search_for_inchi(inchi, args.database)))
+            print(inchi, len(search_for_inchi(inchi, args.database, args.tablename)))
 
     if args.lkey2rinchi:
         print(sql_key_to_rinchi(args.input, args.database))
@@ -627,10 +646,14 @@ if __name__ == "__main__":
         print(sql_key_to_rxninfo(args.input, args.database))
     if args.inchisearch:
         print("start")
-        search_for_inchi(args.input, args.database)
+        search_for_inchi(args.input, args.database, args.tablename)
     if args.conv0203:
         # Names hardcoded because significant modification of the arparse system would be needed and would be complex
         v02_column_names = ["rinchi","rauxinfo"]
         v03_column_names = ["rinchi","rauxinfo","longkey","shortkey","webkey"]
         column_names = v02_column_names + v03_column_names
         convert_v02_v03(args.database, args.input,*column_names)
+    if args.genrauxinfo:
+        gen_rauxinfo(args.database,args.input)
+    else:
+        print(__doc__)
