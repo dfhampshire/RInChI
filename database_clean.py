@@ -1,5 +1,7 @@
+#!/usr/bin/env python3
+
 """
-Performs SQLite3 operations on a database
+Performs SQLite3 cleaning operations on a database
 """
 
 import argparse

@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """
 New Object Orientated Python Scripts
 
