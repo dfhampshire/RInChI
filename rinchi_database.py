@@ -520,11 +520,8 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
         logging.info("depopulating")
         while True:
             try:
-                logging.info(main_q.qsize())
                 temp_cursor.execute(i_command, main_q.get(True, 2))
-                logging.info(main_q.qsize())
                 # Waits for 2 seconds, otherwise throws `Queue.Empty`
-                logging.info("writing")
             except queue.Empty:
                 logging.info("Finished depopulating")
                 break
