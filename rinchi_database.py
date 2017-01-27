@@ -440,9 +440,11 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
 
     """
 
-    # Create database connections including for a temperary database
+    # Create database connections including for a temporary database
+    os.remove("conv0203.log")
     logging.basicConfig(filename='conv0203.log', level=logging.DEBUG)
     logging.info("\n========\nStarting Conversion Process\n========")
+    starttime = time.time()
 
     def checkTableExists(tablename,dbcur):
         tb_exists = "SELECT name FROM sqlite_master WHERE type='table' AND name= ?"
@@ -455,7 +457,9 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
             approved = input("Table {} will be deleted and recreated. Continue? (type 'yes') :".format(table_name))
             if approved == "yes":
                 dbcur.execute('drop table if exists {}'.format(table_name))
+                logging.info("dropping table")
             else:
+                logging.info("exiting operation")
                 sys.exit("Operation Aborted")
         return
 
@@ -475,15 +479,20 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
         raise ValueError("Cannot create empty table")
 
     #Define base commands
-    select_command = "SELECT {}, {} FROM rinchis02 limit 1".format(v02_rinchi,v02_rauxinfo)
+    select_command = "SELECT {}, {} FROM rinchis02".format(v02_rinchi,v02_rauxinfo)
     create_command = "CREATE TABLE IF NOT EXISTS {} ({})".format(table_name, cols_to_create)
     insert_command = "INSERT INTO {} VALUES (".format(table_name) + ", ".join(["?"]*colcount) + ")"
 
-    def populate_list(main_q, db_filename, table_name, s_command, v03_rinchi, v03_rauxinfo,
+    logging.info("Check for original table") # Doing this now to prevent delays later
+    db = sqlite3.connect(db_filename)
+    cursor = db.cursor()
+    drop_table_if_needed(table_name, cursor)
+    db.close()
+
+    def populate_list(main_q, db_filename, s_command, v03_rinchi, v03_rauxinfo,
                     v03_longkey, v03_shortkey, v03_webkey):
         db = sqlite3.connect(db_filename)
         cursornew = db.cursor()
-        drop_table_if_needed(table_name, cursornew)
         logging.info("populating")
         for row in cursornew.execute(s_command):
             the_rinchi = v02_convert.convert_rinchi(row[0])
@@ -499,9 +508,8 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
             if v03_webkey:
                 data_to_add.append(rinchi_handle.rinchikey_from_rinchi(the_rinchi, "W"))
             main_q.put(data_to_add)
-            while main_q.qsize() > 1000:
-                time.sleep(0.05)
-                logging.log("Queue over 1000 - sleeping for 0.05s")
+            while main_q.full():
+                time.sleep(0.01)
         logging.info("finished_populating")
         db.close()
 
@@ -512,24 +520,27 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
         logging.info("depopulating")
         while True:
             try:
-                temp_cursor.execute(i_command, main_q.get(True, 5))
-                db_temp.commit()
-                # Waits for 20 seconds, otherwise throws `Queue.Empty`
+                logging.info(main_q.qsize())
+                temp_cursor.execute(i_command, main_q.get(True, 2))
+                logging.info(main_q.qsize())
+                # Waits for 2 seconds, otherwise throws `Queue.Empty`
+                logging.info("writing")
             except queue.Empty:
                 logging.info("Finished depopulating")
                 break
+        db_temp.commit()
         db_temp.close()
         return
 
-    q = queue.Queue()
-    popul8 = threading.Thread(target=populate_list, args=(q,db_filename, table_name, select_command, v03_rinchi, v03_rauxinfo,
+    q = queue.Queue(1000)
+    popul8 = threading.Thread(target=populate_list, args=(q,db_filename, select_command, v03_rinchi, v03_rauxinfo,
                     v03_longkey, v03_shortkey, v03_webkey))
     depopul8 = threading.Thread(target=depopulate_list, args=(q,create_command,insert_command))
     depopul8.start()
     popul8.start()
     depopul8.join()
     popul8.join()
-
+    logging.info("transfering temporary database...")
     db = sqlite3.connect(db_filename)
     cursor = db.cursor()
     cursor.execute("ATTACH DATABASE ? AS db2", ("rinchi_temp.db",))
@@ -539,7 +550,8 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
     cursor.execute("INSERT INTO {0} SELECT * FROM db2.{0}".format(table_name))
     db.commit()
     db.close()
-    logging.info("Finished conversion")
+    os.remove("rinchi_temp.db")
+    logging.info("Finished conversion in {} seconds".format(time.time()-starttime))
 
 
 

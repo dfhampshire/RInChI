@@ -141,7 +141,8 @@ def split_rauxinfo(rauxinfo):
         auxinfos = []
         for auxinfo_body in auxinfo_bodies:
             auxinfo = 'AuxInfo=' + auxinfo_version + '/' + auxinfo_body
-            auxinfos.append(auxinfo)
+            if auxinfo_body != "X":
+                auxinfos.append(auxinfo)
         return auxinfos
 
     layer2_auxinfos = auxinfo_builder(rauxinfo_groups[0], auxinfo_version)
