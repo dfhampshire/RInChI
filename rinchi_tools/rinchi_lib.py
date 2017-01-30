@@ -1,40 +1,29 @@
-# pragma region InChI-Trust Licence
-# /*
-# * Reaction International Chemical Identifier (RInChI)
-# * Version 1
-# * Software version 0.03
-# * Wed, 27 Jul 2016
-# *
-# * The RInChI library and programs are free software developed under the
-# * auspices of the International Union of Pure and Applied Chemistry (IUPAC).
-# *
-# * IUPAC/InChI-Trust Licence No.1.0 for the
-# * Reaction International Chemical Identifier (RInChI) Software version 0.03
-# * Copyright (C) IUPAC and InChI Trust Limited
-# *
-# * This library is free software; you can redistribute it and/or modify it
-# * under the terms of the IUPAC/InChI Trust InChI Licence No.1.0,
-# * or any later version.
-# *
-# * Please note that this library is distributed WITHOUT ANY WARRANTIES
-# * whatsoever, whether expressed or implied.  See the IUPAC/InChI Trust
-# * Licence for the International Chemical Identifier (InChI) Software
-# * version 1.04, October 2011 ("IUPAC_InChI_Trust_Licence_11_Oct_2011.pdf")
-# * for more details.
-# *
-# * You should have received a copy of the IUPAC/InChI Trust InChI
-# * Licence No. 1.0 with this library; if not, please write to:
-# *
-# *     The InChI Trust
-# *     8 Cavendish Avenue
-# *     Cambridge
-# *     CB1 7US
-# *     UK
-# *
-# * or email to: alan@inchi-trust.org.
-# *
-# */
-# pragma endregion
+"""
+RInChI tools module.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+This module provides functions defining how RInChIs and RAuxInfos are
+constructed from InChIs and reaction data.  It also interfaces with the RInChI
+v0.03 software as provided by the InChI trust.
+
+The RInChI library and programs are free software developed under the
+auspices of the International Union of Pure and Applied Chemistry (IUPAC).
+
+This file is based on that provides with the official v0.03 RInChI software release, but with modifications to ensure
+Python 3 compatibility. Documentation was adapted from the official v0.03 release document.
+
+"""
 
 import os
 from ctypes import *
@@ -56,6 +45,9 @@ class Asciifier(object):
 
 
 class RInChI:
+    """
+    The RInChI class interfaces the C class in the librinchi library
+    """
     def __init__(self, lib_path=default_path):
         if os.sep == "\\":
             self.lib_handle = cdll.LoadLibrary(lib_path + "/librinchi.dll")
@@ -86,13 +78,30 @@ class RInChI:
         self.lib_rinchikey_from_rinchi.restype = c_long
 
     def rinchi_errorcheck(self, return_code):
+        """
+        Specifies Python error handling behavior
+
+        Args:
+            return_code : the return code from the C library
+
+        """
         if return_code != 0:
             err_message = str(self.lib_latest_error_message(), 'utf-8')
             print(err_message)
             raise Exception(err_message)
 
     def rinchi_from_file_text(self, input_format, rxnfile_data, force_equilibrium=False):
-        """Generates RInChI string and RAuxInfo from supplied RD or RXN file text. Result is returned as a tuple."""
+        """
+        Generates RInChI string and RAuxInfo from supplied RD or RXN file text.
+
+        Args:
+            input_format: “AUTO”, "RD" or "RXN" (with “AUTO” as default value)
+            rxnfile_data: text block of RD or RXN file data
+            force_equilibrium (bool) : Force interpretation of reaction as equilibrium reaction
+
+        Returns: tuple pair of the RInChI and RAuxInfo generated
+
+        """
         result_rinchi_string = c_char_p()
         result_rinchi_auxinfo = c_char_p()
         self.rinchi_errorcheck(
@@ -100,10 +109,23 @@ class RInChI:
                                            byref(result_rinchi_auxinfo)))
         res_rinchi = str(result_rinchi_string.value, 'utf-8')
         res_auxinfo = str(result_rinchi_auxinfo.value, 'utf-8')
-        return [res_rinchi, res_auxinfo]
+        return res_rinchi, res_auxinfo
 
     def rinchikey_from_file_text(self, input_format, file_text, key_type, force_equilibrium=False):
-        """Generates RInChI key of supplied RD or RXN file text."""
+        """
+        Generates RInChI key of supplied RD or RXN file text.
+
+        Args:
+            input_format: "RD" or "RXN"
+            file_text: text block of RD or RXN file data
+            key_type: 1 letter controlling the type of key generated; “L” for Long-RInChIKey, “S” for Short key
+            (Short-RInChIKey), “W” for Web key (Web-RInChIKey)
+            force_equilibrium (bool): Force interpretation of reaction as equilibrium reaction
+
+        Returns: a RInChIKey
+
+        """
+
         result = c_char_p()
         self.rinchi_errorcheck(
             self.lib_rinchikey_from_file_text(input_format, file_text, key_type, force_equilibrium, byref(result)))
@@ -111,8 +133,16 @@ class RInChI:
         return result_uc
 
     def file_text_from_rinchi(self, rinchi_string, rinchi_auxinfo, output_format):
-        """Reconstructs (or attempts to reconstruct) RD or RXN file from RInChI string and RAuxInfo. RAuxInfo is not
-        strictly required, but highly recommended."""
+        """
+        Reconstructs (or attempts to reconstruct) RD or RXN file from RInChI string and RAuxInfo
+
+        Args:
+            rinchi_string: The RInChI string to convert
+            rinchi_auxinfo: The RAuxInfo to convert (optional, recommended)
+            output_format: "RD" or "RXN"
+
+        Returns: The text block for the file
+        """
         result = c_char_p()
         self.rinchi_errorcheck(
             self.lib_file_text_from_rinchi(rinchi_string, rinchi_auxinfo, output_format, byref(result)))
@@ -120,11 +150,19 @@ class RInChI:
         return result_uc
 
     def inchis_from_rinchi(self, rinchi_string, rinchi_auxinfo=""):
-        """Splits an RInChI string and optional RAuxInfo into components.
+        """
+        Splits an RInChI string and optional RAuxInfo into components.
 
-        Returns a dictionary of five lists: Direction, No-Structures, Reactants, Products, and Agents.
-        Each Reactant, Product, and Agent list contains a set of (InChI, AuxInfo) tuples. The No-Structures list
-        contains No-Structure counts for Reactants, Products, and Agents.
+        Args:
+            rinchi_string: A RInChI string
+            rinchi_auxinfo: RAuxInfo string. May be blank but may not be NULL.
+
+        Raises:
+            Exception: RInChi format related errors
+
+        Returns: A dictionary of five lists: Direction, No-Structures, Reactants, Products, and Agents.
+            Each Reactant, Product, and Agent list contains a set of (InChI, AuxInfo) tuples. The No-Structures list
+            contains No-Structure counts for Reactants, Products, and Agents.
         """
         inchis = c_char_p()
         self.rinchi_errorcheck(self.lib_inchis_from_rinchi(rinchi_string, rinchi_auxinfo, byref(inchis)))
@@ -180,7 +218,16 @@ class RInChI:
                 "Agents": agents}
 
     def rinchikey_from_rinchi(self, rinchi_string, key_type):
-        """Generates RInChI key of supplied RD or RXN file text."""
+        """
+        Generates RInChI key of supplied RD or RXN file text.
+
+        Args:
+            rinchi_string: A RInChI string
+            key_type: 1 letter controlling the type of key generated with “L” for the Long-RInChIKey, “S” for the Short
+                key (Short-RInChIKey), “W” for the Web key (Web-RInChIKey)
+
+        Returns: the RInChiKey
+        """
         result = c_char_p()
         self.rinchi_errorcheck(self.lib_rinchikey_from_rinchi(rinchi_string, key_type, byref(result)))
         result_uc = str(result.value, 'utf-8')
