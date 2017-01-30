@@ -15,8 +15,7 @@ from numpy import array, all, equal, rot90
 from scipy.spatial import distance
 
 import rinchi_tools.database
-from rinchi_tools import analysis
-from rinchi_tools import rinchi as rinchi_class
+from rinchi_tools import analysis, rinchi as rinchi_class
 
 if __name__ == "__main__":
 
@@ -69,10 +68,10 @@ if __name__ == "__main__":
     elif args.rinchi:
         if args.ringcount:
             r = rinchi_class.Reaction(args.input)
-            print(r.change_across_reaction(r.ring_change))
+            print(r.change_across_reaction(r.ring_count))
         elif args.formula:
             r = rinchi_class.Reaction(args.input)
-            print(r.change_across_reaction(r.formula_change))
+            print(r.change_across_reaction(r.formula))
         elif args.svg:
             r = rinchi_class.Reaction(args.input)
             r.generate_svg_image(args.arg2)
@@ -139,7 +138,7 @@ if __name__ == "__main__":
                 if args.ringcount and not args.quick:
                     # Count the change in ring size across the reactions
                     r = rinchi_class.Reaction(rin)
-                    res = r.change_across_reaction(r.ring_change)
+                    res = r.change_across_reaction(r.ring_count)
                     if res and not args.list:
                         print(counter, res)
                     elif res and args.list:
@@ -151,7 +150,7 @@ if __name__ == "__main__":
                         if "X" not in rin:
                             if analysis.rxn_ring_change(rin):
                                 r = rinchi_class.Reaction(rin)
-                                res = r.change_across_reaction(r.ring_change)
+                                res = r.change_across_reaction(r.ring_count)
                                 if res:
                                     print(counter, res)
                     except ValueError:
@@ -161,7 +160,7 @@ if __name__ == "__main__":
                     # Count the change in a given ring across the reactions,
                     # supplied in a SMILE like form, eg CCCCCN for pyridine
                     r = rinchi_class.Reaction(rin)
-                    res = r.change_across_reaction(r.ring_change_by_element, args.arg2)
+                    res = r.change_across_reaction(r.ring_count_by_element, args.arg2)
                     if res and not args.list:
                         print(counter, res)
                     elif res and args.list:
@@ -173,7 +172,7 @@ if __name__ == "__main__":
                     # e.g.  (CCCCCN : 1) would indicate the reaction forms a
                     # pyridine ring
                     r = rinchi_class.Reaction(rin)
-                    res_raw = r.change_across_reaction(r.ring_change_inc_elements)
+                    res_raw = r.change_across_reaction(r.ring_count_inc_elements)
 
                     # Account for the fact that cyclic permutations of rings
                     # are chemically equivalent
@@ -199,17 +198,17 @@ if __name__ == "__main__":
 
                 elif args.formula:
                     r = rinchi_class.Reaction(rin)
-                    print(r.change_across_reaction(r.formula_change))
+                    print(r.change_across_reaction(r.formula))
                 elif args.isotopic:
                     r = rinchi_class.Reaction(rin)
-                    i = r.present_in_reaction(r.search_for_isotopic)
+                    i = r.present_in_reaction(r.has_isotopic_layer)
                     if i:
                         print(i)
                 elif args.valence:
                     r = rinchi_class.Reaction(rin)
-                    print(counter, r.change_across_reaction(r.valence_change))
+                    print(counter, r.change_across_reaction(r.valence_count))
                     counter += 1
                 elif args.hybrid:
                     r = rinchi_class.Reaction(rin)
-                    print(counter, r.change_across_reaction(r.hybrid_change))
+                    print(counter, r.change_across_reaction(r.hybrid_count))
                     counter += 1

@@ -1,3 +1,9 @@
+"""
+RInChI class as developed by Ben Hammond 2014
+
+Significant restructuring of classes by Duncan Hampshire 2016 to gain more consistent and less verbose code.
+"""
+
 import copy
 import re
 import tempfile
@@ -15,10 +21,15 @@ rinchi_handle = rinchi_lib.RInChI()
 
 
 class Reaction:
+    """ This class defines a reaction, as defined by a RInChI. Molecule objects are created from all component InChIs,
+    and the member functions of the class can be used to analyse various parameters that may be changing across the reaction
+    """
     def __init__(self, rinchi):
-        """ This class defines a reaction, as defined by a RInChI. Molecule objects are created from all component InChIs,
-        and the member functions of the class can be used to analyse various parameters that may be changing across the reaction
         """
+        Args:
+            rinchi: A RInChI which represent the reaction
+        """
+
 
         # Split the RInChI into it's InChIs:
         self.rinchi = rinchi.rstrip()
@@ -70,13 +81,18 @@ class Reaction:
         return self.wkey
 
     def calculate_reaction_fingerprint(self, fingerprint_size=1024):
-        """ Calculates a reaction fingerprint for a given reaction.
-            Uses a 1024 bit fingerprint by default
-            Method of Daniel M. Lowe (2015) """
+        """
+        Calculates a reaction fingerprint for a given reaction. Uses a 1024 bit fingerprint by default
+        Method of Daniel M. Lowe (2015)
 
-        # This function generates fingerprints for individual molecules using obabel
-        # Could be simply modified to use other software packages ie. RDKIT if
-        # desired
+        This function generates fingerprints for individual molecules using obabel.
+        Could be simply modified to use other software packages ie. RDKIT if desired
+
+        Args:
+            fingerprint_size: The length of the fingerprint to be generated.
+
+        """
+
         def generate_fingerprint(inchi):
             i_out, i_err = utils.call_command(["obabel", "-iinchi", "-:" + inchi, "-ofpt"])
             i_out = "".join(i_out.replace(" ", "").split("\n")[1:])
@@ -125,7 +141,12 @@ class Reaction:
     #########################################
 
     def generate_svg_image(self, outname):
-        """Outputs the reactants, products, and agents as SVG files in the current directory with the given filename"""
+        """
+        Outputs the reactants, products, and agents as SVG files in the current directory with the given filename
+
+        Args:
+            outname: the name of the file to output the SVG image
+        """
         out = []
 
         for group in (self.reactant_inchis, self.product_inchis, self.reaction_agent_inchis):
@@ -152,8 +173,16 @@ class Reaction:
     ###########################################
 
     def change_across_reaction(self, func, args=None):
-        """ Calculates the total change in a parameter across a molecule, given a function that accepts a Molecule
+        """
+        Calculates the total change in a parameter across a molecule, Molecule class function
         and returns a Python Counter object
+
+        Args:
+            func: The class function to calculate the parameter
+            args: Args if required for the function
+
+        Returns: the change in the parameter
+
         """
         count_products = Counter()
         count_reactants = Counter()
@@ -175,8 +204,14 @@ class Reaction:
         return count_products
 
     def present_in_reaction(self, func):
-        """ Takes a function of a Molecule that returns true if a given condition is satisfied
-         If the function returns true for any InChI, the parent RInChI is returned
+        """
+        Tests if a molecule is present in the reaction
+
+        Args:
+            func: function of a Molecule object that returns True if a given condition is satisfied
+
+        Returns: If the function returns true for any InChI, the parent RInChI is returned
+
         """
         for mol in self.reactants:
             if func(mol):
@@ -186,96 +221,55 @@ class Reaction:
                 return self.rinchi
         return False
 
-    def present_in_layer(self, layer, inchi):
-        """ Accepts a reaction layer, and and a checking function.
+    @staticmethod
+    def present_in_layer(layer, inchi):
+        """
+        Checks if an InChI is is present in a layer
+
+        Args:
+            layer: A reaction layer
+            inchi: an Inchi
+
+        Returns: Returns the rinchi if the inchi is present, otherwise returns None.
+
         """
         for mol in layer:
             if mol.inchi == inchi:
-                return self.rinchi
-        return None
-
-    @staticmethod
-    def ring_change(mol):
-        """ Accepts molecule object and returns a Counter containing the number of rings of each size
-        """
-        if mol.atoms:
-            mol.calculate_rings()
-            return mol.ring_count
-        else:
-            return Counter()
-
-    @staticmethod
-    def ring_change_inc_elements(mol):
-        """ Accepts molecule object and returns a Counter containing the number of rings of each size
-        """
-        if mol.atoms:
-            mol.calculate_rings()
-            mol.set_atomic_elements()
-            rings = []
-            for ring in mol.rings:
-                rings.append("".join([mol.atoms[a].element for a in ring]))
-
-            return Counter(rings)
-        else:
-            return Counter()
-
-    @staticmethod
-    def ring_change_by_element(mol, atoms):
-        return mol.contains_ring_by_atoms(atoms)
-
-    @staticmethod
-    def formula_change(mol):
-        """ Accepts molecule object and returns a Counter containing the molecular formula of the molecule
-        """
-        mol.chemical_formula_to_dict()
-        return Counter(mol.formula_dict)
-
-    @staticmethod
-    def valence_change(mol):
-        """ Accepts a molecule object and attempts to calculate the valences of each atom
-        """
-        if mol.atoms:
-            mol.set_atomic_elements()
-            mol.set_atomic_hydrogen()
-            return Counter([a.valence() for a in mol.atoms.values()])
-        else:
-            return Counter()
-
-    @staticmethod
-    def hybrid_change(mol):
-        """ Accepts a molecule object and attempts to calculate the hybridisation of each atom
-        """
-        if mol.atoms:
-            mol.set_atomic_elements()
-            mol.set_atomic_hydrogen()
-            return Counter([a.hybridisation() for a in mol.atoms.values()])
-        else:
-            return Counter()
-
-    @staticmethod
-    def search_for_isotopic(mol):
-        """ Returns true if the given molecule has a defined isotopic layer
-        """
-        if mol.inchi_to_layer("i"):
-            return True
+                return True
+        return False
 
     def catalytic_in_inchi(self, inchi):
-        """ Returns a rinchi if it is catalytic in the given inchi
+        """
+        Determine whether the reaction is catalytic in a particular chemical
+
+        Args:
+            inchi: A InChI string specifying a molecule
+
+        Returns: True or False (Boolean)
         """
         return self.present_in_layer(self.reaction_agents, inchi)
 
     def is_balanced(self):
-        """ Returns true if a reaction is completely balanced"""
-        return set(self.change_across_reaction(self.formula_change).values()) == {0}
+        """
+        Determine if a reaction is balanced
 
-    ##########################################################################
-    # TESTING
-    ##########################################################################
+        Returns: True if Balanced, False otherwise.
+        """
+        return set(self.change_across_reaction(Molecule.get_formula).values()) == {0}
 
     def detect_reaction(self, hyb_i=None, val_i=None, rings_i=None, formula_i=None):
-        """ Takes a series of named dicts as parameters and returns True if the given reaction satifies all the conditions.
-            Allows searching for reactions based on ring changes, valence changes, formula changes, hybridisation of C atom changes,
-            and contained InChIs.
+        """
+        Detect if a reaction satifies certian conditions. Allows searching for reactions based on ring changes,
+        valence changes, formula changes, hybridisation of C atom changes.
+
+        Args:
+            All args are dictionaries of the format {property:count,property2:count2,...}
+            hyb_i: The hybridisation(s) desired
+            val_i: The valence change(s) desired
+            rings_i: The ring change(s) desired
+            formula_i: The formula change(s) desired
+
+        Returns: True if the given reaction satifies all the conditions, otherwise False.
         """
 
         if val_i is None:
@@ -287,19 +281,19 @@ class Reaction:
         if hyb_i is None:
             hyb_i = {}
         if formula_i:
-            formula = self.change_across_reaction(self.formula_change)
+            formula = self.change_across_reaction(Molecule.get_formula)
             if not all(entry in formula.items() for entry in formula_i.items()):
                 return False
         if val_i:
-            val = self.change_across_reaction(self.valence_change)
+            val = self.change_across_reaction(Molecule.get_valence_count)
             if not all([entry in val.items() for entry in val_i.items()]):
                 return False
         if hyb_i:
-            hyb = self.change_across_reaction(self.hybrid_change)
+            hyb = self.change_across_reaction(Molecule.get_hybrid_count)
             if not all([entry in hyb.items() for entry in hyb_i.items()]):
                 return False
         if rings_i:
-            rings = self.change_across_reaction(self.ring_change)
+            rings = self.change_across_reaction(Molecule.get_ring_count)
             if not all([entry in rings.items() for entry in rings_i.items()]):
                 return False
 
@@ -307,17 +301,17 @@ class Reaction:
 
 
 class Molecule:
+    """
+    A class containing a molecule as defined by an inchi. Contains functions for generating
+    edge lists and node edge tables describing molecular graphs, and functions that use
+    molecular graphs to calculate information about the molecules - ring sizes, atom hybridisation,
+    contained functional groups etc.
+    """
     def __init__(self, inchi):
-        """ A class containing a molecule as defined by an inchi. Contains functions for generating
-            edge lists and node edge tables describing molecular graphs, and functions that use
-            molecular graphs to calculate information about the molecules - ring sizes, atom hybridisation,
-            contained functional groups etc.
-        """
         self.inchi = inchi.rstrip()
         self.atoms = {}
         self.formula = None
         self.formula_dict = {}
-
         self.rings = []
         self.ring_count = None
         self.molecular_graph = None
@@ -341,7 +335,13 @@ class Molecule:
 
     @staticmethod
     def composite_inchi_to_simple(inchi):
-        """ Splits an inchi with multiple disconnected components into a list of connected inchis
+        """
+        Splits an inchi with multiple disconnected components into a list of connected inchis
+
+        Args:
+            inchi: A inchi (usually composite)
+
+        Returns: A list of simple inchis within the composite inchi argument
         """
 
         # Separate the input InChI into the header, formula, and other layers
@@ -368,9 +368,14 @@ class Molecule:
 
     @staticmethod
     def new(inchi):
-        """ Takes an InChI string and returns a list of Molecule objects.
-        If there is a semicolon in the InChI string, then the InChI represents a collection of disconnected species:
-        the InChI is separated and a list of Molecules for each separate species is returned.
+        """
+        Creates a list of new Molecule objects. Safer than Molecule() due to composite InChI implications.
+
+        Args:
+            inchi: An InChI string
+
+        Returns: list of Molecule objects.
+
         """
         if ";" in inchi:
             return [Molecule(inch) for inch in Molecule.composite_inchi_to_simple(inchi)]
@@ -382,16 +387,18 @@ class Molecule:
     #####################################################################
 
     def inchi_to_chemical_formula(self):
-        """ Takes an InChI and outputs only the chemical formula
+        """
+        Returns: the Chemical Formula of the Molecule as a string
         """
         layers = self.inchi.split("/")
         return layers[1]
 
     def chemical_formula_to_dict(self):
-        """ Accepts a chemical formula and returns a dict with elements as keys and number of atoms as value
         """
-        # Dict with elemental formulae as keys, and number of atoms in formula
-        # as values
+        Get the chemical formula as a dictionary
+
+        Returns: a dictionary with elements as keys and number of atoms as value
+        """
         result = {}
         if not self.formula:
             self.formula = self.inchi_to_chemical_formula()
@@ -410,7 +417,7 @@ class Molecule:
                 result[e] = 1
 
         self.formula_dict = result
-
+start here
     def set_atomic_elements(self):
         """ Takes an InChI and a dict of Atoms and assigns each atom an element
         MOSTLY WORKING
@@ -862,11 +869,9 @@ class Molecule:
         """ Takes an InChI as input and returns a Python Counter dict in the format
         ring size : number of rings present """
 
-        # TEMPORARY FIX for algorithm breaking on disconnected components
         c = self.inchi_to_layer("c")
         if not c or ";" in self.inchi_to_layer("c"):
             self.ring_count = Counter()
-            # return None
 
         if not self.has_searched_rings:
             if self.number_of_rings:
@@ -879,8 +884,13 @@ class Molecule:
             self.ring_count = Counter()
 
     def contains_ring_by_atoms(self, atoms):
-        """ Returns the number of rings of a given atomic configuration: eg. "CCCCCN" will
-        return the number of pyridine fragments in the molecule.
+        """
+        Count the rings by atom list eg. "CCCCCN" will return the number of pyridine fragments in the molecule.
+
+        Args:
+            atoms: The atoms in the ring.
+
+        Returns: number of rings
         """
 
         if not self.has_searched_rings:
@@ -913,11 +923,90 @@ class Molecule:
                     atom_list.rotate(1)
         return count
 
+    def get_ring_count(self):
+        """
+        Get the ring count
+
+        Returns: a Counter object containing the number of rings of each size
+
+        """
+        if self.atoms:
+            self.calculate_rings()
+            return self.ring_count
+        else:
+            return Counter()
+
+    def has_isotopic_layer(self):
+        """
+        Does the molecule inchi have an isotopic layer?
+
+        Returns: A boolean value
+
+        """
+        if self.inchi_to_layer("i"):
+            return True
+        else:
+            return False
+
+    def get_hybrid_count(self):
+        """
+        Calculate the hybridisation of each atom
+
+        Returns: A Counter object containing the hybridisation of the atoms
+        """
+        if self.atoms:
+            self.set_atomic_elements()
+            self.set_atomic_hydrogen()
+            return Counter([a.hybridisation() for a in self.atoms.values()])
+        else:
+            return Counter()
+
+    def get_valence_count(self):
+        """
+        Calculates the valences of each atom in the Molecule
+
+        Returns: A Counter object containing the valences of the atoms
+
+        """
+        if self.atoms:
+            self.set_atomic_elements()
+            self.set_atomic_hydrogen()
+            return Counter([a.valence() for a in self.atoms.values()])
+        else:
+            return Counter()
+
+    def get_ring_count_inc_elements(self):
+        """
+        Count the rings of a molecule. Result includes the elements of the ring.
+
+        Returns: a Counter containing the number of rings of each size and the elements contained by a ring
+        """
+        if self.atoms:
+            self.calculate_rings()
+            self.set_atomic_elements()
+            rings = []
+            for ring in self.rings:
+                rings.append("".join([self.atoms[a].element for a in ring]))
+
+            return Counter(rings)
+        else:
+            return Counter()
+
+    def get_formula(self):
+        """
+        Get chemical empirical formula
+
+        Returns: Chemical formula stored as a counter
+        """
+        self.chemical_formula_to_dict()
+        return Counter(self.formula_dict)
+
+
 
 class Atom:
+    """A class containing a brief description of an atom, for use as nodes in a graph describing a molecule
+    """
     def __init__(self, index=None):
-        """ A class containing a brief description of an atom, for use as nodes in a graph describing a molecule
-        """
         self.index = index
         self.bonds = []
         self.protons = 0
@@ -932,7 +1021,9 @@ class Atom:
             return None
 
     def hybridisation(self):
-        """Currently only defined for C atoms but still useful"""
+        """
+        Gets the atom hybridisation. Only defined for C atoms but still useful
+        """
         if self.valence():
             if self.element == "C":
                 if self.valence() == 4:

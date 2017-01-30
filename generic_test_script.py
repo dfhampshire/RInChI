@@ -9,11 +9,7 @@
 # BENJAMIN HAMMOND 2014
 
 
-import logging
-import sqlite3
-
-from rinchi_tools import rinchi_lib, v02_convert
-
+"""
 # Define a handle for the RInChI class within the C++ library
 rinchi_handle = rinchi_lib.RInChI()
 
@@ -41,3 +37,24 @@ def populate_list(db_filename, s_command):
 
 
 populate_list("rinchi.db",select_command)
+"""
+
+"""
+class Item:
+    def __init__(self,name):
+        self.name = name
+
+    def get_name(self):
+        return self.name
+
+
+def do_method(instance, method):
+    return method(instance)
+
+cow = Item("Mr Cow")
+print(do_method(cow, Item.get_name))
+"""
+
+import collections
+
+print(collections.Counter("hi"))
