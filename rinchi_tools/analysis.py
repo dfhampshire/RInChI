@@ -23,6 +23,7 @@ v0.03 software as provided by the InChI trust.
 The RInChI library and programs are free software developed under the
 auspices of the International Union of Pure and Applied Chemistry (IUPAC).
 """
+
 from rinchi_tools import inchi_tools, tools
 
 

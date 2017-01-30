@@ -64,7 +64,7 @@ def build_rinchi(l2_inchis=None, l3_inchis=None, l4_inchis=None, direction='', u
         where #2 is the number of unknown reactants in layer 2, #3 is number in layer 3 etc.
 
     Returns:
-        The RinChI made from the input InChIs and reaction data.
+        rinchi: The RinChI made from the input InChIs and reaction data.
 
     Raises:
         VersionError: The input InChIs are not of the same version.
@@ -249,11 +249,14 @@ def build_rinchi_rauxinfo(l2_input=None, l3_input=None, l4_input=None, direction
 def build_rauxinfo(l2_auxinfo, l3_auxinfo, l4_auxinfo):
     """
     Takes 3 sets of AuxInfos and converts them into a RAuxInfo. n.b. The order of Inchis in each list is presumed to be
-    corresponding to that in
-    :param l2_auxinfo: List of layer 2 AuxInfos
-    :param l3_auxinfo: List of layer 3 AuxInfos
-    :param l4_auxinfo: List of layer 4 AuxInfos
-    :return: An RAuxInfo
+    corresponding to that in the RInChI
+
+    Args:
+         l2_auxinfo: List of layer 2 AuxInfos
+         l3_auxinfo: List of layer 3 AuxInfos
+         l4_auxinfo: List of layer 4 AuxInfos
+
+    Returns: An RAuxInfo
     """
     # Format the AuxInfos for inclusion in the RAuxInfo.
     l2_auxinfo_versions, auxinfo_l2 = process_layer(l2_auxinfo, None, False)
@@ -274,16 +277,16 @@ def build_rauxinfo(l2_auxinfo, l3_auxinfo, l4_auxinfo):
 def split_rinchi_inc_auxinfo(rinchi, rinchi_auxinfo):
     """ Returns the inchi and auxinfo pairs, each in lists, the direction character, and a list of unknown structures.
 
-        Args:
-            rinchi: A RInChI String
-            rinchi_auxinfo: The corresponding RAuxInfo
+    Args:
+        rinchi: A RInChI String
+        rinchi_auxinfo: The corresponding RAuxInfo
 
-        Returns:
-            rct_inchis: List of reactant inchi and auxinfo pairs
-            pdt_inchis: List of product inchi and auxinfo pairs
-            agt_inchis: List of agent inchi and auxinfo pairs
-            direction: returns the direction character
-            no_structs: returns a list of the numbers of unknown structures in each layer
+    Returns:
+        rct_inchis: List of reactant inchi and auxinfo pairs
+        pdt_inchis: List of product inchi and auxinfo pairs
+        agt_inchis: List of agent inchi and auxinfo pairs
+        direction: returns the direction character
+        no_structs: returns a list of the numbers of unknown structures in each layer
     """
     inchi_components = rinchi_interface.inchis_from_rinchi(rinchi, rinchi_auxinfo)
     direction = inchi_components['Direction']
@@ -297,15 +300,15 @@ def split_rinchi_inc_auxinfo(rinchi, rinchi_auxinfo):
 def split_rinchi(rinchi):
     """ Returns the inchis without RAuxInfo, each in lists, and the direct and no_structs lists
 
-        Args:
-            rinchi: A RInChI String
+    Args:
+        rinchi: A RInChI String
 
-        Returns:
-            rct_inchis: List of reactant inchis
-            pdt_inchis: List of product inchis
-            agt_inchis: List of agent inchis
-            direction: returns the direction character
-            no_structs: returns a list of the numbers of unknown structures in each layer
+    Returns:
+        rct_inchis: List of reactant inchis
+        pdt_inchis: List of product inchis
+        agt_inchis: List of agent inchis
+        direction: returns the direction character
+        no_structs: returns a list of the numbers of unknown structures in each layer
     """
     inchi_components = rinchi_interface.inchis_from_rinchi(rinchi, "")
     direction = inchi_components['Direction']
@@ -320,15 +323,16 @@ def split_rinchi(rinchi):
 
 
 def split_rinchi_only_auxinfo(rinchi, rinchi_auxinfo):
-    """ Returns the RAuxInfo"
-        Args:
-            rinchi: A RInChI String
-            rinchi_auxinfo: The corresponding RAuxInfo
+    """Returns the RAuxInfo
 
-        Returns:
-            rct_inchis_auxinfo: List of reactant AuxInfos
-            pdt_inchis_auxinfo: List of product AuxInfos
-            agt_inchis_auxinfo: List of agent AuxInfos
+    Args:
+        rinchi: A RInChI String
+        rinchi_auxinfo: The corresponding RAuxInfo
+
+    Returns:
+        rct_inchis_auxinfo: List of reactant AuxInfos
+        pdt_inchis_auxinfo: List of product AuxInfos
+        agt_inchis_auxinfo: List of agent AuxInfos
     """
     inchi_components = rinchi_interface.inchis_from_rinchi(rinchi, rinchi_auxinfo)
     reactants = inchi_components['Reactants']
@@ -347,6 +351,11 @@ def deduper(rinchi, rauxinfo=""):
     Args:
         rinchi: A RInChI string
         rauxinfo: Optional RAuxInfo
+
+    Returns:
+        rinchi: A RInChI string
+        rauxinfo: RAuxInfo if specified
+
     """
     reactants, products, agents, direction, no_structs = split_rinchi_inc_auxinfo(rinchi, rauxinfo)
     reactants_s = set(reactants)
@@ -384,8 +393,6 @@ def gen_rauxinfo(rinchi):
     Returns:
         The RAuxInfo of the RinChI.
 
-    Raises:
-        VersionError: If the generated AuxInfos are not of the same version.
     """
     # Split the RInChI into constituent InChIs
     reactants, products, agents, direction, u_s = split_rinchi(rinchi)
@@ -412,17 +419,20 @@ def gen_rauxinfo(rinchi):
     return rauxinfo
 
 
-def process_layer(items, rauxinfodict=None, sort_layer=True, ):
-    """ Processes a layer of InChIs or InChi-AuxInfos for outputting as a layer
+def process_layer(items, rauxinfodict=None, sort_layer=True):
+    """ Processes a layer of InChIs and / or InChi-AuxInfos for outputting as a layer.
 
         Args:
             items: A list of items to insert into the layer
             rauxinfodict: A dictionary of inchis as the keys and Auxinfos as the items
-            sort_layer: Whether to sort the items in each layer. Defaults to True
+            sort_layer: Whether to sort the items in each layer. Defaults to True. Typically this should be true for
+            RInChIs which as sorted as such, and False for RAuxinfos which are sorted according to the corresponding
+            RInChI.
 
         Returns:
             versions: A list of the version identifiers
             layer: A string of bodies delimited by an exclamation mark ("!") ready for inclusion as a layer.
+            rauxinfo_layer:
     """
     versions = []
     bodies = []
@@ -482,12 +492,14 @@ def add(rinchis):
         If in "made", move to "intermediates".
         If in "present", move to "used".
         If in "intermediates", remain in "intermediates".
+
     The products are considered:
         If novel, add to "made".
         If in "used", move to "present".
         If in "made", remain in "made".
         If in "present", remain in "present".
         If in "intermediates", move to "made".
+
     The extras are considered:
         If novel, add to "present".
 
@@ -515,7 +527,7 @@ def add(rinchis):
     # Iterate over the RInChI steps.
     for rinchi in rinchis:
         # Parse the structures in the RInChI.
-        reactants, products, extras, direction, no_structs = tools.split_rinchi(rinchi)
+        reactants, products, extras, direction, no_structs = split_rinchi(rinchi)
         if not all(v == 0 for v in no_structs):
             raise Error("No structures present")
         # Sort the structures into the various pots as per the algorithm.
@@ -561,8 +573,18 @@ def add(rinchis):
 
 
 def rinchi_file_to_list(input_path):
-    """Creates a list of rinchis and rauxinfos from a flat file containing rinchis and rauxinfos. The lists are matched
-    by index - so a list(zip()) on the output will reuturn the results pair-wise """
+    """
+    Creates a list of rinchis and rauxinfos from a flat file containing rinchis and rauxinfos. The lists are matched
+    by index - so a list(zip()) on the output will reuturn the results pair-wise
+
+    Args:
+        input_path: The file to import to a list
+
+    Returns:
+        input_rinchis: The list of RInChIs
+        input_rauxinfos: The list of RAuxInfos
+
+    """
     # Parse RInChI file input.
     try:
         input_file = open(input_path)

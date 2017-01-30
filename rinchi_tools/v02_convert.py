@@ -7,19 +7,17 @@ D.F. Hampshire 2016
 from rinchi_tools import tools, utils, inchi_tools
 
 
-class Error(Exception):
-    pass
-
 class VersionError(Exception):
     pass
 
 
 def convert_rinchi(rinchi):
-    """Convert a v0.02 RInChI into a v0.03 RInChI.
-    
+    """
+    Convert a v0.02 RInChI into a v0.03 RInChI.
+
     Args:
         rinchi: A RInChI of version 0.02.
-        
+
     Returns:
         rinchi: A RInChI of version 0.03.
     """
@@ -29,17 +27,20 @@ def convert_rinchi(rinchi):
 
 
 def gen_rauxinfo(rinchi):
-    """Create RAuxInfo for a RInChI using a conversion function.
+    """
+    Create RAuxInfo for a RInChI using a conversion function.
 
     Args:
         rinchi: The RInChI of which to create the RAuxInfo.
 
     Returns:
-        The RAuxInfo of the RinChI.
+        rauxinfo: The RAuxInfo of the RinChI
 
     Raises:
         VersionError: If the generated AuxInfos are not of the same version.
+
     """
+
     # Split the RInChI into constituent InChIs
     gp1_inchis, gp2_inchis, gp3_inchis, direct, u = split_rinchi(rinchi)
 
@@ -68,6 +69,8 @@ def gen_rauxinfo(rinchi):
             versions: A list of the version identifiers of the AuxInfos.
             auxinfo_group: A string of AuxInfo bodies delimited by double-
                 slashes ("//") ready for inclusion in a RAuxInfo.
+
+
         """
         versions = []
         bodies = []
@@ -89,7 +92,7 @@ def gen_rauxinfo(rinchi):
     # Check that all the auxinfo groups have the same version info.
     try:
         auxinfo_vers = utils.consolidate(auxinfo_gp1_verss + auxinfo_gp2_verss + auxinfo_gp3_verss)
-    except Error:
+    except ValueError:
         raise VersionError("RAuxInfo can only be made from same-version AuxInfos")
     # Construct and return the RAuxInfo
     if auxinfo_gp3:
@@ -100,12 +103,12 @@ def gen_rauxinfo(rinchi):
 
 def convert_rauxinfo(rauxinfo):
     """Convert a v0.02 RAuxInfo into a v0.03 RAuxInfo.
-    
+
     Args:
         rauxinfo: A RAuxInfo of version 0.02.
-        
+
     Returns:
-        rauxinfo: A RAuxInfo of version 0.03.          
+        rauxinfo: A RAuxInfo of version 0.03.
     """
     layer2_auxinfos, layer3_auxinfos, layer4_auxinfos = split_rauxinfo(rauxinfo)
     rauxinfo = tools.build_rauxinfo(layer2_auxinfos, layer3_auxinfos, layer4_auxinfos)
@@ -121,7 +124,7 @@ def convert_all(rinchi, rauxinfo):
         
     Returns:
         rauxinfo: A RAuxInfo of version 0.03.
-        rauxinfo: A RAuxInfo of version 0.03.       
+        rauxinfo: A RAuxInfo of version 0.03.
     """
     rauxinfo = convert_rauxinfo(rauxinfo)
     rinchi = convert_rauxinfo(rinchi)
@@ -129,7 +132,18 @@ def convert_all(rinchi, rauxinfo):
 
 
 def split_rauxinfo(rauxinfo):
-    """Convert a RAuxInfo to AuxInfos."""
+    """
+    Convert a RAuxInfo to AuxInfos
+
+    Args:
+        rauxinfo: An RAuxInfo of version v0.02
+
+    Returns:
+        layer2_auxinfos: list of layer 2 auxinfos
+        layer3_auxinfos: list of layer 3 auxinfos
+        layer4_auxinfos: list of layer 4 auxinfos
+
+    """
     # Separate version information from the RAuxInfo body.
     rauxinfo_version, rauxinfo_body = rauxinfo.split('=')[1].split('/', 1)
     auxinfo_version = rauxinfo_version.split('.', 2)[2]
@@ -159,15 +173,15 @@ def split_rinchi(rinchi):
     
     Args:
         rinchi: A RInChI of version 0.02
-        
+
     Returns:
         layer2_inchis, layer3_inchis, layer4_inchis: Lists of the InChIs which made up
             the RInChI groups, returned in the order they were displayed.
         direction:"+","-", or "=" representing the direction of the reaction.
         u_structs: unknown structures in each layer in the form of a tuple (#2,#3,#4)
-        
+
     Raises:
-        VersionError: RInChI must be version 0.02.            
+        VersionError: RInChI must be version 0.02.
     """
     # Separate version information from the RInChI body.
     rinchi_version, rinchi_body = rinchi.split('=')[1].split('/', 1)

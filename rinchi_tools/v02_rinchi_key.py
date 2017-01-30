@@ -1,6 +1,7 @@
-"""RInChIKey generation library module.
+"""version 0.02 RInChIKey generation library module.
 
     Copyright 2012 C.H.G. Allen
+    Modified 2016 D.F. Hampshire
     
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -19,12 +20,13 @@ RInChIs.
 
 The supplied implimentation of the inchi_2_inchikey function uses the InChIKey
 creation algorithm from OASA, a free python library for the manipulation of
-chemical formats.
+chemical formats, now stored permanently in the v02_inchi_key.py module.
+
 """
 
 import hashlib
 
-from rinchi_tools import tools, inchi_key, utils
+from rinchi_tools import tools, v02_inchi_key, utils
 
 # The following variable defines the version number of the RInChIKeys created
 # by this module.
@@ -32,15 +34,13 @@ RINCHIKEY_VERSION = 'b'
 
 
 # Define exceptions for the module to use.
-class Error(Exception):
+
+
+class RinchiError(ValueError):
     pass
 
 
-class RinchiError(Error):
-    pass
-
-
-class InchiError(Error):
+class InchiError(ValueError):
     pass
 
 
@@ -53,7 +53,7 @@ def inchi_2_inchikey(inchi):
     Returns:
         inchikey: The InChI's inchikey.
     """
-    raw_inchikey = inchi_key.key_from_inchi(inchi)
+    raw_inchikey = v02_inchi_key.key_from_inchi(inchi)
     inchikey = "InChIKey=" + raw_inchikey
     return inchikey
 
@@ -255,7 +255,13 @@ def rxn_layers_hasher(rxn_layers):
 
 
 def alphabet_hash(arg, length='64'):
-    """Hash an argument using sha256 and alphabetical representation.
+    """
+    Hash an argument using sha256 and alphabetical representation.
+    Args:
+        arg: Argument to hash
+        length: the length of the SHA hash desired
+
+    Returns: The SHA256 hash
     """
 
     def sha256_hash(arg):

@@ -3,20 +3,7 @@ RInChI test module.
 
     2016 D.F. Hampshire
 
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-
-This module tests the module functions. It used the rxn file rxn_t1.rxn for testing. It also interfaces with the RInChI
-v0.03 software as provided by the InChI trust.
+This module tests the module functions.
 
 The RInChI library and programs are free software developed under the
 auspices of the International Union of Pure and Applied Chemistry (IUPAC).
@@ -28,7 +15,7 @@ from rinchi_tools import tools, rinchi_lib, inchi_tools,conversion, analysis
 
 rinchi_interface = rinchi_lib.RInChI()
 
-print("\n\n\n========GO GO GO !========\n================")
+print("\n\n\n========Start Test!========\n================")
 
 # Test addition.py
 # Define an arbitrary (and impossible!) three step reaction, inchis names
