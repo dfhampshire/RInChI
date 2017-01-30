@@ -1,6 +1,7 @@
 """RInChI external software location module.
 
     Copyright 2012 C.H.G. Allen
+    Modified 2016 D. Hampshire
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -14,16 +15,10 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 
-This module defines two variables, which specify the paths to external software
+This module defines variables that specify the paths to external software
 used by the RInChI tools.
 
 INCHI_PATH: Specifies the path of the InChI creation software (supplied).
-
-MOLCONVERT_PATH: Specifies the path of ChemAxon's MolConverter program.  If
-    this is not given, the RInChI software will not be able to generate 2D
-    coordinates when converting RInChIs to RXN files.  MolConverter is
-    available from http://www.chemaxon.com/products/marvin/molconverter/
-    without charge after registration.
 """
 import os
 
@@ -31,6 +26,3 @@ import os
 path = os.path.dirname(os.path.abspath(__file__))
 INCHI_PATH = path + '/inchi-1'
 
-# Path to ChemAxon's MolConvert.  If MolConvert is not available, please leave
-# blank.
-MOLCONVERT_PATH = ''

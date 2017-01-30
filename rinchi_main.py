@@ -14,7 +14,7 @@ import scipy.cluster as cluster
 from numpy import array, all, equal, rot90
 from scipy.spatial import distance
 
-import rinchi_database
+import rinchi_tools.database
 from rinchi_tools import analysis
 from rinchi_tools import rinchi as rinchi_class
 
@@ -54,7 +54,7 @@ if __name__ == "__main__":
 
     try:
         if args.key and args.input.startswith("Long-RInChIKey"):
-            args.input = rinchi_database.sql_key_to_rinchi(args.input, "rinchi.db")
+            args.input = rinchi_tools.database.sql_key_to_rinchi(args.input, "rinchi.db")
     except ValueError:
         print("Could not find Long-RInChIKey in database")
         pass
