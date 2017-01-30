@@ -417,10 +417,10 @@ class Molecule:
                 result[e] = 1
 
         self.formula_dict = result
-start here
+
     def set_atomic_elements(self):
-        """ Takes an InChI and a dict of Atoms and assigns each atom an element
-        MOSTLY WORKING
+        """
+        Sets the atomic element property for each of the instances of the the Atom class.
         """
         if not self.formula_dict:
             self.chemical_formula_to_dict()
@@ -445,7 +445,13 @@ start here
                 self.atoms[i + 1].element = ordered_atoms[i]
 
     def inchi_to_layer(self, l):
-        """ Takes an InChI and a label l, and returns only the layer starting with l as a string"""
+        """
+        Get a particular layer of the InChI
+        Args:
+            l: The layer of the InChI to retrieve
+
+        Returns: The InChI layer desired
+        """
         layers = self.inchi.split("/")
         for layer in layers:
             if layer.startswith(l):
@@ -454,9 +460,8 @@ start here
             return None
 
     def set_atomic_hydrogen(self):
-        """ Takes a molecular graph with already set elements and the corresponding inchi, and sets the
-            number of protons attached to each atom
-        """
+        """Takes the molecular graph and the inchi, and sets the number of
+        protons attached to each atom"""
         h_layer = self.inchi_to_layer("h")
 
         if not h_layer:
@@ -507,7 +512,10 @@ start here
 
     def generate_edge_list(self):
         """ Takes the connective layer of an inchi and returns the molecular graph as an edge list, parsing
-        it directly using regular expressions rather than converting it to a MOL file using the inchi-1 executable
+        it directly using re.
+
+        Returns:
+            edges: A list containing the edges of the molecular graph
         """
         conlayer = self.inchi_to_layer("c")
         # Check if a connection layer was actually passed
@@ -515,7 +523,7 @@ start here
             self.has_conlayer = False
             return None
 
-            # Initialise a list containing the edges of the molecular graph, and copies of the connective layer
+        # Initialise a list containing the edges of the molecular graph, and copies of the connective layer
         # that will be destroyed in the process
         conlayer_mut = copy.deepcopy(conlayer)
         conlayer_comma = copy.deepcopy(conlayer)
@@ -579,11 +587,12 @@ start here
         return edges
 
     def generate_atoms(self, lst=None):
-        """ Takes a molecular graph as a list of edges and returns a node-edge graph as a dictionary
-        If no list is passed, the function sets the atoms for an instance of a Molecule object
+        """Sets the node-edge graph as a dictionary.
+
+        Args:
+            lst: A molecular graph as a list of edges. If no list is passed, the function sets the atoms for its
+            own instance.
         """
-        # Initialise key for each atom label, each with the value of an empty
-        # list
         if lst:
             ls = lst
         else:
@@ -608,11 +617,19 @@ start here
             #######################################################################
 
     def depth_first_search(self, start=1):
-        """ Performs a DFS over the molecular graph of a given Molecule object, returning a list of edges that form
+        """
+         Performs a DFS over the molecular graph of a given Molecule object, returning a list of edges that form
         a spanning tree (tree edges), and a list of the edges that would cyclise this spanning tree (back edges)
 
-        The number of back edges returned is equal to the smallest number of cycles that can describe the cycle space of
-        the molecular graph
+        The number of back edges returned is
+
+        Args:
+            start: Set which atom should be the starting node
+
+        Returns:
+            tree_edges: A list of tree edges.
+            back_edges: A list of back edges. The list length is equal to the smallest number of cycles that can
+            describe the cycle space of the molecular graph
         """
 
         # Ensure that the molecular graph has been generated
@@ -671,11 +688,19 @@ start here
 
     @staticmethod
     def breadth_first_search(graph, start, finish):
-        """ Accepts an unweighted, undirected vertex-edge graph and returns as a list the shortest path between
-        the start and finish nodes.
+        """
+        Get the shortest path between the start and finish nodes
 
         Adapted from http://eddmann.com/posts/depth-first-search-and-breadth-first-search-in-python/,
         accessed 06/11/2014
+
+        Args:
+            graph: an unweighted, undirected vertex-edge graph as a list
+            start: the starting node
+            finish: the finishing node as
+
+        Returns: The shortest path as a list
+
         """
 
         # Collections.deque is a doubly linked list - supports fast addition
@@ -691,8 +716,19 @@ start here
                     queue.append((nxt, path + [nxt]))
 
     def find_shortest_path(self, graph, start, end, path=None):
-        """ Recursively iterates over the entire molecular graph, yielding the shortest path between two points
+        """
+        Recursively iterates over the entire molecular graph, yielding the shortest path between two points
+
         Adapted from https://www.python.org/doc/essays/graphs/, accessed 15/10/2014
+
+        Args:
+            graph: an unweighted, undirected vertex-edge graph as a list
+            start: the starting node as a number
+            end: the finishing node as a number
+            path: latest iteration of the path
+
+        Returns: The shortest path as a list of indices
+
         """
 
         if path is None:
