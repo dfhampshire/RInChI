@@ -4,6 +4,7 @@
 RInChI analysis script.
 
     Copyright 2012 C.H.G. Allen
+    Modified 2016 D. Hampshire
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -31,6 +32,9 @@ from rinchi_tools import analysis
 
 def __search(rinchi_path, inchi_path, reactant=False, product=False, eqm=False, agent=False, list_rinchis=False):
     """
+    Searches a flat files containing RInChIs for a particular InChI. This is somewhat superseeded by the action of the
+    search function in the database module.
+
     :param rinchi_path: Th path to the list of rinchis
     :param inchi_path: the path to the file containing the inchi to be searched for
     :param reactant: Look for inchi in reactants
