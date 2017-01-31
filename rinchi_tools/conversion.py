@@ -41,10 +41,8 @@ this rinchi_lib.py interface.
 import re
 from time import strftime
 
-from rinchi_tools import tools, rinchi_lib
-
-# Create a handle for the RInChI class
-rinchi_handle = rinchi_lib.RInChI()
+from rinchi_tools import tools
+from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
 
 
 # Define an exception for the module to use.
@@ -373,20 +371,20 @@ def rdf_2_rinchis(
     rxndata = []
     for rdfile in rdfiles:
         rinchi, rauxinfo = tools.deduper(
-            *rinchi_handle.rinchi_from_file_text("RD", rdfile, force_equilibrium))
+            *RInChI_Handle.rinchi_from_file_text("RD", rdfile, force_equilibrium))
         if not (rinchi in rinchis and ((not return_rauxinfos)
                                        or rauxinfo in rauxinfos)):  # Force unique entries
             rinchis.append(rinchi)
             if return_rauxinfos:
                 rauxinfos.append(rauxinfo)
             if return_longkeys:
-                longkey = rinchi_handle.rinchikey_from_rinchi(rinchi, "L")
+                longkey = RInChI_Handle.rinchikey_from_rinchi(rinchi, "L")
                 longkeys.append(longkey)
             if return_shortkeys:
-                shortkey = rinchi_handle.rinchikey_from_rinchi(rinchi, "S")
+                shortkey = RInChI_Handle.rinchikey_from_rinchi(rinchi, "S")
                 shortkeys.append(shortkey)
             if return_webkeys:
-                webkey = rinchi_handle.rinchikey_from_rinchi(rinchi, "W")
+                webkey = RInChI_Handle.rinchikey_from_rinchi(rinchi, "W")
                 webkeys.append(webkey)
             if return_rxndata:
                 d = rdfile.replace("\n", "")

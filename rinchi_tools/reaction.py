@@ -14,7 +14,7 @@ from scipy.sparse import csr_matrix
 
 from rinchi_tools import tools, utils
 from rinchi_tools.molecule import Molecule
-from rinchi_tools.rinchi_lib import RInChI as rinchi_handle
+from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
 
 
 class Reaction:
@@ -62,19 +62,19 @@ class Reaction:
     def longkey(self):
         """Set longkey if not already set, then return longkey"""
         if not self.lkey:
-            self.lkey = rinchi_handle.rinchikey_from_rinchi(self.rinchi, "L")
+            self.lkey = RInChI_Handle.rinchikey_from_rinchi(self.rinchi, "L")
         return self.lkey
 
     def shortkey(self):
         """Set shortkey if not already set, then return shortkey"""
         if not self.skey:
-            self.skey = rinchi_handle.rinchikey_from_rinchi(self.rinchi, "S")
+            self.skey = RInChI_Handle.rinchikey_from_rinchi(self.rinchi, "S")
         return self.skey
 
     def webkey(self):
         """Set webkey if not already set, then return webkey"""
         if not self.wkey:
-            self.wkey = rinchi_handle.rinchikey_from_rinchi(self.rinchi, "W")
+            self.wkey = RInChI_Handle.rinchikey_from_rinchi(self.rinchi, "W")
         return self.wkey
 
     def calculate_reaction_fingerprint(self, fingerprint_size=1024):

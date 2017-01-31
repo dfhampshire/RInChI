@@ -16,8 +16,8 @@ from heapq import nsmallest
 from scipy.spatial import distance
 
 import rinchi_tools.reaction
-from rinchi_database import rinchi_handle
 from rinchi_tools import conversion, v02_convert
+from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
 
 
 def convert_rdf_to_dict(rdf, header, force_equilibrium=False):
@@ -472,11 +472,11 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
             if v03_rauxinfo:
                 data_to_add.append(v02_convert.convert_rauxinfo(row[1]))
             if v03_longkey:
-                data_to_add.append(rinchi_handle.rinchikey_from_rinchi(the_rinchi, "L"))
+                data_to_add.append(RInChI_Handle.rinchikey_from_rinchi(the_rinchi, "L"))
             if v03_shortkey:
-                data_to_add.append(rinchi_handle.rinchikey_from_rinchi(the_rinchi, "S"))
+                data_to_add.append(RInChI_Handle.rinchikey_from_rinchi(the_rinchi, "S"))
             if v03_webkey:
-                data_to_add.append(rinchi_handle.rinchikey_from_rinchi(the_rinchi, "W"))
+                data_to_add.append(RInChI_Handle.rinchikey_from_rinchi(the_rinchi, "W"))
             main_q.put(data_to_add)
             while main_q.full():
                 time.sleep(0.01)

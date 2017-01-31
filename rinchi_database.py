@@ -10,12 +10,11 @@
 import argparse
 import sqlite3
 
-from rinchi_tools import rinchi_lib, v02_convert
+from rinchi_tools import v02_convert
 from rinchi_tools.database import rdf_to_csv, rdf_to_csv_append, create_csv_from_directory, rdf_to_sql, csv_to_sql, \
     sql_key_to_rxninfo, sql_key_to_rinchi, compare_fingerprints, recall_fingerprints, update_fingerprints, \
     search_for_inchi, convert_v02_v03
-
-rinchi_handle = rinchi_lib.RInChI()
+from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
 
 
 #######################################
@@ -86,7 +85,7 @@ if __name__ == "__main__":
 
     if args.lkey2rxninfo and args.input.startswith("RInChI"):
         try:
-            args.input = rinchi_handle.rinchikey_from_rinchi(args.input, "L")
+            args.input = RInChI_Handle.rinchikey_from_rinchi(args.input, "L")
         except ValueError:
             print("Could not convert RInChI to Long-RInChI-key")
             pass
