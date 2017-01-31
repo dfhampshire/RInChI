@@ -24,7 +24,7 @@ The RInChI library and programs are free software developed under the
 auspices of the International Union of Pure and Applied Chemistry (IUPAC).
 """
 
-from rinchi_tools import inchi_tools, tools
+from rinchi_tools import inchi_tools, tools, conversion
 
 
 # Define an exception for the module to use.
@@ -277,3 +277,40 @@ def search_4_inchi(sought_inchi, rinchis, location=''):
         else:
             they_call_me_the_seeker(sought_inchi, (reactants + products + agents))
     return results
+
+
+def convert_rdf_to_dict(rdf, properties, force_equilibrium=False):
+    """
+    Convert an RDF to a dictionary of properties
+
+    Args:
+        rdf: The RD file as a text block
+        properties: The properties to include in the result, stored as an iterable
+        force_equilibrium: Whether the force the RInChI to be an equilibrium RInChI
+
+    Returns: A dictionary containing the properties, with the property names as the keys
+
+    """
+    with open(rdf) as data:
+        input_data = data.read()
+
+    # Set optional conversion parameters
+    start_index = 0
+    stop = 0
+
+    # Set which columns to include
+    return_rauxinfo = "RAuxInfo" in properties
+    return_longkey = "LongKey" in properties
+    return_shortkey = "ShortKey" in properties
+    return_webkey = "WebKey" in properties
+    return_rxninfo = "RXNInfo" in properties
+
+    # Run RInChI conversion functions.
+    rinchidata = conversion.rdf_2_rinchis(input_data, start_index, stop, force_equilibrium, return_rauxinfo,
+                                          return_longkey, return_shortkey, return_webkey, return_rxninfo)
+
+    # Transpose nested list into a list of data entries
+    data_transpose = map(list, zip(*rinchidata))
+
+    # Force uniqueness
+    return {x[0]: x[1:] for x in data_transpose}

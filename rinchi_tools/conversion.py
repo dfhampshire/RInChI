@@ -45,13 +45,6 @@ from rinchi_tools import tools
 from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
 
 
-# Define an exception for the module to use.
-
-
-class Error(Exception):
-    pass
-
-
 def rxn_2_molfs(rxn):
     """Accept an RXNfile and return lists of reactant and product molfiles.
 
@@ -195,7 +188,8 @@ def molfs_2_rdf(rxnt_molfs=None, prod_molfs=None, agnt_molfs=None, name=''):
 
 
 def split_rdf(rdfile, start=0, stop=0):
-    """Convert RDFiles to a list of RInChI-friendly RXN files.
+    """
+    Convert RDFiles to a list of RInChI-friendly RXN files.
 
     Function takes an RDFile and converts it into a list of RXN files.
 
@@ -208,6 +202,14 @@ def split_rdf(rdfile, start=0, stop=0):
     Therefore, in order to export a comprehensive list of RXN files described
     by the RDFile, each RXN entry is scanned for variations, and each variation
     is scanned for additional substances.
+
+    Args:
+        rdfile: The RD file text block
+        start: The index of the first RXN entry to process
+        stop: The index of the last RXN entry to process
+
+    Returns: A list of rxnfiles for conversion to a RInChI
+
     """
     # First, split the RDfile into its component RXN entries.
     rxn_entries = rdfile.split('$RXN')
@@ -219,104 +221,115 @@ def split_rdf(rdfile, start=0, stop=0):
     # creating a list of reactions.
     reactions = []
 
-    def rdf_rxn_2_molfs(rxn_entry):
-        """Converts an entry from an RDF to a list of reactions it describes.
-
-        Args:
-            rxn_entry: An RXN entry from an RDFile.  This consists of
-                everything following a "$RXN" tag.
-
-        Returns:
-            reactions: A list of tuples of lists; each tuple represents a
-                reaction, and consists of a list of reactant molfiles and a
-                list of product molfiles. Catalysts, solvents, etc. are
-                returned as both a reactant and a product (i.e. present on both
-                sides of the reaction).
-        """
-        # Count the declared number of reactants and products.
-        rrrppp_line = rxn_entry.splitlines()[4]
-        num_rxnts = int(rrrppp_line[0:3])
-        num_prods = int(rrrppp_line[3:6])
-        # Count the number of agents if present; else count zero
-        if len(rrrppp_line) > 6:
-            num_agents = int(rrrppp_line[6:9])
-        else:
-            num_agents = 0
-        # Split the RXN entry at every occurrence of "M  END".
-        mend_split = rxn_entry.split('M  END')
-        for index, item in enumerate(mend_split):
-            mend_split[index] = item.lstrip() + 'M  END'
-        # Delete data before the first "$MOL".
-        mend_split[0] = '$MOL' + mend_split[0].split('$MOL')[1]
-        # Remove data after the final "M  END" and store it.
-        additional_data = mend_split.pop(-1)[:-7]
-        # Harvest the reactants, products, and agents and save them to lists.
-        rxnts = mend_split[0:num_rxnts]
-        prods = mend_split[num_rxnts:num_rxnts + num_prods]
-        agnts = mend_split[num_rxnts + num_prods:num_rxnts + num_prods + num_agents]
-        # Clean up reactants, products, and agents to make true molfiles.
-        for sets in [rxnts, prods, agnts]:
-            for index, item in enumerate(sets):
-                sets[index] = '\n'.join(item.splitlines()[1:]).rstrip()
-        # Save the remaining data to another list.
-        leftover_data = mend_split[num_rxnts + num_prods + num_agents:]
-        # Discard anything before a $DTYPE tag in the leftover data, leaving
-        # behind only data sandwiched between a '$DTYPE' and an 'M  END' tag.
-        for index, entry in enumerate(leftover_data):
-            leftover_data[index] = entry.split('$DTYPE')[-1]
-        # Count the number of reaction variations.
-        # N.B. this only works if variations are in "VARIATION(#)" format.
-        num_variations = 1
-        while "VARIATION(%d)" % (num_variations + 1) in rxn_entry:
-            num_variations += 1
-
-        # Extract any "reaction agents" saved as embedded molfiles within the
-        # data section of the reaction record, and sort them according to
-        # variation.
-
-        def agent_harvester(data, num_variations):
-            def cleanup_agent(datum):
-                return datum.split('\n', 2)[2].rstrip()
-
-            agent_variations = []
-            for variation in range(0, num_variations):
-                agents = []
-                for datum in data:
-                    if "VARIATION(%d)" % num_variations in datum:
-                        item = cleanup_agent(datum).rstrip()
-                        if item not in agents:
-                            agents.append(item)
-                agent_variations.append(agents)
-            return agent_variations
-
-        agents_by_variation = agent_harvester(leftover_data, num_variations)
-        # Create the final list of reactions
-        reactions = []
-
-        def rstriplist(listin):
-            ret = [i.rstrip() for i in listin]
-            return ret
-
-        output_rxnts = list(set(rstriplist(rxnts)))
-        output_prods = list(set(rstriplist(prods)))
-        for agents in agents_by_variation:
-            output_agents = list(set(agents + agnts))
-            reactions.append((output_rxnts, output_prods, output_agents))
-        # Return this list, and the additional data_pair
-        return reactions, additional_data
-
     for rxn_entry in rxn_entries:
         rxn_variations, rxn_data = rdf_rxn_2_molfs(rxn_entry)
         for rxn_variation in rxn_variations:
             reactions.append((rxn_variation, rxn_data))
     # Convert the list of reaction tuples into a list of RXN files.
-    rdfiles = []
+    rxnfiles = []
     for reaction in reactions:
         rdfile = molfs_2_rdf(reaction[0][0], reaction[0][1], reaction[0][2])
         rdfile = rdfile.strip() + '\n' + reaction[1].strip()
-        rdfiles.append(rdfile)
+        rxnfiles.append(rdfile)
     # Return the list of RXN files
-    return rdfiles
+    return rxnfiles
+
+
+def rdf_rxn_2_molfs(rxn_entry):
+    """Converts an entry from an RDF to a list of reactions it describes. Works for entries parsed from an RD file.
+
+    Args:
+        rxn_entry: An RXN entry from an RDFile.  This consists of
+            everything following a "$RXN" tag.
+
+    Returns:
+        reactions: A list of tuples of lists; each tuple represents a
+            reaction, and consists of a list of reactant molfiles and a
+            list of product molfiles. Catalysts, solvents, etc. are
+            returned as both a reactant and a product (i.e. present on both
+            sides of the reaction).
+    """
+    # Count the declared number of reactants and products.
+    rrrppp_line = rxn_entry.splitlines()[4]
+    num_rxnts = int(rrrppp_line[0:3])
+    num_prods = int(rrrppp_line[3:6])
+    # Count the number of agents if present; else count zero
+    if len(rrrppp_line) > 6:
+        num_agents = int(rrrppp_line[6:9])
+    else:
+        num_agents = 0
+    # Split the RXN entry at every occurrence of "M  END".
+    mend_split = rxn_entry.split('M  END')
+    for index, item in enumerate(mend_split):
+        mend_split[index] = item.lstrip() + 'M  END'
+    # Delete data before the first "$MOL".
+    mend_split[0] = '$MOL' + mend_split[0].split('$MOL')[1]
+    # Remove data after the final "M  END" and store it.
+    additional_data = mend_split.pop(-1)[:-7]
+    # Harvest the reactants, products, and agents and save them to lists.
+    rxnts = mend_split[0:num_rxnts]
+    prods = mend_split[num_rxnts:num_rxnts + num_prods]
+    agnts = mend_split[num_rxnts + num_prods:num_rxnts + num_prods + num_agents]
+    # Clean up reactants, products, and agents to make true molfiles.
+    for sets in [rxnts, prods, agnts]:
+        for index, item in enumerate(sets):
+            sets[index] = '\n'.join(item.splitlines()[1:]).rstrip()
+    # Save the remaining data to another list.
+    leftover_data = mend_split[num_rxnts + num_prods + num_agents:]
+    # Discard anything before a $DTYPE tag in the leftover data, leaving
+    # behind only data sandwiched between a '$DTYPE' and an 'M  END' tag.
+    for index, entry in enumerate(leftover_data):
+        leftover_data[index] = entry.split('$DTYPE')[-1]
+    # Count the number of reaction variations.
+    # N.B. this only works if variations are in "VARIATION(#)" format.
+    num_variations = 1
+    while "VARIATION(%d)" % (num_variations + 1) in rxn_entry:
+        num_variations += 1
+
+    # Extract any "reaction agents" saved as embedded molfiles within the
+    # data section of the reaction record, and sort them according to
+    # variation.
+
+    agents_by_variation = agent_harvester(leftover_data, num_variations)
+    # Create the final list of reactions
+    reactions = []
+
+    def rstriplist(listin):
+        ret = [i.rstrip() for i in listin]
+        return ret
+
+    output_rxnts = list(set(rstriplist(rxnts)))
+    output_prods = list(set(rstriplist(prods)))
+    for agents in agents_by_variation:
+        output_agents = list(set(agents + agnts))
+        reactions.append((output_rxnts, output_prods, output_agents))
+    # Return this list, and the additional data_pair
+    return reactions, additional_data
+
+
+def agent_harvester(data, num_variations):
+    """
+    Parses agent variations from the leftover data at the end of a RD files
+
+    Args:
+        data: The leftover data at the end of the RD file
+        num_variations: The number of variation in the leftover data section
+
+    Returns: A complete list of agent variation stored as a list of lists
+    """
+    def cleanup_agent(datum):
+        return datum.split('\n', 2)[2].rstrip()
+
+    agent_variations = []
+    for variation in range(0, num_variations):
+        agents = []
+        for datum in data:
+            if "VARIATION(%d)" % num_variations in datum:
+                item = cleanup_agent(datum).rstrip()
+                if item not in agents:
+                    agents.append(item)
+        agent_variations.append(agents)
+    return agent_variations
 
 
 def rdf_2_rinchis(

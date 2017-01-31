@@ -63,3 +63,14 @@ def test2():
 
 def test3():
     print(collections.Counter("hi"))
+
+
+def test4():
+    import sqlite3
+    connection = sqlite3.connect('../rinchi.db')
+    cursor = connection.cursor()
+    cursor.execute('select * from rinchis02')
+    names = [description[0] for description in cursor.description]
+    print(names)
+
+test4()

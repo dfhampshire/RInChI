@@ -132,7 +132,8 @@ def count_sp2(inchi, wd=False):
 
 
 def count_sp3(inchi, wd=False, enantio=False):
-    """Count the number of sp3 stereocentres in a molecule.
+    """
+    Count the number of sp3 stereocentres in a molecule.
 
     Args:
         inchi: An InChI
@@ -204,16 +205,28 @@ def count_sp3(inchi, wd=False, enantio=False):
 
 
 def count_centres(inchi, wd=False, sp2=True, sp3=True):
+    """
+    Counts the centres contained within an inchi
+
+    Args:
+        inchi: The InChI to search for the centres
+        wd: Whether or not the stereocentre must be well-defined to be counted.
+        sp2: Count sp2 centres
+        sp3: Count sp3 centres
+
+    Returns:
+        stereocentres: The number of stereocentres
+        stereo_mols: The number of molecules with stereocentres
+
+    """
     stereocentres = 0
     stereo_mols = 0
     if sp2:
         stereocentres += count_sp2(inchi, wd)
-        if stereocentres:
-            stereo_mols += 1
     if sp3:
         stereocentres = count_sp3(inchi, wd)
-        if stereocentres:
-            stereo_mols += 1
+    if stereocentres:
+        stereo_mols = 1
     return stereocentres, stereo_mols
 
 

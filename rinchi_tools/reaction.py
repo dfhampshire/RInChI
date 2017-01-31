@@ -261,7 +261,7 @@ class Reaction:
 
         Args:
             All args are dictionaries of the format {property:count,property2:count2,...}
-            hyb_i: The hybridisation(s) desired
+            hyb_i: The hybridisation change(s) desired
             val_i: The valence change(s) desired
             rings_i: The ring change(s) desired
             formula_i: The formula change(s) desired

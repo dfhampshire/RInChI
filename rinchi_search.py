@@ -20,4 +20,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.s:
-        database.advanced_search(args.database, args.tablename,args.inchi, rings={6: 1}, hyb={"sp2": -4, "sp3": 4})
+        database.advanced_search(args.inchi, args.database, args.tablename, rings={6: 1}, hyb={"sp2": -4, "sp3": 4})
