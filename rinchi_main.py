@@ -14,8 +14,8 @@ import scipy.cluster as cluster
 from numpy import array, all, equal, rot90
 from scipy.spatial import distance
 
-import rinchi_tools.database
-from rinchi_tools import analysis, rinchi as rinchi_class
+import rinchi_tools.reaction
+from rinchi_tools import analysis
 
 if __name__ == "__main__":
 
@@ -60,26 +60,26 @@ if __name__ == "__main__":
 
     if args.inchi:
         # If supplied a single inchi, perform a ring count
-        mol = rinchi_class.Molecule.new(args.input)
+        mol = rinchi_tools.molecule.Molecule.new(args.input)
         for m in mol:
             m.calculate_rings()
             print(m.ring_count)
 
     elif args.rinchi:
         if args.ringcount:
-            r = rinchi_class.Reaction(args.input)
+            r = rinchi_tools.reaction.Reaction(args.input)
             print(r.change_across_reaction(r.ring_count))
         elif args.formula:
-            r = rinchi_class.Reaction(args.input)
+            r = rinchi_tools.reaction.Reaction(args.input)
             print(r.change_across_reaction(r.formula))
         elif args.svg:
-            r = rinchi_class.Reaction(args.input)
+            r = rinchi_tools.reaction.Reaction(args.input)
             r.generate_svg_image(args.arg2)
         elif args.reactionsearch:
-            r = rinchi_class.Reaction(args.input)
+            r = rinchi_tools.reaction.Reaction(args.input)
             print(r.detect_reaction(hyb_i={"sp3": 2}))
         elif args.fingerprint:
-            r = rinchi_class.Reaction(args.input)
+            r = rinchi_tools.reaction.Reaction(args.input)
             r.calculate_reaction_fingerprint()
             print(repr(r.reaction_fingerprint).replace(" ", ""))
     elif args.reactionsearch:
@@ -87,7 +87,7 @@ if __name__ == "__main__":
         with open(args.input) as data:
             for rin in data:
                 try:
-                    r = rinchi_class.Reaction(rin)
+                    r = rinchi_tools.reaction.Reaction(rin)
                     if r.detect_reaction(hyb_i={"sp2": -4, "sp3": 4}, rings_i={6: 1}):
                         print(counter, r.rinchi)
                     counter += 1
@@ -95,14 +95,14 @@ if __name__ == "__main__":
                     print("ERROR", rin)
 
     elif args.test:
-        r1 = rinchi_class.Reaction(args.input)
+        r1 = rinchi_tools.reaction.Reaction(args.input)
         r1.calculate_reaction_fingerprint()
         sparseness = []
 
         counter = 1
         with open(args.arg2) as data:
             for rin in data:
-                r2 = rinchi_class.Reaction(rin)
+                r2 = rinchi_tools.reaction.Reaction(rin)
                 r2.calculate_reaction_fingerprint()
                 sparseness.append(1024 - len([i for i in r2.reaction_fingerprint if not i]))
 
@@ -114,7 +114,7 @@ if __name__ == "__main__":
         arr = []
         with open(args.input) as data:
             for rin in data:
-                r = rinchi_class.Reaction(rin)
+                r = rinchi_tools.reaction.Reaction(rin)
                 r.calculate_reaction_fingerprint()
 
                 arr.append(r.reaction_fingerprint.toarray()[0])
@@ -137,7 +137,7 @@ if __name__ == "__main__":
             for rin in data:
                 if args.ringcount and not args.quick:
                     # Count the change in ring size across the reactions
-                    r = rinchi_class.Reaction(rin)
+                    r = rinchi_tools.reaction.Reaction(rin)
                     res = r.change_across_reaction(r.ring_count)
                     if res and not args.list:
                         print(counter, res)
@@ -149,7 +149,7 @@ if __name__ == "__main__":
                     try:
                         if "X" not in rin:
                             if analysis.rxn_ring_change(rin):
-                                r = rinchi_class.Reaction(rin)
+                                r = rinchi_tools.reaction.Reaction(rin)
                                 res = r.change_across_reaction(r.ring_count)
                                 if res:
                                     print(counter, res)
@@ -159,7 +159,7 @@ if __name__ == "__main__":
                 elif args.ringsearch:
                     # Count the change in a given ring across the reactions,
                     # supplied in a SMILE like form, eg CCCCCN for pyridine
-                    r = rinchi_class.Reaction(rin)
+                    r = rinchi_tools.reaction.Reaction(rin)
                     res = r.change_across_reaction(r.ring_count_by_element, args.arg2)
                     if res and not args.list:
                         print(counter, res)
@@ -171,7 +171,7 @@ if __name__ == "__main__":
                     # Count the change in rings returning the change in elemental structure of the rings
                     # e.g.  (CCCCCN : 1) would indicate the reaction forms a
                     # pyridine ring
-                    r = rinchi_class.Reaction(rin)
+                    r = rinchi_tools.reaction.Reaction(rin)
                     res_raw = r.change_across_reaction(r.ring_count_inc_elements)
 
                     # Account for the fact that cyclic permutations of rings
@@ -197,18 +197,18 @@ if __name__ == "__main__":
                     counter += 1
 
                 elif args.formula:
-                    r = rinchi_class.Reaction(rin)
+                    r = rinchi_tools.reaction.Reaction(rin)
                     print(r.change_across_reaction(r.formula))
                 elif args.isotopic:
-                    r = rinchi_class.Reaction(rin)
+                    r = rinchi_tools.reaction.Reaction(rin)
                     i = r.present_in_reaction(r.has_isotopic_layer)
                     if i:
                         print(i)
                 elif args.valence:
-                    r = rinchi_class.Reaction(rin)
+                    r = rinchi_tools.reaction.Reaction(rin)
                     print(counter, r.change_across_reaction(r.valence_count))
                     counter += 1
                 elif args.hybrid:
-                    r = rinchi_class.Reaction(rin)
+                    r = rinchi_tools.reaction.Reaction(rin)
                     print(counter, r.change_across_reaction(r.hybrid_count))
                     counter += 1

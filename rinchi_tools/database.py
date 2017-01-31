@@ -15,8 +15,9 @@ from heapq import nsmallest
 
 from scipy.spatial import distance
 
+import rinchi_tools.reaction
 from rinchi_database import rinchi_handle
-from rinchi_tools import conversion, rinchi, v02_convert
+from rinchi_tools import conversion, v02_convert
 
 
 def convert_rdf_to_dict(rdf, header, force_equilibrium=False):
@@ -281,7 +282,7 @@ def advanced_search(db_filename, inchis=None, hyb=None, val=None, rings=None, fo
 
     counter = 0
     for rin in rinchis:
-        r = rinchi.Reaction(rin)
+        r = rinchi_tools.reaction.Reaction(rin)
         if r.detect_reaction(hyb_i=hyb, val_i=val, rings_i=rings, formula_i=formula):
             counter += 1
             print(r.rinchi)
@@ -300,7 +301,7 @@ def compare_fingerprints(lk1, db_filename):
     if lk1.startswith("Long-RInChIKey"):
         fp1 = recall_fingerprints(lk1, db_filename)
     elif lk1.startswith("RInChI"):
-        r = rinchi.Reaction(lk1)
+        r = rinchi_tools.reaction.Reaction(lk1)
         r.calculate_reaction_fingerprint()
         fp1 = r.reaction_fingerprint.toarray()
     else:
@@ -355,7 +356,7 @@ def update_fingerprints(db_filename):
         try:
             # cursor.execute('''SELECT rinchi FROM rinchis WHERE longkey LIKE ?''', (lkey,))
             # rinchi = cursor.fetchone()[0]
-            r = rinchi.Reaction(lkey[0])
+            r = rinchi_tools.reaction.Reaction(lkey[0])
             r.calculate_reaction_fingerprint()
 
             # Pickle the reaction fingerprint - store it as binary data within
