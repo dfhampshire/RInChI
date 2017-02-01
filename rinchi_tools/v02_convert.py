@@ -169,19 +169,21 @@ def split_rauxinfo(rauxinfo):
 
 
 def split_rinchi(rinchi):
-    """Split a v0.02 RInChI into its constituent parts.
+    """
+    Split a v0.02 RInChI into its constituent parts.
     
     Args:
         rinchi: A RInChI of version 0.02
 
+    Raises:
+        VersionError: RInChI must be version 0.02.
+
     Returns:
         layer2_inchis, layer3_inchis, layer4_inchis: Lists of the InChIs which made up
-            the RInChI groups, returned in the order they were displayed.
+        the RInChI groups, returned in the order they were displayed.
         direction:"+","-", or "=" representing the direction of the reaction.
         u_structs: unknown structures in each layer in the form of a tuple (#2,#3,#4)
 
-    Raises:
-        VersionError: RInChI must be version 0.02.
     """
     # Separate version information from the RInChI body.
     rinchi_version, rinchi_body = rinchi.split('=')[1].split('/', 1)

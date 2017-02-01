@@ -65,17 +65,17 @@ def __rxn2rinchi(input_path, ret_rauxinfo=False, longkey=False, shortkey=False, 
         return
 
     # Generate the requested data.
-    rinchi, rauxinfo = RInChI_Handle.rinchi_from_file_text("RXN", input_file, force_equilibrium)
+    rinchi, rauxinfo = RInChI_Handle().rinchi_from_file_text("RXN", input_file, force_equilibrium)
     rinchi_text = ''
     rinchi_text += rinchi + '\n'
     if ret_rauxinfo:
         rinchi_text += rauxinfo + '\n'
     if longkey:
-        rinchi_text += RInChI_Handle.rinchikey_from_rinchi(rinchi, "L") + '\n'
+        rinchi_text += RInChI_Handle().rinchikey_from_rinchi(rinchi, "L") + '\n'
     if shortkey:
-        rinchi_text += RInChI_Handle.rinchikey_from_rinchi(rinchi, "S") + '\n'
+        rinchi_text += RInChI_Handle().rinchikey_from_rinchi(rinchi, "S") + '\n'
     if webkey:
-        rinchi_text += RInChI_Handle.rinchikey_from_rinchi(rinchi, "W") + '\n'
+        rinchi_text += RInChI_Handle().rinchikey_from_rinchi(rinchi, "W") + '\n'
     # Uses the output utility
     utils.output(rinchi_text, not file_out, "rinchi", input_name)
     return
@@ -111,11 +111,11 @@ def __rinchi2file(input_path, rxnout=True, rdout=False, fileout=True):
     # Generate RXN file.
     if rxnout or not (rxnout or rdout):
         for index, rinchi_in in enumerate(input_rinchis):
-            rxn = RInChI_Handle.file_text_from_rinchi(rinchi_in, input_rauxinfos[index], "RXN")
+            rxn = RInChI_Handle().file_text_from_rinchi(rinchi_in, input_rauxinfos[index], "RXN")
             utils.output(rxn, not fileout, "rxn", input_name)
     if rdout:
         for index, rinchi_in in enumerate(input_rinchis):
-            rd = RInChI_Handle.file_text_from_rinchi(rinchi_in, input_rauxinfos[index], "RD")
+            rd = RInChI_Handle().file_text_from_rinchi(rinchi_in, input_rauxinfos[index], "RD")
             utils.output(rd, not fileout, "rdf", input_name)
     return
 
@@ -155,11 +155,11 @@ def __rinchi2key(input_path, longkey=False, shortkey=False, webkey=False, inc_ri
         if inc_rinchi:
             rinchi_text += rinchi_in + '\n'
         if longkey:
-            rinchi_text += RInChI_Handle.rinchikey_from_rinchi(rinchi_in, "L") + '\n'
+            rinchi_text += RInChI_Handle().rinchikey_from_rinchi(rinchi_in, "L") + '\n'
         if shortkey:
-            rinchi_text += RInChI_Handle.rinchikey_from_rinchi(rinchi_in, "S") + '\n'
+            rinchi_text += RInChI_Handle().rinchikey_from_rinchi(rinchi_in, "S") + '\n'
         if webkey:
-            rinchi_text += RInChI_Handle.rinchikey_from_rinchi(rinchi_in, "W") + '\n'
+            rinchi_text += RInChI_Handle().rinchikey_from_rinchi(rinchi_in, "W") + '\n'
 
     utils.output(rinchi_text, not file_out, "rinchi", input_name)
     return

@@ -1,6 +1,4 @@
-
-
-#!/usr/bin/env python3
+# !/usr/bin/env python3
 
 # NEW PYTHON SCRIPTS
 # TESTING PHASE
@@ -17,8 +15,7 @@ from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
 
 
 def test1():
-
-    select_command = "SELECT rowid, {}, {} FROM rinchis02".format("rinchi","rauxinfo")
+    select_command = "SELECT rowid, {}, {} FROM rinchis02".format("rinchi", "rauxinfo")
     logging.basicConfig(filename='debug.log', level=logging.DEBUG)
 
     def populate_list(db_filename, s_command):
@@ -31,28 +28,25 @@ def test1():
                 the_rinchi = v02_convert.convert_rinchi(row[1])
                 data_to_add.append(the_rinchi)
                 data_to_add.append(v02_convert.convert_rauxinfo(row[2]))
-                data_to_add.append(RInChI_Handle.rinchikey_from_rinchi(the_rinchi, "L"))
-                data_to_add.append(RInChI_Handle.rinchikey_from_rinchi(the_rinchi, "S"))
-                data_to_add.append(RInChI_Handle.rinchikey_from_rinchi(the_rinchi, "W"))
+                data_to_add.append(RInChI_Handle().rinchikey_from_rinchi(the_rinchi, "L"))
+                data_to_add.append(RInChI_Handle().rinchikey_from_rinchi(the_rinchi, "S"))
+                data_to_add.append(RInChI_Handle().rinchikey_from_rinchi(the_rinchi, "W"))
             except:
                 logging.info(row[1])
                 logging.info(row[2])
                 logging.info(data_to_add)
         db.close()
 
-    populate_list("rinchi.db",select_command)
+    populate_list("rinchi.db", select_command)
 
 
 def test2():
-
     class Item:
-
-        def __init__(self,name):
+        def __init__(self, name):
             self.name = name
 
         def get_name(self):
             return self.name
-
 
     def do_method(instance, method):
         return method(instance)
@@ -62,7 +56,7 @@ def test2():
 
 
 def test3():
-    print(collections.Counter("hi"))
+    print(collections.Counter())
 
 
 def test4():
@@ -72,5 +66,6 @@ def test4():
     cursor.execute('select * from rinchis02')
     names = [description[0] for description in cursor.description]
     print(names)
+
 
 test4()

@@ -1,21 +1,18 @@
 #!/usr/bin/env python3
-
+"""
 # NEW PYTHON SCRIPTS
 # TESTING PHASE
 
 # RInChI Project
 # BENJAMIN HAMMOND 2014
-
+"""
 
 import argparse
-import sqlite3
 
-from rinchi_tools import v02_convert
 from rinchi_tools.database import rdf_to_csv, rdf_to_csv_append, create_csv_from_directory, rdf_to_sql, csv_to_sql, \
-    sql_key_to_rxninfo, sql_key_to_rinchi, compare_fingerprints, recall_fingerprints, update_fingerprints, \
-    search_for_inchi, convert_v02_v03
+    sql_key_to_rinchi, compare_fingerprints, recall_fingerprints, update_fingerprints, search_for_inchi, \
+    convert_v02_v03, gen_rauxinfo
 from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
-
 
 #######################################
 # GENERATION AND CONVERSION OF DATABASES
@@ -25,27 +22,6 @@ from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
 #####################################
 # SEARCHING OF DATABASES
 #####################################
-
-
-def gen_rauxinfo(db_filename, table_name):
-    """
-    Updates a table in a database to give rauxinfos where teh column is null
-    :param db_filename: Database filename
-    :param table_name: name of table
-    :return: None
-    """
-    db = sqlite3.connect(db_filename)
-    cursor = db.cursor()
-
-    def converter(rinchi):
-        """Interfaces the rauxinfo converter in v02_convert.py"""
-        rauxinfo = v02_convert.gen_rauxinfo(rinchi)
-        return rauxinfo
-    # Creating SQL function increases performance
-    db.create_function("convert", 1, converter)
-    cursor.execute("UPDATE {} SET rauxinfo = convert(rinchi) WHERE rauxinfo IS NULL or rauxinfo = '';".format(table_name))
-    db.commit()
-    return
 
 
 if __name__ == "__main__":
@@ -67,7 +43,6 @@ if __name__ == "__main__":
 
     action.add_argument('--lkey2rinchi', action='store_true',
                         help='Returns the RInChI corresponding to a given Long Key')
-    action.add_argument('--lkey2rxninfo', action='store_true', help='Returns the RXNInfo for a given Long Key')
     action.add_argument('--inchisearch', action='store_true',
                         help='Returns all RInChIs containing the given InChI to STDOUT')
     action.add_argument('--TEST', action='store_true', help='Returns all RInChIs containing the given InChI to STDOUT')
@@ -77,15 +52,16 @@ if __name__ == "__main__":
     action.add_argument('--rfingerprints', action='store_true', help='Returns the fingerprint of a given key')
     action.add_argument('--cfingerprints', action='store_true',
                         help='Returns all RInChIs containing the given InChI to STDOUT')
-    action.add_argument('--conv0203',action='store_true',
+    action.add_argument('--conv0203', action='store_true',
                         help='Creates a new table of v.03 rinchis from a table of v.02 rinchis')
-    action.add_argument('--genrauxinfo',action='store_true',help='Generate RAuxinfos from rinchis within a SQL database')
+    action.add_argument('--genrauxinfo', action='store_true',
+                        help='Generate RAuxinfos from rinchis within a SQL database')
 
     args = parser.parse_args()
 
     if args.lkey2rxninfo and args.input.startswith("RInChI"):
         try:
-            args.input = RInChI_Handle.rinchikey_from_rinchi(args.input, "L")
+            args.input = RInChI_Handle().rinchikey_from_rinchi(args.input, "L")
         except ValueError:
             print("Could not convert RInChI to Long-RInChI-key")
             pass
@@ -97,16 +73,16 @@ if __name__ == "__main__":
     if args.dir2csv:
         create_csv_from_directory(args.input, args.database, return_longkey=True, return_rxninfo=True)
     if args.rdf2sql:
-        rdf_to_sql(args.input, args.database)
+        rdf_to_sql(args.input, args.database, args.tablename)
     if args.csv2sql:
-        csv_to_sql(args.input, args.database)
+        csv_to_sql(args.input, args.database, args.tablename)
 
     if args.ufingerprints:
-        update_fingerprints(args.input)
+        update_fingerprints(args.input, args.database, args.tablename)
     if args.rfingerprints:
-        print(list(recall_fingerprints(args.input, args.database)))
+        print(list(recall_fingerprints(args.input, args.database, args.tablename)))
     if args.cfingerprints:
-        compare_fingerprints(args.input, args.database)
+        compare_fingerprints(args.input, args.database, args.tablename)
 
     if args.TEST:
         tinchis = ["InChI=1S/C3H5Cl/c1-2-3-4/h2H,1,3H2", "InChI=1S/C3H5Br/c1-2-3-4/h2H,1,3H2",
@@ -116,19 +92,17 @@ if __name__ == "__main__":
             print(inchi, len(search_for_inchi(inchi, args.database, args.tablename)))
 
     if args.lkey2rinchi:
-        print(sql_key_to_rinchi(args.input, args.database))
-    if args.lkey2rxninfo:
-        print(sql_key_to_rxninfo(args.input, args.database))
+        print(sql_key_to_rinchi(args.input, args.database, args.tablename))
     if args.inchisearch:
         print("start")
         search_for_inchi(args.input, args.database, args.tablename)
     if args.conv0203:
         # Names hardcoded because significant modification of the arparse system would be needed and would be complex
-        v02_column_names = ["rinchi","rauxinfo"]
-        v03_column_names = ["rinchi","rauxinfo","longkey","shortkey","webkey"]
+        v02_column_names = ["rinchi", "rauxinfo"]
+        v03_column_names = ["rinchi", "rauxinfo", "longkey", "shortkey", "webkey"]
         column_names = v02_column_names + v03_column_names
         convert_v02_v03(args.database, args.input, *column_names)
     if args.genrauxinfo:
-        gen_rauxinfo(args.database,args.input)
+        gen_rauxinfo(args.database, args.input)
     else:
         print(__doc__)

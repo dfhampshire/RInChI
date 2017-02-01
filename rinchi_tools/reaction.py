@@ -21,12 +21,12 @@ class Reaction:
     """ This class defines a reaction, as defined by a RInChI. Molecule objects are created from all component InChIs,
     and the member functions of the class can be used to analyse various parameters that may be changing across the reaction
     """
+
     def __init__(self, rinchi):
         """
         Args:
             rinchi: A RInChI which represent the reaction
         """
-
 
         # Split the RInChI into it's InChIs:
         self.rinchi = rinchi.rstrip()
@@ -62,19 +62,19 @@ class Reaction:
     def longkey(self):
         """Set longkey if not already set, then return longkey"""
         if not self.lkey:
-            self.lkey = RInChI_Handle.rinchikey_from_rinchi(self.rinchi, "L")
+            self.lkey = RInChI_Handle().rinchikey_from_rinchi(self.rinchi, "L")
         return self.lkey
 
     def shortkey(self):
         """Set shortkey if not already set, then return shortkey"""
         if not self.skey:
-            self.skey = RInChI_Handle.rinchikey_from_rinchi(self.rinchi, "S")
+            self.skey = RInChI_Handle().rinchikey_from_rinchi(self.rinchi, "S")
         return self.skey
 
     def webkey(self):
         """Set webkey if not already set, then return webkey"""
         if not self.wkey:
-            self.wkey = RInChI_Handle.rinchikey_from_rinchi(self.rinchi, "W")
+            self.wkey = RInChI_Handle().rinchikey_from_rinchi(self.rinchi, "W")
         return self.wkey
 
     def calculate_reaction_fingerprint(self, fingerprint_size=1024):
@@ -163,7 +163,6 @@ class Reaction:
         for i in range(len(out)):
             with open(outname + str(i) + ".svg", "w") as text:
                 text.write(out[i])
-
 
     ############################################
     # Calculating changes across reactions

@@ -27,13 +27,7 @@ auspices of the International Union of Pure and Applied Chemistry (IUPAC).
 from rinchi_tools import inchi_tools, tools, conversion
 
 
-# Define an exception for the module to use.
-class Error(Exception):
-    pass
-
-
-def rxn_ring_change(input_rinchi, pm=(False, False),
-                    return_ring_counts_only=False):
+def rxn_ring_change(input_rinchi, pm=(False, False), return_ring_counts_only=False):
     """
     Determine how the number of rings changes in a reaction.
 
@@ -63,6 +57,16 @@ def rxn_ring_change(input_rinchi, pm=(False, False),
     reactants, products, agents, direction, no_structs = tools.split_rinchi(input_rinchi)
 
     def layer_ring_counter(layer):
+        """
+        Counts the rings in each of the layers
+
+        Args:
+            layer: A list of InChIs in a layer
+
+        Returns:
+            layer_rings: The number of rings in a layer
+            cyclic_mols: The number of cyclic molecules
+        """
         layer_rings = 0
         cyclic_mols = 0
         for inchi in layer:
@@ -80,11 +84,11 @@ def rxn_ring_change(input_rinchi, pm=(False, False),
         return reactant_rings, product_rings, agent_rings
     # Do not calculate ring change if the RInChI contains undefined structures.
     if not all(v == 0 for v in no_structs):
-        raise Error('RInChI contains an undefined structure.')
+        raise ValueError('RInChI contains an undefined structure.')
     # Do not calculate ring change if the RInChI lacks either reactants or
     # products.
     if not (reactants and products):
-        raise Error('RInChI must have reactants and products.')
+        raise ValueError('RInChI must have reactants and products.')
     # If required, divide the number of rings by the number of molecules.
     if pm[0]:
         if pm[1]:
@@ -123,13 +127,12 @@ def rxns_ring_changes(rinchis, pm=(False, False)):
                 results[ring_change].append(rinchi_entry)
             except KeyError:
                 results[ring_change] = [rinchi_entry]
-        except Error:
+        except Exception:
             pass
     return results
 
 
-def rxn_stereochem_change(input_rinchi, wd=False, pm=(False, False),
-                          sp2=True, sp3=True):
+def rxn_stereochem_change(input_rinchi, wd=False, pm=(False, False), sp2=True, sp3=True):
     """Determine whether a reaction creates or destroys stereochemistry.
 
     Args:
@@ -158,7 +161,7 @@ def rxn_stereochem_change(input_rinchi, wd=False, pm=(False, False),
     reactants, products, agents, direction, no_structs = tools.split_rinchi(input_rinchi)
     # If the reaction does not have reactants and products, do not count.
     if not (reactants and products):
-        raise Error('RInChI must have reactants and products.')
+        raise ValueError('RInChI must have reactants and products.')
     # Count the stereocentres in layer 2.
     reactant_stereocentres = 0
     reactant_stereo_mols = 0
@@ -167,13 +170,13 @@ def rxn_stereochem_change(input_rinchi, wd=False, pm=(False, False),
 
     for inchi in reactants:
         if no_structs[0] != 0:
-            raise Error('RInChI Reactants contain undefined structures.')
+            raise ValueError('RInChI Reactants contain undefined structures.')
         sc_change, sm_change = inchi_tools.count_centres(inchi, wd, sp2, sp3)
         reactant_stereocentres += sc_change
         reactant_stereo_mols += sm_change
     for inchi in products:
         if no_structs[1] != 0:
-            raise Error('RInChI Products contain undefined structures.')
+            raise ValueError('RInChI Products contain undefined structures.')
         sc_change, sm_change = inchi_tools.count_centres(inchi, wd, sp2, sp3)
         product_stereocentres += sc_change
         product_stereo_mols += sm_change
@@ -195,8 +198,7 @@ def rxn_stereochem_change(input_rinchi, wd=False, pm=(False, False),
         return abs(stereocentre_change)
 
 
-def rxns_stereochem_changes(rinchis, wd=False, pm=(False, False),
-                            sp2=True, sp3=True):
+def rxns_stereochem_changes(rinchis, wd=False, pm=(False, False), sp2=True, sp3=True):
     """Analyse a list of RInChIs for stereochemical changes.
 
     Args:
@@ -220,13 +222,12 @@ def rxns_stereochem_changes(rinchis, wd=False, pm=(False, False),
     results = dict()
     for rinchi_entry in rinchis:
         try:
-            stereochange = rxn_stereochem_change(
-                rinchi_entry, wd, pm, sp2, sp3)
+            stereochange = rxn_stereochem_change(rinchi_entry, wd, pm, sp2, sp3)
             try:
                 results[stereochange].append(rinchi_entry)
             except KeyError:
                 results[stereochange] = [rinchi_entry]
-        except Error:
+        except Exception:
             pass
     return results
 
@@ -237,12 +238,8 @@ def search_4_inchi(sought_inchi, rinchis, location=''):
     Args:
         sought_inchi: The InChI to search for.
         rinchis: The list of RInChIs in which to search for the InChI.
-        location: Where in the RInChIs to search for the InChI.  This is a
-            single character which can be either:
-                a) r: for Reactants.
-                b) p: for Products.
-                c) e: for Equilibrium reactants.
-                d) a: for reaction Agents.
+        location: Where in the RInChIs to search for the InChI.  This is a single character which can be either
+        'r' for Reactants, 'p' for Products, 'e' for Equilibrium reactants, 'a' for reaction Agents.
 
     Returns:
         results: A list of RInChIs in which the InChI is found in the location
@@ -261,7 +258,12 @@ def search_4_inchi(sought_inchi, rinchis, location=''):
             eqibs = []
 
         def they_call_me_the_seeker(search_inchi, group):
-            # (I've been seeking low and hiiiiigh)
+            """
+            Find InChI occurrences in a group of InChIs
+            Args:
+                search_inchi: the InChI to search for
+                group: the group of InChIs to look within
+            """
             for inchi in group:
                 if search_inchi == inchi:
                     results.append(rinchi)

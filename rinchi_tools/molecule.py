@@ -24,6 +24,7 @@ class Molecule:
     molecular graphs to calculate information about the molecules - ring sizes, atom hybridisation,
     contained functional groups etc.
     """
+
     def __init__(self, inchi):
         self.inchi = inchi.rstrip()
         self.atoms = {}
@@ -335,7 +336,7 @@ class Molecule:
 
     def depth_first_search(self, start=1):
         """
-         Performs a DFS over the molecular graph of a given Molecule object, returning a list of edges that form
+        Performs a DFS over the molecular graph of a given Molecule object, returning a list of edges that form
         a spanning tree (tree edges), and a list of the edges that would cyclise this spanning tree (back edges)
 
         The number of back edges returned is
@@ -503,7 +504,7 @@ class Molecule:
         """
         # Ensure that the molecular graph was calculated
         if not self.atoms:
-            return Nonerinchi
+            return None
         self.generate_atoms()
         cycles = []
         for edge in self.edge_list:

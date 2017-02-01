@@ -28,7 +28,7 @@ import operator
 import re
 import string
 
-# noinspection PyPep8
+
 triplets = ["AAA", "AAB", "AAC", "AAD", "AAE", "AAF", "AAG", "AAH", "AAI", "AAJ", "AAK", "AAL", "AAM", "AAN", "AAO",
             "AAP", "AAQ", "AAR", "AAS", "AAT", "AAU", "AAV", "AAW", "AAX", "AAY", "AAZ", "ABA", "ABB", "ABC", "ABD",
             "ABE", "ABF", "ABG", "ABH", "ABI", "ABJ", "ABK", "ABL", "ABM", "ABN", "ABO", "ABP", "ABQ", "ABR", "ABS",
@@ -1246,7 +1246,7 @@ def minor_digest(minor):
 
 def compute_inchi_check(key):
     """this is not used in new InChIKey - starting from 1.02 version of InChI software"""
-    assert isinstance(key,str) or isinstance(key,bytes)
+    assert isinstance(key, str) or isinstance(key, bytes)
     if key.startswith("InChIKey="):
         key = key[9:]
     m = re.match("^([A-Z]{14})-([A-Z]{9})$", key)
@@ -1262,7 +1262,7 @@ def compute_inchi_check(key):
 
 def flag_old(version, parts):
     """this code is for InChIKey from 1.02Beta version of InChI software!"""
-    assert isinstance(version,int) and 1 <= version <= 3
+    assert isinstance(version, int) and 1 <= version <= 3
     flag = 0
     starts = set([x[0] for x in parts])
     if starts & set("tbms"):
@@ -1355,11 +1355,11 @@ def key_from_inchi(inp):
         # raise Exception( "InChIKey generation from InChI is only supported for standard InChI (starting with '1S/'); sorry - invalid version part '%s'" % parts[0])
     del parts[0]
     i = 1
-    next = True
+    nexti = True
     parts_major = [parts[0]]
     p_count = 0
     # sort the layers into a major and minor part - these are hashed separately
-    while next:
+    while nexti:
         if i >= len(parts):
             break
         if parts[i][0] in "chq":
@@ -1369,7 +1369,7 @@ def key_from_inchi(inp):
             p_count += int(parts[i][1:])
             i += 1
         else:
-            next = False
+            nexti = False
     major = "/".join(parts_major)
     parts_minor = parts[i:]
     minor = "/".join(parts_minor)

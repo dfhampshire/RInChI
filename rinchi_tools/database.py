@@ -190,7 +190,7 @@ def pragma_sql_env(cursor):
     cursor.execute(''' PRAGMA main.cache_size=5000''')
 
 
-def create_sql_table(cursor,table_name,columns):
+def create_sql_table(cursor, table_name, columns):
     """
     Create an SQL table
 
@@ -200,10 +200,10 @@ def create_sql_table(cursor,table_name,columns):
         columns: A list of column names to create
     """
     column_string = " TEXT, ".join(columns)
-    cursor.execute('CREATE TABLE IF NOT EXISTS {} ({})'.format(table_name,column_string))
+    cursor.execute('CREATE TABLE IF NOT EXISTS {} ({})'.format(table_name, column_string))
 
 
-def get_sql_columns(cursor,table_name):
+def get_sql_columns(cursor, table_name):
     """
     Get list of column names quickly
 
@@ -230,17 +230,18 @@ def sql_insert(cursor, table_name, data, columns=None, exec_many=False):
         exec_many: Whether to use cursor.execute() or cursor.executemany()
     """
     if columns is None:
-        get_sql_columns(cursor,table_name)
+        get_sql_columns(cursor, table_name)
 
-    command = ("INSERT INTO {}({}) VALUES (".format(table_name,", ".join(columns))
-               + ", ".join(["?"] * len(columns) ) + ")")
+    command = (
+        "INSERT INTO {}({}) VALUES (".format(table_name, ", ".join(columns)) + ", ".join(["?"] * len(columns)) + ")")
 
     if exec_many:
-        cursor.executemany(command,data)
+        cursor.executemany(command, data)
     else:
-        cursor.execute(command,data)
+        cursor.execute(command, data)
 
-def checkTableExists(table_name, cursor):
+
+def check_table_exists(table_name, cursor):
     """
     Checks if a table exists within a database
 
@@ -257,7 +258,14 @@ def checkTableExists(table_name, cursor):
 
 
 def drop_table_if_needed(table_name, cursor):
-    if checkTableExists(table_name, cursor):
+    """
+    Checks if table exists and drops the table if it does
+
+    Args:
+        table_name: The table to drop
+        cursor: The SQLite database cursor object
+    """
+    if check_table_exists(table_name, cursor):
         approved = input("Table {} will be deleted and recreated. Continue? (type 'yes') :".format(table_name))
         if approved == "yes":
             cursor.execute('drop table if exists {}'.format(table_name))
@@ -271,7 +279,7 @@ def drop_table_if_needed(table_name, cursor):
 # Searching SQL databases
 #########################
 
-def sql_search(cursor,table_name, columns=None, lookup_value=None,field=None,use_like=False,limit=False):
+def sql_search(cursor, table_name, columns=None, lookup_value=None, field=None, use_like=False, limit=None):
     """
     Search for a value in an SQL database
 
@@ -297,14 +305,14 @@ def sql_search(cursor,table_name, columns=None, lookup_value=None,field=None,use
         comparator = "="
 
     # impose limit if required
-    if limit:
+    if limit is not None:
         limiter = " LIMIT {}".format(limit)
     else:
         limiter = ""
 
     # formulate the query
-    part1 = 'SELECT {} FROM {}'.format(' ,'.join(columns),table_name)
-    part2 = ' WHERE {} {} ?'.format(field,comparator)
+    part1 = 'SELECT {} FROM {}'.format(' ,'.join(columns), table_name)
+    part2 = ' WHERE {} {} ?'.format(field, comparator)
     if lookup_value is None:
         command = part1 + limiter
     else:
@@ -314,7 +322,7 @@ def sql_search(cursor,table_name, columns=None, lookup_value=None,field=None,use
     return cursor
 
 
-def sql_key_to_rinchi(key, db_filename, table_name, keytype ="L"):
+def sql_key_to_rinchi(key, db_filename, table_name, keytype="L"):
     """
     Returns the RInChI matching the given Long RInChI key for a given database
 
@@ -341,7 +349,7 @@ def sql_key_to_rinchi(key, db_filename, table_name, keytype ="L"):
         field = "webkey"
     else:
         raise ValueError('The keytype argument must be one of "L" , "S" or "W"')
-    cursor = sql_search(cursor, table_name,["rinchi"], key, field,)
+    cursor = sql_search(cursor, table_name, ["rinchi"], key, field, )
     rinchi = cursor.fetchone()[0]
     db.close()
     return rinchi
@@ -360,7 +368,7 @@ def search_for_inchi(inchi, db_filename, table_name):
     db = sqlite3.connect(db_filename)
     cursor = db.cursor()
     query = "%" + "/".join(inchi.split("/")[1:]) + "%"
-    cursor = sql_search(cursor,table_name,["rinchi"],inchi,"rinchi",True)
+    cursor = sql_search(cursor, table_name, ["rinchi"], query, "rinchi", True)
     for r in cursor:
         print((r[0]))
 
@@ -406,7 +414,7 @@ def advanced_search(inchi, db_filename, table_name, hyb=None, val=None, rings=No
 # Converting to SQL databases
 #############################
 
-def rdf_to_sql(rdfile, db_filename, table_name, columns = None):
+def rdf_to_sql(rdfile, db_filename, table_name, columns=None):
     """
     Creates or adds to an SQLite database the contents of a given RDFile.
 
@@ -417,15 +425,15 @@ def rdf_to_sql(rdfile, db_filename, table_name, columns = None):
         columns: The columns to add. If None, the default is [rinchi,rauxinfo,longkey,shortkey,webkey]
     """
     if columns is None:
-        columns = ["rinchi","rauxinfo","longkey","shortkey","webkey"]
+        columns = ["rinchi", "rauxinfo", "longkey", "shortkey", "webkey"]
 
     db = sqlite3.connect(db_filename)
     cursor = db.cursor()
 
-    create_sql_table(cursor,table_name,columns)
+    create_sql_table(cursor, table_name, columns)
 
     # Repopulate columns variable. Useful for pre-exisiting table
-    columns = get_sql_columns(cursor,table_name)
+    columns = get_sql_columns(cursor, table_name)
 
     pragma_sql_env(cursor)
 
@@ -441,7 +449,7 @@ def rdf_to_sql(rdfile, db_filename, table_name, columns = None):
     rdf_data_tuple = [tuple([i] + rdf_data[i]) for i in rdf_data.keys()]
 
     # Add the rdf data to the dictionary
-    sql_insert(cursor,table_name,rdf_data_tuple,columns,True)
+    sql_insert(cursor, table_name, rdf_data_tuple, columns, True)
     db.commit()
     db.close()
 
@@ -453,6 +461,7 @@ def csv_to_sql(csv_name, db_filename, table_name):
     Args:
         csv_name: The CSV filename
         db_filename: The SQLite3 database
+        table_name: The name of the table to create or append
     """
     db = sqlite3.connect(db_filename)
     cursor = db.cursor()
@@ -463,21 +472,21 @@ def csv_to_sql(csv_name, db_filename, table_name):
         columns = reader.next()
         create_sql_table(cursor, table_name, columns)
         for row in reader:
-            sql_insert(cursor,table_name,row)
+            sql_insert(cursor, table_name, row)
 
     db.commit()
     db.close()
 
 
-def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=False, v03_rinchi=False,
-                    v03_rauxinfo=False, v03_longkey=False, v03_shortkey=False, v03_webkey=False):
+def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=False, v03_rinchi=False, v03_rauxinfo=False,
+                    v03_longkey=False, v03_shortkey=False, v03_webkey=False):
     """
     Converts a database of v02 rinchis into a database of v03 rinchis and associated information. N.B keys for v02 are
     not required as new keys must be generated for the database. Because of the nature of this problem, this is achieved
     by creating a new database for the processed data and then transferring back to the original
 
     Args:
-         db_filename: The database filename to which the changes should be made. The new database is added as a new table
+         db_filename: The database filename to which the changes should be made. The new database is added as a table.
          table_name: the name for the new v03 rinchi table.
          v02_rinchi: The name of the v02 rinchi column. Defaults to False (No rinchi in database).
          v02_rauxinfo: The name of the v02 rauxinfo column. Defaults to False (No rauxinfos in database).
@@ -497,11 +506,10 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
     # Construct SQL strings
     col_list = [v03_rinchi, v03_rauxinfo, v03_longkey, v03_shortkey, v03_webkey]
     cols_to_create = []
-    cols_to_insert = []
     colcount = 0
     for column in col_list:
         if column:
-            cols_to_create.append(column + " text")
+            cols_to_create.append("{} text".format(column))
             colcount += 1
     cols_to_create = ", ".join(cols_to_create)
 
@@ -521,7 +529,7 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
 
     q = queue.Queue(1000)
     popul8 = threading.Thread(target=populate_queue, args=(
-    q, db_filename, select_command, v03_rinchi, v03_rauxinfo, v03_longkey, v03_shortkey, v03_webkey))
+        q, db_filename, select_command, v03_rinchi, v03_rauxinfo, v03_longkey, v03_shortkey, v03_webkey))
     depopul8 = threading.Thread(target=depopulate_queue, args=(q, create_command, insert_command))
     depopul8.start()
     popul8.start()
@@ -573,7 +581,7 @@ def compare_fingerprints(search_term, db_filename, table_name):
 
     res = []
     cursor = db.cursor()
-    cursor = sql_search(cursor,table_name,["longkey","fingerprint"],limit=-1)
+    cursor = sql_search(cursor, table_name, ["longkey", "fingerprint"], limit=-1)
     for r in cursor:
         counter += 1
         res.append((r[0], distance.euclidean(fp1, pickle.loads(str(r[1])).toarray()[0])))
@@ -586,7 +594,7 @@ def compare_fingerprints(search_term, db_filename, table_name):
     print("\n", out)
 
 
-def recall_fingerprints(lkey, db_filename,table_name):
+def recall_fingerprints(lkey, db_filename, table_name):
     """
     returns a reaction fingerprint as stored in the reaction database
     Args:
@@ -599,7 +607,7 @@ def recall_fingerprints(lkey, db_filename,table_name):
     """
     db = sqlite3.connect(db_filename)
     cursor = db.cursor()
-    cursor = sql_search(cursor,table_name,["fingerprint"],lkey,"longkey",)
+    cursor = sql_search(cursor, table_name, ["fingerprint"], lkey, "longkey", )
 
     # Unpickle the binary data, and return a Numpy array containing the
     # reaction fingerprint
@@ -627,7 +635,7 @@ def update_fingerprints(db_filename, table_name, fingerprint_table_name):
     cursor = db.cursor()
     cursor2 = db.cursor()
 
-    cursor = sql_search(cursor,table_name,[])
+    cursor = sql_search(cursor, table_name, fingerprint_table_name)
 
     counter = 0
     for lkey in cursor:
@@ -652,6 +660,7 @@ def update_fingerprints(db_filename, table_name, fingerprint_table_name):
             print(counter, "ERR", "\n")
     db.commit()
     db.close()
+
 
 # Updating scripts using threading for performance
 #################################################
@@ -685,11 +694,11 @@ def populate_queue(main_q, db_filename, s_command, v03_rinchi, v03_rauxinfo, v03
         if v03_rauxinfo:
             data_to_add.append(v02_convert.convert_rauxinfo(row[1]))
         if v03_longkey:
-            data_to_add.append(RInChI_Handle.rinchikey_from_rinchi(the_rinchi, "L"))
+            data_to_add.append(RInChI_Handle().rinchikey_from_rinchi(the_rinchi, "L"))
         if v03_shortkey:
-            data_to_add.append(RInChI_Handle.rinchikey_from_rinchi(the_rinchi, "S"))
+            data_to_add.append(RInChI_Handle().rinchikey_from_rinchi(the_rinchi, "S"))
         if v03_webkey:
-            data_to_add.append(RInChI_Handle.rinchikey_from_rinchi(the_rinchi, "W"))
+            data_to_add.append(RInChI_Handle().rinchikey_from_rinchi(the_rinchi, "W"))
         main_q.put(data_to_add)
         while main_q.full():
             time.sleep(0.01)
@@ -718,3 +727,26 @@ def depopulate_queue(q, create_command, i_command):
             break
     db.commit()
     db.close()
+
+
+def gen_rauxinfo(db_filename, table_name):
+    """
+    Updates a table in a database to give rauxinfos where teh column is null
+    :param db_filename: Database filename
+    :param table_name: name of table
+    :return: None
+    """
+    db = sqlite3.connect(db_filename)
+    cursor = db.cursor()
+
+    def converter(rinchi):
+        """Interfaces the rauxinfo converter in v02_convert.py"""
+        rauxinfo = v02_convert.gen_rauxinfo(rinchi)
+        return rauxinfo
+
+    # Creating SQL function increases performance
+    db.create_function("convert", 1, converter)
+    cursor.execute(
+        "UPDATE {} SET rauxinfo = convert(rinchi) WHERE rauxinfo IS NULL or rauxinfo = '';".format(table_name))
+    db.commit()
+    return

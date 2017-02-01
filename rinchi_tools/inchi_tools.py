@@ -28,11 +28,6 @@ import tempfile
 from rinchi_tools import external, utils
 
 
-# Define an exception for the module to use.
-class Error(Exception):
-    pass
-
-
 def get_conlayer(inchi):
     """
     Return the connectivity layer of an InChI.
@@ -311,9 +306,8 @@ def molf_2_inchi(molf, return_auxinfo=False):
 
     Returns:
         inchi: The InChI.
-        auxinfo: The InChI's AuxInfo, if required.
-        N.B. If the inchi program fails to generate data, an empty string will
-            be returned instead.
+        auxinfo: The InChI's AuxInfo, if required. N.B. If the inchi program fails to generate data,
+        an empty string will be returned instead.
     """
     # Saves the molfile to a temporary file.
     molf_tempfile = tempfile.NamedTemporaryFile(delete=False)

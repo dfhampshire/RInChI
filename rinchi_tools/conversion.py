@@ -353,25 +353,20 @@ def rdf_2_rinchis(
             converting.  If set at default value (0), conversion does not stop
             until the end of the file is reached.
         force_equilibrium: Whether to set the direction flags explicitly to equilibrium
-        return_rauxinfos: If True, generates and returns RAuxInfo each
-            generated RInChI.
-        return_longkeys: If True, generates and returns Long-RInChIKeys for
-            each generated RInChI.
-        return_shortkeys: If True, generates and returns Short-RInChIKeys for
-            each generated RInChI.
-        return_webkeys: If True, generates and returns Web-RInChIKeys for
-            each generated RInChI.
+        return_rauxinfos: If True, generates and returns RAuxInfo each generated RInChI.
+        return_longkeys: If True, generates and returns Long-RInChIKeys for each generated RInChI.
+        return_shortkeys: If True, generates and returns Short-RInChIKeys for each generated RInChI.
+        return_webkeys: If True, generates and returns Web-RInChIKeys for each generated RInChI.
         return_rxndata: If True, returns a list of the &DTYPE/$DATUM data stored in the rxnfiles
 
     Returns:
-        A tuple containing:
-            rinchis: A list of RInChIs generated from the RDFile.
-            rauxinfos: A list of the RInChIs' RAuxInfos.
-            longkeys: A list of the RInChIs' Long-RInChIKeys.
-            shortkeys: A list of the RInChIs' Short-RInChIKeys.
-            webkeys: A list of the RInChIs' Web-RInChIKeys.
-            rxndata: A list of the &DTYPE/$DATUM data stored in the rxnfiles
-        If not requested, the tuple entry will be blank.
+        rinchis: A list of RInChIs generated from the RDFile.
+        rauxinfos: A list of the RInChIs' RAuxInfos.
+        longkeys: A list of the RInChIs' Long-RInChIKeys.
+        shortkeys: A list of the RInChIs' Short-RInChIKeys.
+        webkeys: A list of the RInChIs' Web-RInChIKeys.
+        rxndata: A list of the &DTYPE/$DATUM data stored in the rxnfiles
+
     """
     # Split the RDFile into a list of RD files.
     rdfiles = split_rdf(rdf, start, stop)
@@ -384,20 +379,20 @@ def rdf_2_rinchis(
     rxndata = []
     for rdfile in rdfiles:
         rinchi, rauxinfo = tools.deduper(
-            *RInChI_Handle.rinchi_from_file_text("RD", rdfile, force_equilibrium))
+            *RInChI_Handle().rinchi_from_file_text("RD", rdfile, force_equilibrium))
         if not (rinchi in rinchis and ((not return_rauxinfos)
                                        or rauxinfo in rauxinfos)):  # Force unique entries
             rinchis.append(rinchi)
             if return_rauxinfos:
                 rauxinfos.append(rauxinfo)
             if return_longkeys:
-                longkey = RInChI_Handle.rinchikey_from_rinchi(rinchi, "L")
+                longkey = RInChI_Handle().rinchikey_from_rinchi(rinchi, "L")
                 longkeys.append(longkey)
             if return_shortkeys:
-                shortkey = RInChI_Handle.rinchikey_from_rinchi(rinchi, "S")
+                shortkey = RInChI_Handle().rinchikey_from_rinchi(rinchi, "S")
                 shortkeys.append(shortkey)
             if return_webkeys:
-                webkey = RInChI_Handle.rinchikey_from_rinchi(rinchi, "W")
+                webkey = RInChI_Handle().rinchikey_from_rinchi(rinchi, "W")
                 webkeys.append(webkey)
             if return_rxndata:
                 d = rdfile.replace("\n", "")
