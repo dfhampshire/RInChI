@@ -1,10 +1,10 @@
 # !/usr/bin/env python3
+"""
+Script used to test various the module during development. Not for general distribution. Successful code is implemented
+elsewhere.
 
-# NEW PYTHON SCRIPTS
-# TESTING PHASE
-
-# RInChI Project
-# BENJAMIN HAMMOND 2014
+Duncan Hampshire 2017
+"""
 
 import collections
 import logging
@@ -66,6 +66,3 @@ def test4():
     cursor.execute('select * from rinchis02')
     names = [description[0] for description in cursor.description]
     print(names)
-
-
-test4()
