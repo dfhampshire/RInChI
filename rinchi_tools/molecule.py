@@ -19,7 +19,7 @@ from rinchi_tools.atom import Atom
 
 class Molecule:
     """
-    A class containing a molecule as defined by an inchi. Contains functions for generating
+    A class containing a molecule as defined by an inchi.  Contains functions for generating
     edge lists and node edge tables describing molecular graphs, and functions that use
     molecular graphs to calculate information about the molecules - ring sizes, atom hybridisation,
     contained functional groups etc.
@@ -87,7 +87,7 @@ class Molecule:
     @staticmethod
     def new(inchi):
         """
-        Creates a list of new Molecule objects. Safer than Molecule() due to composite InChI implications.
+        Creates a list of new Molecule objects.  Safer than Molecule() due to composite InChI implications.
 
         Args:
             inchi: An InChI string
@@ -101,7 +101,7 @@ class Molecule:
             return [Molecule(inchi)]
 
     #####################################################################
-    # Generate molecular properties, ie. molecular graph, chemical formula
+    # Generate molecular properties, ie.  molecular graph, chemical formula
     #####################################################################
 
     def inchi_to_chemical_formula(self):
@@ -308,7 +308,7 @@ class Molecule:
         """Sets the node-edge graph as a dictionary.
 
         Args:
-            lst: A molecular graph as a list of edges. If no list is passed, the function sets the atoms for its
+            lst: A molecular graph as a list of edges.  If no list is passed, the function sets the atoms for its
             own instance.
         """
         if lst:
@@ -346,7 +346,7 @@ class Molecule:
 
         Returns:
             tree_edges: A list of tree edges.
-            back_edges: A list of back edges. The list length is equal to the smallest number of cycles that can
+            back_edges: A list of back edges.  The list length is equal to the smallest number of cycles that can
             describe the cycle space of the molecular graph
         """
 
@@ -379,7 +379,7 @@ class Molecule:
                     current_edge = [current_node, child]
 
                     # If the current node has a previously visited node as a child, this must be a back edge,
-                    # forming a cycle. Otherwise, this is a tree edge to an unexplored node, and the current
+                    # forming a cycle.  Otherwise, this is a tree edge to an unexplored node, and the current
                     # node is changed to this node.
                     if child in nodes_visited:
                         back_edges.append(current_edge)
@@ -478,7 +478,7 @@ class Molecule:
             when performing the Horton Algorithm (see elsewhere)
         """
 
-        # Initialise list of all rings in the molecule. Accepts
+        # Initialise list of all rings in the molecule.  Accepts
 
         rings_list = []
         tree_edges, back_edges = self.depth_first_search()
@@ -675,7 +675,7 @@ class Molecule:
 
     def contains_ring_by_atoms(self, atoms):
         """
-        Count the rings by atom list eg. "CCCCCN" will return the number of pyridine fragments in the molecule.
+        Count the rings by atom list eg.  "CCCCCN" will return the number of pyridine fragments in the molecule.
 
         Args:
             atoms: The atoms in the ring.
@@ -764,7 +764,7 @@ class Molecule:
 
     def get_ring_count_inc_elements(self):
         """
-        Count the rings of a molecule. Result includes the elements of the ring.
+        Count the rings of a molecule.  Result includes the elements of the ring.
 
         Returns: a Counter containing the number of rings of each size and the elements contained by a ring
         """

@@ -33,8 +33,8 @@ Modified all .rxn handling functions to no longer discard reaction data in the
 $DTYPE/$DATUM  format, instead optionally returns them.
 
 Modified 2016 by D.F. Hampshire - Removed functions now included in source v0.03
-software (commands that interface with RInChI). Similar python functionality can
-be found from the rinchi_lib.py interfacing file. Some functions now modified to use
+software (commands that interface with RInChI).  Similar python functionality can
+be found from the rinchi_lib.py interfacing file.  Some functions now modified to use
 this rinchi_lib.py interface.
 """
 
@@ -50,7 +50,7 @@ def rxn_2_molfs(rxn):
 
     The function takes a RXNfile, and returns three lists: the first is a list
     of the reactants' molfiles, the second a list of the products'
-    molfiles and the third is a list of agents e.g. solvents or catalysts.
+    molfiles and the third is a list of agents e.g.  solvents or catalysts.
 
     Args:
         rxn: The contents of an RXN file in the form of a string.
@@ -116,7 +116,7 @@ def molfs_2_rxn(rxnt_molfs=None, prod_molfs=None, agnt_molfs=None, name=''):
         rxnt_molfs = []
 
     def remove_mol(molfs):
-        """Remove $MOL header if it exists. So that the function accepts both
+        """Remove $MOL header if it exists.  So that the function accepts both
         with and without headers
         """
         for idx, molf in enumerate(molfs):
@@ -236,7 +236,7 @@ def split_rdf(rdfile, start=0, stop=0):
 
 
 def rdf_rxn_2_molfs(rxn_entry):
-    """Converts an entry from an RDF to a list of reactions it describes. Works for entries parsed from an RD file.
+    """Converts an entry from an RDF to a list of reactions it describes.  Works for entries parsed from an RD file.
 
     Args:
         rxn_entry: An RXN entry from an RDFile.  This consists of
@@ -245,8 +245,8 @@ def rdf_rxn_2_molfs(rxn_entry):
     Returns:
         reactions: A list of tuples of lists; each tuple represents a
             reaction, and consists of a list of reactant molfiles and a
-            list of product molfiles. Catalysts, solvents, etc. are
-            returned as both a reactant and a product (i.e. present on both
+            list of product molfiles.  Catalysts, solvents, etc.  are
+            returned as both a reactant and a product (i.e.  present on both
             sides of the reaction).
     """
     # Count the declared number of reactants and products.
@@ -281,7 +281,7 @@ def rdf_rxn_2_molfs(rxn_entry):
     for index, entry in enumerate(leftover_data):
         leftover_data[index] = entry.split('$DTYPE')[-1]
     # Count the number of reaction variations.
-    # N.B. this only works if variations are in "VARIATION(#)" format.
+    # N.B.  this only works if variations are in "VARIATION(#)" format.
     num_variations = 1
     while "VARIATION(%d)" % (num_variations + 1) in rxn_entry:
         num_variations += 1

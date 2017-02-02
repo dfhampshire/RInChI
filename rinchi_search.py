@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-Search program for a python database.
+RInChI Searching Script
 
-BENJAMIN HAMMOND 2014
+Searches an SQL database for InChIs.
 
-Significant restructuring and feature adding DUNCAN HAMPSHIRE 2017
-
+    B. Hammond 2014
+    D. Hampshire 2017 - Significant restructuring and feature adding
 """
 
 import argparse

@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """
-RInChI Conversion Program
+RInChI conversion script
 
-    2012 C. Allen
-    2016 D.F. Hampshire
+Converts RInChIs to and from various chemical reaction file formats.
 
-2016 - Code rewritten for Python 3 using the argparse module, and major structural and procedural changes.
+    C. Allen 2012
+    D.F. Hampshire 2016 - Code rewritten for Python 3 using the argparse module, and major structural and procedural
+    changes.
 
 """
 

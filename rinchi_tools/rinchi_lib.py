@@ -21,7 +21,7 @@ The RInChI library and programs are free software developed under the
 auspices of the International Union of Pure and Applied Chemistry (IUPAC).
 
 This file is based on that provides with the official v0.03 RInChI software release, but with modifications to ensure
-Python 3 compatibility. Documentation was adapted from the official v0.03 release document.
+Python 3 compatibility.  Documentation was adapted from the official v0.03 release document.
 
 """
 
@@ -155,13 +155,13 @@ class RInChI:
 
         Args:
             rinchi_string: A RInChI string
-            rinchi_auxinfo: RAuxInfo string. May be blank but may not be NULL.
+            rinchi_auxinfo: RAuxInfo string.  May be blank but may not be NULL.
 
         Raises:
             Exception: RInChi format related errors
 
         Returns: A dictionary of five lists: Direction, No-Structures, Reactants, Products, and Agents.
-            Each Reactant, Product, and Agent list contains a set of (InChI, AuxInfo) tuples. The No-Structures list
+            Each Reactant, Product, and Agent list contains a set of (InChI, AuxInfo) tuples.  The No-Structures list
             contains No-Structure counts for Reactants, Products, and Agents.
         """
         inchis = c_char_p()

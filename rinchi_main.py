@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-
 """
-Code to run the Object Orientated Python Scripts
+RInChI Object Orientated Script
 
-B. Hammond 2014
-D. Hampshire 2016
+Performs various tasks using functions structure in an Object Orientated manner in the reaction.py, molecule.py,
+and atom.py module.
+
+    B. Hammond 2014
+    D. Hampshire 2016 - Restructuring of module and class, feature fixing and simplifying.
 """
 
 import argparse
@@ -18,7 +20,7 @@ from rinchi_tools import analysis, database
 from rinchi_tools.molecule import Molecule
 from rinchi_tools.reaction import Reaction
 
-# TODO simplify and test this. PHP web implementation need too
+# TODO simplify and test this.  PHP web implementation checked and re-made
 
 if __name__ == "__main__":
 

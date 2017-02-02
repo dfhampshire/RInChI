@@ -18,7 +18,7 @@
 
 This file has been extracted from the OASA python Library to provide legacy support for the now deprecated RInChI v0.02.
 
-Small modifications made by D. Hampshire 2017 to port the code to Python 3.
+Small modifications made by D.  Hampshire 2017 to port the code to Python 3.
 
 # --------------------------------------------------------------------------
 """

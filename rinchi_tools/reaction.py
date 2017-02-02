@@ -18,7 +18,7 @@ from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
 
 
 class Reaction:
-    """ This class defines a reaction, as defined by a RInChI. Molecule objects are created from all component InChIs,
+    """ This class defines a reaction, as defined by a RInChI.  Molecule objects are created from all component InChIs,
     and the member functions of the class can be used to analyse various parameters that may be changing across the reaction
     """
 
@@ -79,11 +79,11 @@ class Reaction:
 
     def calculate_reaction_fingerprint(self, fingerprint_size=1024):
         """
-        Calculates a reaction fingerprint for a given reaction. Uses a 1024 bit fingerprint by default
-        Method of Daniel M. Lowe (2015)
+        Calculates a reaction fingerprint for a given reaction.  Uses a 1024 bit fingerprint by default
+        Method of Daniel M.  Lowe (2015)
 
         This function generates fingerprints for individual molecules using obabel.
-        Could be simply modified to use other software packages ie. RDKIT if desired
+        Could be simply modified to use other software packages ie.  RDKIT if desired
 
         Args:
             fingerprint_size: The length of the fingerprint to be generated.
@@ -121,7 +121,7 @@ class Reaction:
         if not reactant_f:
             reactant_f = [0] * fingerprint_size
 
-        # Combining the molecular fingerprints into a reaction fingerprint using the method of Daniel M. Lowe
+        # Combining the molecular fingerprints into a reaction fingerprint using the method of Daniel M.  Lowe
         # omega and omega_na are empirically derived values as suggested in his
         # 2015 paper
         omega_na = 10
@@ -255,7 +255,7 @@ class Reaction:
 
     def detect_reaction(self, hyb_i=None, val_i=None, rings_i=None, formula_i=None):
         """
-        Detect if a reaction satifies certian conditions. Allows searching for reactions based on ring changes,
+        Detect if a reaction satifies certian conditions.  Allows searching for reactions based on ring changes,
         valence changes, formula changes, hybridisation of C atom changes.
 
         Args:

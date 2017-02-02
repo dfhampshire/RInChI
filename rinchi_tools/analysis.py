@@ -17,7 +17,7 @@ RInChI analysis module.
 
 This module provides functions for the counting rings and stereocentres in
 InChIs and RInChIs.  It also provides a function for searching for InChIs
-in a database of RInChIs. It also interfaces with the RInChI
+in a database of RInChIs.  It also interfaces with the RInChI
 v0.03 software as provided by the InChI trust.
 
 The RInChI library and programs are free software developed under the
@@ -34,7 +34,7 @@ def rxn_ring_change(input_rinchi, pm=(False, False), return_ring_counts_only=Fal
     Args:
         input_rinchi: A RInChI to analyse.
         pm: A tuple containing booleans for whether to calculate ring changes per
-            molecule ( pm[0] ) or per cyclic molecule ( pm[1] ). The default is not
+            molecule ( pm[0] ) or per cyclic molecule ( pm[1] ).  The default is not
             to calculate per molecule.
         return_ring_counts_only: Only return ring counts in each layer
 
@@ -46,7 +46,7 @@ def rxn_ring_change(input_rinchi, pm=(False, False), return_ring_counts_only=Fal
             ring_change: The number of rings created by the reaction.  If rings
                 are destroyed, this will be negative.  If the reaction is an
                 equilibrium or direction is unspecified, the value of ring
-                change will be the absolute (i.e. positive) value.
+                change will be the absolute (i.e.  positive) value.
 
     Raises:
         Error: If the ring change cannot be analysed.  This may either be
@@ -111,7 +111,7 @@ def rxns_ring_changes(rinchis, pm=(False, False)):
     Args:
         rinchis: A list of RInChIs.
         pm: A tuple containing booleans for whether to calculate ring changes per
-            molecule ( pm[0] ) or per cyclic molecule ( pm[1] ). The default is not
+            molecule ( pm[0] ) or per cyclic molecule ( pm[1] ).  The default is not
             to calculate per molecule.
     Returns:
         results: A dictionary, of which the keys are reaction ring changes and

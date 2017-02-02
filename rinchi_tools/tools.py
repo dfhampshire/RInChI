@@ -50,17 +50,17 @@ def build_rinchi(l2_inchis=None, l3_inchis=None, l4_inchis=None, direction='', u
     (currently limited to directionality information), and returns a RInChI.
 
     Args:
-        The first three arguments are groups of InChIs saved as strings within an iterable (e.g. a list, set, tuple).
-        Any or all of these may be omitted.  All InChIs must be of the same version number. If a chemical which cannot
+        The first three arguments are groups of InChIs saved as strings within an iterable (e.g.  a list, set, tuple).
+        Any or all of these may be omitted.  All InChIs must be of the same version number.  If a chemical which cannot
         be described by an InChI is desired within the RInChI, it should be added to the u_struct argument detailed
         below.
         l2_inchis:  Chemicals in the second layer of the RInChI
         l3_inchis:  Chemicals in the third layer of the RInChI
-        l4_inchis:  Chemicals in the fourth layer of a RInChI. It refers to the substances present at the start
-        and end of the reaction (e.g. catalysts, solvents), only referred to as "agents".
+        l4_inchis:  Chemicals in the fourth layer of a RInChI.  It refers to the substances present at the start
+        and end of the reaction (e.g.  catalysts, solvents), only referred to as "agents".
         direction: This must be "+", "-" or "=".  "+" means that l2_inchis_input are the reactants, and the
         l3_inchis the products; "-" means the opposite; and "=" means the l2_inchis and l3_inchis are in equilibrium.
-        u_struct: Defines the number of unknown structures in each layer. This must be a list of the form [#2,#3,#4]
+        u_struct: Defines the number of unknown structures in each layer.  This must be a list of the form [#2,#3,#4]
         where #2 is the number of unknown reactants in layer 2, #3 is number in layer 3 etc.
 
     Returns:
@@ -95,7 +95,7 @@ def build_rinchi(l2_inchis=None, l3_inchis=None, l4_inchis=None, direction='', u
         inchi_version = utils.consolidate(l2_versions + l3_versions + l4_versions)
     except Error:
         raise VersionError("RInChI can only be made from same-version InChIs.")
-    # Decide in which order the RInChI layers should be displayed. Amend no structure flag accordingly.
+    # Decide in which order the RInChI layers should be displayed.  Amend no structure flag accordingly.
     if l2_rinchi_layer > l3_rinchi_layer:
         reverse_direction = True
         rinchi_layer2 = l3_rinchi_layer
@@ -145,17 +145,17 @@ def build_rinchi_rauxinfo(l2_input=None, l3_input=None, l4_input=None, direction
     RInChI Builder takes three groups of InChIs, and additional reaction data, and returns a RInChI.
 
     Args:
-        The first three arguments are tuples of InChI and RAuxInfo pairs within an iterable (e.g. a list, set, tuple).
-        Any or all of these may be omitted.  All InChIs must be of the same version number. If a chemical which cannot
+        The first three arguments are tuples of InChI and RAuxInfo pairs within an iterable (e.g.  a list, set, tuple).
+        Any or all of these may be omitted.  All InChIs must be of the same version number.  If a chemical which cannot
         be described by an InChI is desired within the RInChI, it should be added to the u_struct argument detailed
         below.
         l2_input:  Chemicals in the second layer of the RInChI
         l3_input:  Chemicals in the third layer of the RInChI
-        l4_input:  Chemicals in the fourth layer of a RInChI. It refers to the substances present at the start
-        and end of the reaction (e.g. catalysts, solvents), only referred to as "agents".
+        l4_input:  Chemicals in the fourth layer of a RInChI.  It refers to the substances present at the start
+        and end of the reaction (e.g.  catalysts, solvents), only referred to as "agents".
         direction: This must be "+", "-" or "=".  "+" means that the LHS are the reactants, and the RHS the products;
         "-" means the opposite; and "=" means the LHS and RHS are in equilibrium.
-        u_struct: Defines the number of unknown structures in each layer. This must be a list of the form [#2,#3,#4]
+        u_struct: Defines the number of unknown structures in each layer.  This must be a list of the form [#2,#3,#4]
         where #2 is the number of unknown reactants in layer 2, #3 is number in layer 3 etc.
 
     Returns:
@@ -165,7 +165,7 @@ def build_rinchi_rauxinfo(l2_input=None, l3_input=None, l4_input=None, direction
     Raises:
         VersionError: The input InChIs are not of the same version.
     """
-    # Convert the InChI layers to sets. Ignore the AuxInfos for now
+    # Convert the InChI layers to sets.  Ignore the AuxInfos for now
     if l4_input is None:
         l4_input = []
     if l3_input is None:
@@ -192,7 +192,7 @@ def build_rinchi_rauxinfo(l2_input=None, l3_input=None, l4_input=None, direction
         inchi_version = utils.consolidate(l2_versions + l3_versions + l4_versions)
     except Error:
         raise VersionError("RInChI can only be made from same-version InChIs.")
-    # Decide in which order the RInChI layers should be displayed. Amend no structure flag accordingly.
+    # Decide in which order the RInChI layers should be displayed.  Amend no structure flag accordingly.
     if l2_rinchi_layer > l3_rinchi_layer:
         reverse_direction = True
         rinchi_layer2 = l3_rinchi_layer
@@ -248,7 +248,7 @@ def build_rinchi_rauxinfo(l2_input=None, l3_input=None, l4_input=None, direction
 
 def build_rauxinfo(l2_auxinfo, l3_auxinfo, l4_auxinfo):
     """
-    Takes 3 sets of AuxInfos and converts them into a RAuxInfo. n.b. The order of Inchis in each list is presumed to be
+    Takes 3 sets of AuxInfos and converts them into a RAuxInfo.  n.b.  The order of Inchis in each list is presumed to be
     corresponding to that in the RInChI
 
     Args:
@@ -425,7 +425,7 @@ def process_layer(items, rauxinfodict=None, sort_layer=True):
         Args:
             items: A list of items to insert into the layer
             rauxinfodict: A dictionary of inchis as the keys and Auxinfos as the items
-            sort_layer: Whether to sort the items in each layer. Defaults to True. Typically this should be true for
+            sort_layer: Whether to sort the items in each layer.  Defaults to True.  Typically this should be true for
             RInChIs which as sorted as such, and False for RAuxinfos which are sorted according to the corresponding
             RInChI.
 
@@ -470,7 +470,7 @@ def process_layer(items, rauxinfodict=None, sort_layer=True):
 def add(rinchis):
     """ Combines a list of RInChIs into one combined RInChI.
 
-    N.B. As stoichiometry is not represented in the input, this is an
+    N.B.  As stoichiometry is not represented in the input, this is an
         approximate addition.
 
     Substances from RInChIs are sorted into one of four "pots":
@@ -514,7 +514,7 @@ def add(rinchis):
     Args:
         rinchis: A list of RInChIs, representing a sequence of reactions making
             up one overall process.  The order of this list is important, as
-            each RInChI is interpreted as a step in the overall process. They must
+            each RInChI is interpreted as a step in the overall process.  They must
             also have a clearly defined direction.
 
     Returns:
@@ -574,7 +574,7 @@ def add(rinchis):
 
 def rinchi_file_to_list(input_path):
     """
-    Creates a list of rinchis and rauxinfos from a flat file containing rinchis and rauxinfos. The lists are matched
+    Creates a list of rinchis and rauxinfos from a flat file containing rinchis and rauxinfos.  The lists are matched
     by index - so a list(zip()) on the output will reuturn the results pair-wise
 
     Args:

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-
 """
-RInChI addition script.
+RInChI addition script
 
-    Copyright 2012 C.H.G. Allen 2016 D.F. Hampshire
+This script analyses flat files of RInChIs separated by newlines.
 
-Rewritten to use argparse module
+    C.H.G. Allen 2012
+    D.F. Hampshire 2016- Rewritten to use argparse module and Python3
 
 """
 

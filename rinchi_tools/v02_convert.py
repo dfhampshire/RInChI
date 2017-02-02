@@ -61,7 +61,7 @@ def gen_rauxinfo(rinchi):
         """Process a group of AuxInfos for inclusion in a RAuxInfo.
 
         Args:
-            auxinfos: A list of InChI AuxInfos. An empty string in this list is
+            auxinfos: A list of InChI AuxInfos.  An empty string in this list is
                 interpreted as representing the AuxInfo of a structure which
                 is unable to be described by an InChI.
 

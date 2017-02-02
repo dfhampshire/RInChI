@@ -1,26 +1,18 @@
 #!/usr/bin/env python3
 """
-Program to run the Python Databasing tools
+RInChI databasing tools script
 
-Ben Hammond 2014
-Duncan Hampshire 2016
+Converts, creates, and removes from SQL databases
+
+    B. Hammond 2014
+    D. Hampshire 2016 - Major features added
+
 """
 
 import argparse
 
-from rinchi_tools.database import rdf_to_csv, rdf_to_csv_append, create_csv_from_directory, rdf_to_sql, csv_to_sql, \
-    sql_key_to_rinchi, compare_fingerprints, recall_fingerprints, update_fingerprints, search_for_inchi, \
-    convert_v02_v03, gen_rauxinfo
+from rinchi_tools import database
 from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
-
-#######################################
-# GENERATION AND CONVERSION OF DATABASES
-#######################################
-
-
-#####################################
-# SEARCHING OF DATABASES
-#####################################
 
 
 if __name__ == "__main__":
@@ -66,42 +58,42 @@ if __name__ == "__main__":
             pass
 
     if args.rdf2csv:
-        rdf_to_csv(args.input, return_longkey=True, return_rxninfo=True)
+        database.rdf_to_csv(args.input, return_longkey=True, return_rxninfo=True)
     if args.rdfappend:
-        rdf_to_csv_append(args.input, args.database)
+        database.rdf_to_csv_append(args.input, args.database)
     if args.dir2csv:
-        create_csv_from_directory(args.input, args.database, return_longkey=True, return_rxninfo=True)
+        database.create_csv_from_directory(args.input, args.database, return_longkey=True, return_rxninfo=True)
     if args.rdf2sql:
-        rdf_to_sql(args.input, args.database, args.tablename)
+        database.rdf_to_sql(args.input, args.database, args.tablename)
     if args.csv2sql:
-        csv_to_sql(args.input, args.database, args.tablename)
+        database.csv_to_sql(args.input, args.database, args.tablename)
 
     if args.ufingerprints:
-        update_fingerprints(args.input, args.database, args.tablename)
+        database.update_fingerprints(args.input, args.database, args.tablename)
     if args.rfingerprints:
-        print(list(recall_fingerprints(args.input, args.database, args.tablename)))
+        print(list(database.recall_fingerprints(args.input, args.database, args.tablename)))
     if args.cfingerprints:
-        compare_fingerprints(args.input, args.database, args.tablename)
+        database.compare_fingerprints(args.input, args.database, args.tablename)
 
     if args.TEST:
         tinchis = ["InChI=1S/C3H5Cl/c1-2-3-4/h2H,1,3H2", "InChI=1S/C3H5Br/c1-2-3-4/h2H,1,3H2",
                    "InChI=1S/C3H5I/c1-2-3-4/h2H,1,3H2", "InChI=1S/C3H6O/c1-2-3-4/h2,4H,1,3H2",
                    "InChI=1S/C3H5F/c1-2-3-4/h2H,1,3H2", "InChI=1S/C3H6/c1-3-2/h3H,1H2,2H3"]
         for inchi in tinchis:
-            print(inchi, len(search_for_inchi(inchi, args.database, args.tablename)))
+            print(inchi, len(database.search_for_inchi(inchi, args.database, args.tablename)))
 
     if args.lkey2rinchi:
-        print(sql_key_to_rinchi(args.input, args.database, args.tablename))
+        print(database.sql_key_to_rinchi(args.input, args.database, args.tablename))
     if args.inchisearch:
         print("start")
-        search_for_inchi(args.input, args.database, args.tablename)
+        database.search_for_inchi(args.input, args.database, args.tablename)
     if args.conv0203:
         # Names hardcoded because significant modification of the arparse system would be needed and would be complex
         v02_column_names = ["rinchi", "rauxinfo"]
         v03_column_names = ["rinchi", "rauxinfo", "longkey", "shortkey", "webkey"]
         column_names = v02_column_names + v03_column_names
-        convert_v02_v03(args.database, args.input, *column_names)
+        database.convert_v02_v03(args.database, args.input, *column_names)
     if args.genrauxinfo:
-        gen_rauxinfo(args.database, args.input)
+        database.gen_rauxinfo(args.database, args.input)
     else:
         print(__doc__)

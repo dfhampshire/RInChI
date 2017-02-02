@@ -1,27 +1,12 @@
 #!/usr/bin/env python3
-
 """
-RInChI analysis script.
+RInChI analysis script
 
-    Copyright 2012 C.H.G. Allen
-    Modified 2016 D. Hampshire
+This script analyses flat files of RInChIs separated by newlines.
 
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
+    C.H.G. Allen 2012
+    D. Hampshire 2016 - Rewritten to use argparse module and Python3
 
-    http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-
-
-This script analyses RInChI databases.  These are files containing RInChIs
-separated by newlines.  This script has been tested on a database of c. 2500
-RInChIs.
 """
 
 import argparse
@@ -34,8 +19,8 @@ from rinchi_tools import analysis
 
 def __search(rinchi_path, inchi_path, reactant=False, product=False, eqm=False, agent=False, list_rinchis=False):
     """
-    Searches a flat files containing RInChIs for a particular InChI. This is somewhat superseeded by the action of the
-    search function in the database module.
+    Searches a flat files containing RInChIs for a particular InChI.  This is somewhat superseeded by the action of
+    the search function in the database module.
 
     Args:
         rinchi_path: Th path to the list of rinchis

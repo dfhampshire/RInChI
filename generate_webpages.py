@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """
-Generate PHP web-pages that contain RInChIs, RAuxInfos and Keys for both the version 0.02 and 0.03 rinchi versions.
+Generates web-pages
 
-Duncan Hampshire 2017
+Automates the generation of PHP web-pages that contain RInChIs, RAuxInfos and Keys for both the version 0.02 and 0.03
+rinchi versions.
+
+    Duncan Hampshire 2017
 """
 
 import argparse

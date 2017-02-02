@@ -32,9 +32,9 @@ class Atom:
 
     def hybridisation(self):
         """
-        Gets the atom hybridisation. Only defined for C atoms but still useful
+        Gets the atom hybridisation.  Only defined for C atoms but still useful
 
-        Returns: None or a string signalling the hybridisation e.g. "sp2"
+        Returns: None or a string signalling the hybridisation e.g.  "sp2"
         """
         if self.valence():
             if self.element == "C":

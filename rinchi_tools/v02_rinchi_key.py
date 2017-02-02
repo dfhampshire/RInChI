@@ -1,26 +1,13 @@
-"""version 0.02 RInChIKey generation library module.
+"""
+Version 0.02 RInChIKey generation library module.
 
     Copyright 2012 C.H.G. Allen
-    Modified 2016 D.F. Hampshire
-    
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-    
-    http://www.apache.org/licenses/LICENSE-2.0
-    
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
+    D.F. Hampshire 2016 - Modified for Python3 comaptability
 
-This module provides functions to create Long- and Short-RInChIKeys from
-RInChIs.
+This module provides functions to create Long- and Short-RInChIKeys from RInChIs.
 
-The supplied implimentation of the inchi_2_inchikey function uses the InChIKey
-creation algorithm from OASA, a free python library for the manipulation of
-chemical formats, now stored permanently in the v02_inchi_key.py module.
+The supplied implimentation of the inchi_2_inchikey function uses the InChIKey creation algorithm from OASA,
+a free python library for the manipulation of chemical formats, now stored permanently in the v02_inchi_key.py module.
 
 """
 
@@ -90,7 +77,7 @@ def rinchi_2_longkey(rinchi):
         """Process a group of InChIKeys for inclusion in a Long-RInChIKey.
         
         Args:
-            inchikeys: A list of InChIKeys. An empty string in this list is
+            inchikeys: A list of InChIKeys.  An empty string in this list is
                 interpreted as representing the Key of a structure which
                 is unable to be described by an InChI.
             
@@ -135,7 +122,8 @@ def rinchi_2_shortkey(rinchi):
         rinchi: The RInChI from which to create the Short-RInChIKey
     
     Returns:
-        shortkey: The Short-RInChIKey of the RInChI    
+        shortkey:
+            The Short-RInChIKey of the RInChI
     """
     gp1, gp2, gp3, rxn_layers = tools.split_rinchi(rinchi)
     gp1_vers, gp1_major, gp1_minor = rinchi_gp_hasher(gp1)
@@ -217,8 +205,8 @@ def rxn_layers_hasher(rxn_layers):
         rxn_layers: A list of the reaction layers, including their 1char flags(but not including the /'s)
             
     Returns:
-        rxn_layer_hashed: The 5char "hash".  The scare-quotes reflect the fact
-            that this is not a true hash, as the first character is in fact a directionality flag.
+        rxn_layer_hashed: The 5char "hash".  The scare-quotes reflect the fact that this is not a true hash,
+        as the first character is in fact a directionality flag.
             
     Raises:
         RinchiError: If the rxn_layers are non-standard.

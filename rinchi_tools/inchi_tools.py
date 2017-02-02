@@ -306,7 +306,7 @@ def molf_2_inchi(molf, return_auxinfo=False):
 
     Returns:
         inchi: The InChI.
-        auxinfo: The InChI's AuxInfo, if required. N.B. If the inchi program fails to generate data,
+        auxinfo: The InChI's AuxInfo, if required.  N.B.  If the inchi program fails to generate data,
         an empty string will be returned instead.
     """
     # Saves the molfile to a temporary file.

@@ -1,5 +1,5 @@
 """
-Databasing tools. Many are simply Python 3 restructured versions of Ben Hammond 2014. Other work by D. Hampshire 2017
+Databasing tools.  Many are simply Python 3 restructured versions of Ben Hammond 2014. Other work by D. Hampshire 2017
 """
 import csv
 import logging
@@ -229,7 +229,7 @@ def sql_insert(cursor, table_name, data, columns=None, exec_many=False):
         cursor: The SQLite database cursor object
         table_name: The name of the table
         data: tha data to insert into the database.
-        columns: A list of the columns in the table. If not found, an attempt is made to get these automatically.
+        columns: A list of the columns in the table.  If not found, an attempt is made to get these automatically.
         exec_many: Whether to use cursor.execute() or cursor.executemany()
     """
     if columns is None:
@@ -333,7 +333,7 @@ def sql_key_to_rinchi(key, db_filename, table_name, keytype="L"):
         key: The key to search for
         db_filename: The database in which to search
         table_name: The table in which to search for the key
-        keytype: The key type to seach for. Defaults to the long key
+        keytype: The key type to seach for.  Defaults to the long key
 
     Raises:
         ValueError: The keytype argument must be one of "L" , "S" or "W"
@@ -361,7 +361,7 @@ def sql_key_to_rinchi(key, db_filename, table_name, keytype="L"):
 def search_for_inchi(inchi, db_filename, table_name):
     """
     Searches for an inchi within a rinchi database.
-    Approx. 20x faster than the version in rinchi_tools.analyse
+    Approx.  20x faster than the version in rinchi_tools.analyse
 
     Args:
         inchi: The InChI to search for
@@ -380,7 +380,7 @@ def search_for_inchi(inchi, db_filename, table_name):
 
 def advanced_search(inchi, db_filename, table_name, hyb=None, val=None, rings=None, formula=None):
     """
-    Search for an Inchi within a RInChi database with advanced options. Output is to stdout.
+    Search for an Inchi within a RInChi database with advanced options.  Output is to stdout.
 
     Args:
         inchi: The InChI to search for
@@ -425,7 +425,7 @@ def rdf_to_sql(rdfile, db_filename, table_name, columns=None):
         rdfile: The RD file to add to the database
         db_filename: The file name of the SQLite database
         table_name: The name of the table to create or append
-        columns: The columns to add. If None, the default is [rinchi,rauxinfo,longkey,shortkey,webkey]
+        columns: The columns to add.  If None, the default is [rinchi,rauxinfo,longkey,shortkey,webkey]
     """
     if columns is None:
         columns = ["rinchi", "rauxinfo", "longkey", "shortkey", "webkey"]
@@ -435,7 +435,7 @@ def rdf_to_sql(rdfile, db_filename, table_name, columns=None):
 
     create_sql_table(cursor, table_name, columns)
 
-    # Repopulate columns variable. Useful for pre-exisiting table
+    # Repopulate columns variable.  Useful for pre-exisiting table
     columns = get_sql_columns(cursor, table_name)
 
     pragma_sql_env(cursor)
@@ -484,20 +484,20 @@ def csv_to_sql(csv_name, db_filename, table_name):
 def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=False, v03_rinchi=False, v03_rauxinfo=False,
                     v03_longkey=False, v03_shortkey=False, v03_webkey=False):
     """
-    Converts a database of v02 rinchis into a database of v03 rinchis and associated information. N.B keys for v02 are
-    not required as new keys must be generated for the database. Because of the nature of this problem, this is achieved
+    Converts a database of v02 rinchis into a database of v03 rinchis and associated information.  N.B keys for v02 are
+    not required as new keys must be generated for the database.  Because of the nature of this problem, this is achieved
     by creating a new database for the processed data and then transferring back to the original
 
     Args:
-         db_filename: The database filename to which the changes should be made. The new database is added as a table.
+         db_filename: The database filename to which the changes should be made.  The new database is added as a table.
          table_name: the name for the new v03 rinchi table.
-         v02_rinchi: The name of the v02 rinchi column. Defaults to False (No rinchi in database).
-         v02_rauxinfo: The name of the v02 rauxinfo column. Defaults to False (No rauxinfos in database).
-         v03_rinchi: The name of the v03 new rinchi column. Defaults to False (No rinchi column will be created).
-         v03_rauxinfo: The name of the v03 new rinchi column. Defaults to False (No rauxinfo column will be created).
-         v03_longkey: The name of the v03 new rinchi column. Defaults to False (No longkey column will be created).
-         v03_shortkey: The name of the v03 new rinchi column. Defaults to False (No shortkey column will be created).
-         v03_webkey: The name of the v03 new webkey column. Defaults to False (No webkey column will be created).
+         v02_rinchi: The name of the v02 rinchi column.  Defaults to False (No rinchi in database).
+         v02_rauxinfo: The name of the v02 rauxinfo column.  Defaults to False (No rauxinfos in database).
+         v03_rinchi: The name of the v03 new rinchi column.  Defaults to False (No rinchi column will be created).
+         v03_rauxinfo: The name of the v03 new rinchi column.  Defaults to False (No rauxinfo column will be created).
+         v03_longkey: The name of the v03 new rinchi column.  Defaults to False (No longkey column will be created).
+         v03_shortkey: The name of the v03 new rinchi column.  Defaults to False (No shortkey column will be created).
+         v03_webkey: The name of the v03 new webkey column.  Defaults to False (No webkey column will be created).
 
     """
 
@@ -560,13 +560,13 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
 
 def transfer_table(db_source, db_destination, table_name, drop_source=True):
     """
-    Transfers a table from one database to another. Optionally drops the source database
+    Transfers a table from one database to another.  Optionally drops the source database
 
     Args:
         db_source: The name of the database to source the table
         db_destination: The name of the destination database
         table_name: The name of the table to transfer
-        drop_source: Whether to drop the source database. Defaults to True
+        drop_source: Whether to drop the source database.  Defaults to True
 
     """
     logging.info("transferring {} from {} to {}...".format(table_name,db_source,db_destination))
@@ -618,7 +618,7 @@ def gen_rauxinfo(db_filename, table_name):
 
 def compare_fingerprints(search_term, db_filename, table_name):
     """
-    Search database for top 10 closest matches to a RInChI by fingerprinting method. Sent to stdout.
+    Search database for top 10 closest matches to a RInChI by fingerprinting method.  Sent to stdout.
 
     Args:
         search_term: A RInChi or Long-RInChIKey to search with
@@ -681,7 +681,7 @@ def recall_fingerprints(lkey, db_filename, table_name):
 
 def update_fingerprints(db_filename, table_name, fingerprint_table_name):
     """
-    NOT CURRENTLY WORKING. NEEDS UPDATING TO USE MULTITHREADING FOR USABLE PERFORMANCE
+    NOT CURRENTLY WORKING.  NEEDS UPDATING TO USE MULTITHREADING FOR USABLE PERFORMANCE
 
     Calculates the reaction fingerprint as defined in the reaction Reaction class, and stores
     it in the given database in a compressed form
@@ -694,7 +694,7 @@ def update_fingerprints(db_filename, table_name, fingerprint_table_name):
     """
     db = sqlite3.connect(db_filename)
 
-    # Poor method. A database cannot have two cursors pointing at it.
+    # Poor method.  A database cannot have two cursors pointing at it.
     cursor = db.cursor()
     cursor2 = db.cursor()
 
@@ -731,7 +731,7 @@ def update_fingerprints(db_filename, table_name, fingerprint_table_name):
 
 def populate_queue_general(q, db_filename, table_name, source_columns, processing_function=None, processing_args=None):
     """
-    Populates a queue with items processed from a database using a processing function provided. If no processing function
+    Populates a queue with items processed from a database using a processing function provided.  If no processing function
     is provided then each row is simply placed into the queue.
 
     Args:

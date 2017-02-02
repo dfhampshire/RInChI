@@ -3,7 +3,7 @@ RInChI test module.
 
     2016 D.F. Hampshire
 
-This module tests the module functions. Not very user friendly...
+This module tests the module functions.  Not very user friendly...
 
 The RInChI library and programs are free software developed under the
 auspices of the International Union of Pure and Applied Chemistry (IUPAC).
@@ -22,7 +22,7 @@ print("\n\n\n========Start Test!========\n================")
 three_reactions = ("RInChI=0.03.1S/AAA<>BBB!CCC/d-", "RInChI=0.03.1S/AAA<>DDD/d+", "RInChI=0.03.1S/DDD<>EEE!FFF/d=")
 three_reactions_unknown = (
     "RInChI=0.03.1S/AAA<>BBB!CCC/d-/u1-0-0", "RInChI=0.03.1S/AAA<>DDD/d+", "RInChI=0.03.1S/DDD<>EEE!FFF/d+")
-# Define an arbitrary (and impossible!) three step reaction, inchis names "AAA" , "BBB" etc. but with unknown structures
+# Define an arbitrary (and impossible!) three step reaction, inchis names "AAA" , "BBB" etc.  but with unknown structures
 # Print results
 print(tools.add(three_reactions))
 try:
