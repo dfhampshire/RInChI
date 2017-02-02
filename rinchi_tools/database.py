@@ -27,6 +27,7 @@ def rdf_to_csv(rdf, outfile=None, return_rauxinfo=False, return_longkey=False, r
                return_webkey=False, return_rxninfo=False):
     """
     Convert an RD file to a CSV file containing RInChIs and other optional parameters
+
     Args:
         rdf: The RD file as a text block
         outfile: Optional output file name parameter
@@ -36,7 +37,8 @@ def rdf_to_csv(rdf, outfile=None, return_rauxinfo=False, return_longkey=False, r
         return_webkey: Include the Web key in the result
         return_rxninfo: Include RXN info in the result
 
-    Returns: The name of the CSV file created with the requested fields
+    Returns:
+        The name of the CSV file created with the requested fields
     """
 
     # Check that input was supplied
@@ -47,6 +49,7 @@ def rdf_to_csv(rdf, outfile=None, return_rauxinfo=False, return_longkey=False, r
     input_name = rdf.split(".")[-2]
     input_name = input_name.split("/")[-1]
 
+    # Generate header line
     header = ["RInChI"]
     if return_rauxinfo:
         header.append("RAuxInfo")
@@ -498,55 +501,114 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
 
     """
 
-    # Create database connections including for a temporary database
+    # Create database connections including for a temporary database and setup logging
     os.remove("conv0203.log")
     logging.basicConfig(filename='conv0203.log', level=logging.DEBUG)
     logging.info("\n========\nStarting Conversion Process\n========")
-    starttime = time.time()
+    start_time = time.time()
+
     # Construct SQL strings
     col_list = [v03_rinchi, v03_rauxinfo, v03_longkey, v03_shortkey, v03_webkey]
-    cols_to_create = []
-    colcount = 0
-    for column in col_list:
-        if column:
-            cols_to_create.append("{} text".format(column))
-            colcount += 1
-    cols_to_create = ", ".join(cols_to_create)
+    columns = [column for column in col_list if column]
 
-    if colcount == 0:
+    # Check at least one column is desired
+    if all(i == False for i in col_list):
         raise ValueError("Cannot create empty table")
 
-    # Define base commands
-    select_command = "SELECT {}, {} FROM rinchis02".format(v02_rinchi, v02_rauxinfo)
-    create_command = "CREATE TABLE IF NOT EXISTS {} ({})".format(table_name, cols_to_create)
-    insert_command = "INSERT INTO {} VALUES (".format(table_name) + ", ".join(["?"] * colcount) + ")"
+    # Define the processing function
+    def processing_function(row, args):
+        """
+        Processes a row of a RInChIs and RAuxInfo input into a tuple for adding to a queue
 
+        Args:
+            row: A tuple containing the RInChI and RAuxInfo
+            args: Arguments for the function
+
+        Returns:
+            The data to add to the queue
+        """
+        the_rinchi = v02_convert.convert_rinchi(row[0])
+        data_to_add = []
+        if args[0]:
+            data_to_add.append(the_rinchi)
+        if args[1]:
+            data_to_add.append(v02_convert.convert_rauxinfo(row[1]))
+        if args[2]:
+            data_to_add.append(RInChI_Handle().rinchikey_from_rinchi(the_rinchi, "L"))
+        if args[3]:
+            data_to_add.append(RInChI_Handle().rinchikey_from_rinchi(the_rinchi, "S"))
+        if args[4]:
+            data_to_add.append(RInChI_Handle().rinchikey_from_rinchi(the_rinchi, "W"))
+        return tuple(data_to_add)
+
+    # Check for existence of new table
     logging.info("Check for original table")  # Doing this now to prevent delays later
     db = sqlite3.connect(db_filename)
     cursor = db.cursor()
     drop_table_if_needed(table_name, cursor)
     db.close()
 
-    q = queue.Queue(1000)
-    popul8 = threading.Thread(target=populate_queue, args=(
-        q, db_filename, select_command, v03_rinchi, v03_rauxinfo, v03_longkey, v03_shortkey, v03_webkey))
-    depopul8 = threading.Thread(target=depopulate_queue, args=(q, create_command, insert_command))
-    depopul8.start()
-    popul8.start()
-    depopul8.join()
-    popul8.join()
-    logging.info("transfering temporary database...")
-    db = sqlite3.connect(db_filename)
+    # Create args and run the queue
+    pop_args = [populate_queue_general,[db_filename, "rinchis02", [v02_rinchi, v02_rauxinfo], processing_function, col_list]]
+    depop_args = [depopulate_queue_general, [columns, table_name]]
+    run_queue(1000,pop_args,depop_args)
+
+    # Transfer table from temporary database to new database
+    transfer_table("rinchi_temp.db",db_filename,table_name)
+    logging.info("Finished conversion in {} seconds".format(time.time() - start_time))
+
+
+def transfer_table(db_source, db_destination, table_name, drop_source=True):
+    """
+    Transfers a table from one database to another. Optionally drops the source database
+
+    Args:
+        db_source: The name of the database to source the table
+        db_destination: The name of the destination database
+        table_name: The name of the table to transfer
+        drop_source: Whether to drop the source database. Defaults to True
+
+    """
+    logging.info("transferring {} from {} to {}...".format(table_name,db_source,db_destination))
+
+    # Create connection and attach database
+    db = sqlite3.connect(db_destination)
     cursor = db.cursor()
-    cursor.execute("ATTACH DATABASE ? AS db2", ("rinchi_temp.db",))
+    cursor.execute("ATTACH DATABASE ? AS db2", (db_source,))
+
+    # Execute SQL create command for the source table on the new table
     cursor.execute("SELECT sql FROM db2.sqlite_master WHERE type='table' AND name=?", (table_name,))
-    newsql = cursor.fetchone()[0]
-    cursor.execute(newsql)
+    cursor.execute(cursor.fetchone()[0])
+
+    # Insert values from source to destination
     cursor.execute("INSERT INTO {0} SELECT * FROM db2.{0}".format(table_name))
     db.commit()
     db.close()
-    os.remove("rinchi_temp.db")
-    logging.info("Finished conversion in {} seconds".format(time.time() - starttime))
+
+    # Drop the source table
+    if drop_source:
+        os.remove(db_source)
+
+def gen_rauxinfo(db_filename, table_name):
+    """
+    Updates a table in a database to give rauxinfos where the column is null
+    Args:
+        db_filename: Database filename
+        table_name: name of table
+    """
+    db = sqlite3.connect(db_filename)
+    cursor = db.cursor()
+
+    def converter(rinchi):
+        """Interfaces the rauxinfo converter in v02_convert.py"""
+        rauxinfo = v02_convert.gen_rauxinfo(rinchi)
+        return rauxinfo
+
+    # Creating SQL function increases performance
+    db.create_function("convert", 1, converter)
+    cursor.execute(
+        "UPDATE {} SET rauxinfo = convert(rinchi) WHERE rauxinfo IS NULL or rauxinfo = '';".format(table_name))
+    db.commit()
     return
 
     ##########################################################
@@ -628,6 +690,7 @@ def update_fingerprints(db_filename, table_name, fingerprint_table_name):
         db_filename: the database filename to update
         table_name: The table containing the RInChIs
         fingerprint_table_name: The table to contain the fingerprint
+
     """
     db = sqlite3.connect(db_filename)
 
@@ -666,49 +729,39 @@ def update_fingerprints(db_filename, table_name, fingerprint_table_name):
 #################################################
 
 
-def populate_queue(main_q, db_filename, s_command, v03_rinchi, v03_rauxinfo, v03_longkey, v03_shortkey, v03_webkey):
+def populate_queue_general(q, db_filename, table_name, source_columns, processing_function=None, processing_args=None):
     """
-    Populates a queue of version 0.03 rinchis with processes version 0.02 rinchis
-    
-    TODO modularise
+    Populates a queue with items processed from a database using a processing function provided. If no processing function
+    is provided then each row is simply placed into the queue.
 
     Args:
-        main_q: A queue object 
-        db_filename: the database to executethe command on
-        s_command: the select command to get the data
-        v03_rinchi: include the rinchi
-        v03_rauxinfo: include the rauxinfo
-        v03_longkey: include the longkey
-        v03_shortkey: include the shortkey
-        v03_webkey: include the webkey
+        q: A queue object instance
+        db_filename: The filename of the database from which to populate the queue
+        table_name: The name of the table from which to populate the queue
+        source_columns: A list of columns to select from the table
+        processing_function: A function which takes a row and outputs a row for the new table
+        processing_args: List of arguments if needed to pass to the function
     """
-
-    db = sqlite3.connect(db_filename)
-    cursornew = db.cursor()
-    logging.info("populating")
-    for row in cursornew.execute(s_command):
-        the_rinchi = v02_convert.convert_rinchi(row[0])
-        data_to_add = []
-        if v03_rinchi:
-            data_to_add.append(the_rinchi)
-        if v03_rauxinfo:
-            data_to_add.append(v02_convert.convert_rauxinfo(row[1]))
-        if v03_longkey:
-            data_to_add.append(RInChI_Handle().rinchikey_from_rinchi(the_rinchi, "L"))
-        if v03_shortkey:
-            data_to_add.append(RInChI_Handle().rinchikey_from_rinchi(the_rinchi, "S"))
-        if v03_webkey:
-            data_to_add.append(RInChI_Handle().rinchikey_from_rinchi(the_rinchi, "W"))
-        main_q.put(data_to_add)
-        while main_q.full():
-            time.sleep(0.01)
-    logging.info("finished_populating")
-    db.close()
+    if callable(processing_function) or processing_function is None:
+        db = sqlite3.connect(db_filename)
+        cursor = db.cursor()
+        logging.info("populating")
+        for row in sql_search(cursor,table_name):
+            if processing_function is not None:
+                row = processing_function(row,processing_args)
+            q.put(row)
+            while q.full():
+                time.sleep(0.01)
+        logging.info("finished_populating")
+        db.close()
+    else:
+        raise ValueError("Function not given as argument 'Processing function'")
 
 
-def depopulate_queue(q, create_command, i_command):
+def depopulate_queue_general(q, columns, table_name):
     """
-    Removes items from the queue and processess them
+    Removes items from the queue and processes them
+
     Args:
         q: The queue to depopulate
         create_command: the create command to make a temporary database
@@ -716,11 +769,11 @@ def depopulate_queue(q, create_command, i_command):
     """
     db = sqlite3.connect("rinchi_temp.db")
     cursor = db.cursor()
-    cursor.execute(create_command)
+    create_sql_table(cursor,table_name,columns)
     logging.info("depopulating")
     while True:
         try:
-            cursor.execute(i_command, q.get(True, 2))
+            sql_insert(cursor,table_name, q.get(True, 2))
             # Waits for 2 seconds, otherwise throws `Queue.Empty`
         except queue.Empty:
             logging.info("Finished depopulating")
@@ -729,24 +782,27 @@ def depopulate_queue(q, create_command, i_command):
     db.close()
 
 
-def gen_rauxinfo(db_filename, table_name):
+def run_queue(q_length, *threads):
     """
-    Updates a table in a database to give rauxinfos where teh column is null
-    :param db_filename: Database filename
-    :param table_name: name of table
-    :return: None
+    Runs a set of functions as threads which perform functions on a queue and ends them together
+
+    Args:
+        q_length: The length of the queue to populate for converting the data
+        *threads: The threads store as a tuple of the function name, and the arguments for that function, excluding
+        the first argument which is the queue object created in this function
     """
-    db = sqlite3.connect(db_filename)
-    cursor = db.cursor()
+    q = queue.Queue(q_length)
+    thread_list = []
 
-    def converter(rinchi):
-        """Interfaces the rauxinfo converter in v02_convert.py"""
-        rauxinfo = v02_convert.gen_rauxinfo(rinchi)
-        return rauxinfo
+    # Create a list of thread objects
+    for thread in threads:
+        args = [q] + thread[1]
+        thread_list.append(threading.Thread(target=thread[0], args=args))
 
-    # Creating SQL function increases performance
-    db.create_function("convert", 1, converter)
-    cursor.execute(
-        "UPDATE {} SET rauxinfo = convert(rinchi) WHERE rauxinfo IS NULL or rauxinfo = '';".format(table_name))
-    db.commit()
-    return
+    # Start the threads
+    for thread in thread_list:
+        thread.start()
+
+    # End the threads together
+    for thread in thread_list:
+        thread.join()
