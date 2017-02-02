@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """
-# NEW PYTHON SCRIPTS
-# TESTING PHASE
+Search program for a python database.
 
-# BENJAMIN HAMMOND 2014
+BENJAMIN HAMMOND 2014
+
+Significant restructuring and feature adding DUNCAN HAMPSHIRE 2017
+
 """
 
 import argparse

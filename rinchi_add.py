@@ -5,34 +5,15 @@ RInChI addition script.
 
     Copyright 2012 C.H.G. Allen 2016 D.F. Hampshire
 
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0 .
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-
-This module provides a function for adding together RInChIs representing the
-individual steps of a multi-step reaction into one RInChI representing the
-overall process. It also interfaces with the RInChI v0.03 software as provided
-by the InChI trust.
-
-The RInChI library and programs are free software developed under the
-auspices of the International Union of Pure and Applied Chemistry (IUPAC).
-
-The input RInChI file should contain the RInChIs representing the steps of the
-reaction IN ORDER and separated by line breaks.
+Rewritten to use argparse module
 
 """
 
 import argparse
 
 from rinchi_tools import utils, tools
+
+# TODO refactor into a more logical command line call interface
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="RInChI addition \n{}".format(__doc__))

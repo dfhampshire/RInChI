@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-New Object Orientated Python Scripts
+Code to run the Object Orientated Python Scripts
 
 B. Hammond 2014
 D. Hampshire 2016
@@ -17,6 +17,8 @@ from scipy.spatial import distance
 from rinchi_tools import analysis, database
 from rinchi_tools.molecule import Molecule
 from rinchi_tools.reaction import Reaction
+
+# TODO simplify and test this. PHP web implementation need too
 
 if __name__ == "__main__":
 

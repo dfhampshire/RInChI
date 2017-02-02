@@ -30,19 +30,21 @@ import textwrap
 from rinchi_tools import analysis
 
 
+# TODO refactor functions to include new and old search implementations, comment.
+
 def __search(rinchi_path, inchi_path, reactant=False, product=False, eqm=False, agent=False, list_rinchis=False):
     """
     Searches a flat files containing RInChIs for a particular InChI. This is somewhat superseeded by the action of the
     search function in the database module.
 
-    :param rinchi_path: Th path to the list of rinchis
-    :param inchi_path: the path to the file containing the inchi to be searched for
-    :param reactant: Look for inchi in reactants
-    :param product: Look for inchi in products
-    :param eqm: Look for inchi in reactants or products
-    :param agent: look for inchi in agents layer
-    :param list_rinchis: list the rinchis containing the inchi
-    :return: none
+    Args:
+        rinchi_path: Th path to the list of rinchis
+        inchi_path: the path to the file containing the inchi to be searched for
+        reactant: Look for inchi in reactants
+        product: Look for inchi in products
+        eqm: Look for inchi in reactants or products
+        agent: look for inchi in agents layer
+        list_rinchis: list the rinchis containing the inchi
     """
     if not (reactant or product or eqm or agent):
         reactant = True
@@ -62,7 +64,6 @@ def __search(rinchi_path, inchi_path, reactant=False, product=False, eqm=False, 
         if list_rinchis:
             for rinchi_entry in results:
                 print(rinchi_entry)
-        return
 
     if reactant:
         results_publisher('r', 'reactant')
@@ -72,17 +73,18 @@ def __search(rinchi_path, inchi_path, reactant=False, product=False, eqm=False, 
         results_publisher('e', 'equilibrium reagent')
     if agent:
         results_publisher('a', 'reaction agent')
-    return
 
 
 def __cyclic(input_path, list_rinchis=False, search=False, permol=False, perspecmol=False):
     """
-    :param input_path:
-    :param list_rinchis:
-    :param search:
-    :param permol:
-    :param perspecmol:
-    :return:
+    Find cyclic changes
+
+    Args:
+        input_path:
+        list_rinchis:
+        search:
+        permol:
+        perspecmol:
     """
     pm = [False, False]
     if permol:
@@ -113,21 +115,23 @@ def __cyclic(input_path, list_rinchis=False, search=False, permol=False, perspec
             if list_rinchis:
                 for rinchi in results[ring_change]:
                     print(rinchi)
-    return
 
 
 def __stereochem(input_path, list_rinchis=False, well_defined=False, sp2=True, sp3=True, search=False, permol=False,
                  perspecmol=False):
     """
-    :param input_path:
-    :param list_rinchis:
-    :param well_defined:
-    :param sp2:
-    :param sp3:
-    :param search:
-    :param permol:
-    :param perspecmol:
-    :return:
+    Find stereochemical changes
+
+    Args:
+        input_path:
+        list_rinchis:
+        well_defined:
+        sp2:
+        sp3:
+        search:
+        permol:
+        perspecmol:
+
     """
     pm = [False, False]
     if permol:
@@ -169,7 +173,6 @@ def __stereochem(input_path, list_rinchis=False, well_defined=False, sp2=True, s
             if list_rinchis:
                 for rinchi in results[stereochange]:
                     print(rinchi)
-    return
 
 
 if __name__ == "__main__":

@@ -214,13 +214,11 @@ def rxn_layers_hasher(rxn_layers):
     """Create a 5char "hash" of a RInChI's reaction layers.
     
     Args:
-        rxn_layers: A list of the reaction layers, including their 1char flags
-            (but not including the /'s)
+        rxn_layers: A list of the reaction layers, including their 1char flags(but not including the /'s)
             
     Returns:
         rxn_layer_hashed: The 5char "hash".  The scare-quotes reflect the fact
-            that this is not a true hash, as the first character is in fact a
-            directionality flag.
+            that this is not a true hash, as the first character is in fact a directionality flag.
             
     Raises:
         RinchiError: If the rxn_layers are non-standard.
@@ -257,11 +255,13 @@ def rxn_layers_hasher(rxn_layers):
 def alphabet_hash(arg, length='64'):
     """
     Hash an argument using sha256 and alphabetical representation.
+
     Args:
         arg: Argument to hash
         length: the length of the SHA hash desired
 
-    Returns: The SHA256 hash
+    Returns:
+        The SHA256 hash
     """
 
     def sha256_hash(arg):

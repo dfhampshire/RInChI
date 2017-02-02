@@ -11,6 +11,7 @@ import os
 
 
 # TODO finish this!!!
+
 files = []
 nfiles = []
 for file in os.listdir("."):

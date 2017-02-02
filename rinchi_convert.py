@@ -1,27 +1,12 @@
 #!/usr/bin/env python3
 """
-RInChI Conversion Script.
+RInChI Conversion Program
 
-    Copyright 2016 D.F. Hampshire
+    2012 C. Allen
+    2016 D.F. Hampshire
 
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
+2016 - Code rewritten for Python 3 using the argparse module, and major structural and procedural changes.
 
-    http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-
-
-This script is able to convert between RXNfiles, RDfiles and RInChIs.. It also
-interfaces with the RInChI v0.03 software as provided by the InChI trust.
-
-The RInChI library and programs are free software developed under the
-auspices of the International Union of Pure and Applied Chemistry (IUPAC).
 """
 
 import argparse
@@ -29,10 +14,12 @@ import argparse
 from rinchi_tools import conversion, utils
 from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
 
+# TODO refactor functions into module
+
 
 def __rdf2rinchi(input_path, rauxinfo=False, longkey=False, shortkey=False, webkey=False, equilibrium=False,
                  fileout=False):
-    """Called when -rdf2rinchi is given as the 1st argument of the script."""
+    """Called when -rdf2rinchi is given as the 1st argument of the script"""
     input_name = input_path.split('/')[-1].split('.')[0]
     try:
         input_file = open(input_path).read()
@@ -43,14 +30,14 @@ def __rdf2rinchi(input_path, rauxinfo=False, longkey=False, shortkey=False, webk
     # Generate the requested data.
     results = conversion.rdf_2_rinchis(input_file, 0, 0, equilibrium, rauxinfo, longkey, shortkey, webkey, False)
     rinchi_text = ""
+
     # Construct output string
     for entry in list(zip(*results)):
         for item in entry:
             rinchi_text += str(item)
-            # Uses the output utility
-    utils.output(rinchi_text, not fileout, "rinchi", input_name)
 
-    return
+    # Uses the output utility
+    utils.output(rinchi_text, not fileout, "rinchi", input_name)
 
 
 def __rxn2rinchi(input_path, ret_rauxinfo=False, longkey=False, shortkey=False, webkey=False, force_equilibrium=False,
@@ -78,11 +65,11 @@ def __rxn2rinchi(input_path, ret_rauxinfo=False, longkey=False, shortkey=False, 
         rinchi_text += RInChI_Handle().rinchikey_from_rinchi(rinchi, "W") + '\n'
     # Uses the output utility
     utils.output(rinchi_text, not file_out, "rinchi", input_name)
-    return
 
 
 def __rinchi2file(input_path, rxnout=True, rdout=False, fileout=True):
     """Called when -rinchi2rxn is given as the 1st argument of the script."""
+
     # Parse RInChI file input.
     input_name = input_path.split('/')[-1].split('.')[0]
     try:
@@ -117,7 +104,6 @@ def __rinchi2file(input_path, rxnout=True, rdout=False, fileout=True):
         for index, rinchi_in in enumerate(input_rinchis):
             rd = RInChI_Handle().file_text_from_rinchi(rinchi_in, input_rauxinfos[index], "RD")
             utils.output(rd, not fileout, "rdf", input_name)
-    return
 
 
 def __rinchi2key(input_path, longkey=False, shortkey=False, webkey=False, inc_rinchi=False, file_out=False):
@@ -132,6 +118,7 @@ def __rinchi2key(input_path, longkey=False, shortkey=False, webkey=False, inc_ri
     input_rinchis = []
     input_rauxinfos = []
     rinchi_last = False
+
     # Ensure rinchis are appended correctly
     for line in input_file.readlines():
         if line.startswith('RInChI'):
@@ -147,7 +134,6 @@ def __rinchi2key(input_path, longkey=False, shortkey=False, webkey=False, inc_ri
         input_rauxinfos.append("")
 
     input_file.close()
-    # Parse optional arguments.
 
     # Generate the requested data.
     rinchi_text = ''
@@ -162,7 +148,6 @@ def __rinchi2key(input_path, longkey=False, shortkey=False, webkey=False, inc_ri
             rinchi_text += RInChI_Handle().rinchikey_from_rinchi(rinchi_in, "W") + '\n'
 
     utils.output(rinchi_text, not file_out, "rinchi", input_name)
-    return
 
 
 if __name__ == "__main__":

@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """
-# NEW PYTHON SCRIPTS
-# TESTING PHASE
+Program to run the Python Databasing tools
 
-# RInChI Project
-# BENJAMIN HAMMOND 2014
+Ben Hammond 2014
+Duncan Hampshire 2016
 """
 
 import argparse
