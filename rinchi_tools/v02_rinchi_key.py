@@ -13,7 +13,7 @@ a free python library for the manipulation of chemical formats, now stored perma
 
 import hashlib
 
-from rinchi_tools import tools, v02_inchi_key, utils
+from rinchi_tools import tools, utils, v02_inchi_key
 
 # The following variable defines the version number of the RInChIKeys created
 # by this module.
@@ -32,11 +32,12 @@ class InchiError(ValueError):
 
 
 def inchi_2_inchikey(inchi):
-    """Take an InChI and return its InChIKey.
-    
+    """
+    Take an InChI and return its InChIKey.
+
     Args:
         inchi: An InChI.
-        
+
     Returns:
         inchikey: The InChI's inchikey.
     """
@@ -46,11 +47,12 @@ def inchi_2_inchikey(inchi):
 
 
 def rinchi_2_longkey(rinchi):
-    """Create Long-RInChIKey from a RInChI.
-    
+    """
+    Create Long-RInChIKey from a RInChI.
+
     Args:
         rinchi: The RInChI of which to create the RAuxInfo.
-    
+
     Returns:
         The Long-RInChIKey of the RinChI.
     """
@@ -74,17 +76,16 @@ def rinchi_2_longkey(rinchi):
 
     # Format the InChIKeys for inclusion in the Long-RInChIKey.
     def rinchikeyfy(inchikeys):
-        """Process a group of InChIKeys for inclusion in a Long-RInChIKey.
-        
+        """
+        Process a group of InChIKeys for inclusion in a Long-RInChIKey.
+
         Args:
-            inchikeys: A list of InChIKeys.  An empty string in this list is
-                interpreted as representing the Key of a structure which
-                is unable to be described by an InChI.
-            
+            inchikeys: A list of InChIKeys.  An empty string in this list is interpreted as representing the Key of a
+                structure which is unable to be described by an InChI.
+
         Returns:
             versions: A list of the version identifiers of the InchIKeys.
-            inchikey_group: A string of InChIKey bodies ready for inclusion in
-                a Long-RInChIKey.
+            inchikey_group: A string of InChIKey bodies ready for inclusion in a Long-RInChIKey.
         """
         versions = []
         bodies = []
@@ -103,10 +104,13 @@ def rinchi_2_longkey(rinchi):
     inchikey_gp1_verss, inchikey_gp1 = rinchikeyfy(gp1_inchikeys)
     inchikey_gp2_verss, inchikey_gp2 = rinchikeyfy(gp2_inchikeys)
     inchikey_gp3_verss, inchikey_gp3 = rinchikeyfy(gp3_inchikeys)
+
     # Get the version info of the InChIKeys
     inchikey_vers = utils.consolidate(inchikey_gp1_verss + inchikey_gp2_verss + inchikey_gp3_verss)
+
     # Hash reaction layers.
     rxn_layers_hash = rxn_layers_hasher(rxn_layers)
+
     # Construct and return the Long-RInChIKey
     if inchikey_gp3:
         inchikey_gp3 = '--' + inchikey_gp3
@@ -116,11 +120,12 @@ def rinchi_2_longkey(rinchi):
 
 
 def rinchi_2_shortkey(rinchi):
-    """Create a Short-RInChIKey from a RInChI.
-    
+    """
+    Create a Short-RInChIKey from a RInChI.
+
     Args:
         rinchi: The RInChI from which to create the Short-RInChIKey
-    
+
     Returns:
         shortkey:
             The Short-RInChIKey of the RInChI
@@ -137,14 +142,15 @@ def rinchi_2_shortkey(rinchi):
 
 
 def rinchi_gp_hasher(rinchi_gp):
-    """Create a two-part hash of a RInChI group.
-    
+    """
+    Create a two-part hash of a RInChI group.
+
     Args:
         rinchi_gp: A list of InChIs, which together make up a RInChI group.
-        
+
     Returns:
         majors_hash, minors_hash: A two-part hash of the RInChI group.
-    
+
     Raises:
         InchiError: If the InChI isn't version 1S.
     """
@@ -199,20 +205,21 @@ def rinchi_gp_hasher(rinchi_gp):
 
 
 def rxn_layers_hasher(rxn_layers):
-    """Create a 5char "hash" of a RInChI's reaction layers.
-    
+    """
+    Create a 5char "hash" of a RInChI's reaction layers.
+
     Args:
         rxn_layers: A list of the reaction layers, including their 1char flags(but not including the /'s)
-            
+
     Returns:
         rxn_layer_hashed: The 5char "hash".  The scare-quotes reflect the fact that this is not a true hash,
         as the first character is in fact a directionality flag.
-            
+
     Raises:
         RinchiError: If the rxn_layers are non-standard.
     """
-    # Loop over the layers looking for the direction layer, and set the
-    # direction flag accordingly.
+
+    # Loop over the layers looking for the direction layer, and set the direction flag accordingly.
     for index, layer in enumerate(rxn_layers):
         dlayer_found = False
         if layer.startswith('d'):
@@ -230,12 +237,15 @@ def rxn_layers_hasher(rxn_layers):
             dlayer_index = index
     if not dlayer_found:
         dflag = 'N'
+
     # Remove the direction layer, if extant.
     if dlayer_found:
         del rxn_layers[dlayer_index]
+
     # Sort the other layers into a standard format, and hash them up.
     other_layers = '/'.join(rxn_layers)
     rest_hashed = alphabet_hash(other_layers, 4)
+
     # Concatenate and return the final product.
     return dflag + rest_hashed
 

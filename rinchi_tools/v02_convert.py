@@ -1,13 +1,16 @@
 """
 RInChI v0.02 to 0.03 conversion scripts.
 
-D.F. Hampshire 2016
+    D.F. Hampshire 2016
 """
 
-from rinchi_tools import tools, utils, inchi_tools
+from rinchi_tools import inchi_tools, tools, utils
 
 
 class VersionError(Exception):
+    """
+    Define an exception which deals with InChI and RInChI versions
+    """
     pass
 
 
@@ -58,7 +61,8 @@ def gen_rauxinfo(rinchi):
 
     # Format the AuxInfos for inclusion in the RAuxInfo.
     def rauxinfofy(auxinfos):
-        """Process a group of AuxInfos for inclusion in a RAuxInfo.
+        """
+        Process a group of AuxInfos for inclusion in a RAuxInfo.
 
         Args:
             auxinfos: A list of InChI AuxInfos.  An empty string in this list is
@@ -89,11 +93,13 @@ def gen_rauxinfo(rinchi):
     auxinfo_gp1_verss, auxinfo_gp1 = rauxinfofy(gp1_auxinfo)
     auxinfo_gp2_verss, auxinfo_gp2 = rauxinfofy(gp2_auxinfo)
     auxinfo_gp3_verss, auxinfo_gp3 = rauxinfofy(gp3_auxinfo)
+
     # Check that all the auxinfo groups have the same version info.
     try:
         auxinfo_vers = utils.consolidate(auxinfo_gp1_verss + auxinfo_gp2_verss + auxinfo_gp3_verss)
     except ValueError:
         raise VersionError("RAuxInfo can only be made from same-version AuxInfos")
+
     # Construct and return the RAuxInfo
     if auxinfo_gp3:
         auxinfo_gp3 = '///' + auxinfo_gp3
@@ -102,7 +108,8 @@ def gen_rauxinfo(rinchi):
 
 
 def convert_rauxinfo(rauxinfo):
-    """Convert a v0.02 RAuxInfo into a v0.03 RAuxInfo.
+    """
+    Convert a v0.02 RAuxInfo into a v0.03 RAuxInfo.
 
     Args:
         rauxinfo: A RAuxInfo of version 0.02.
@@ -116,12 +123,13 @@ def convert_rauxinfo(rauxinfo):
 
 
 def convert_all(rinchi, rauxinfo):
-    """Convert a v0.02 RInChI & RAuxInfo into a v0.03 RInChI & RAuxInfo.
-    
+    """
+    Convert a v0.02 RInChI & RAuxInfo into a v0.03 RInChI & RAuxInfo.
+
     Args:
         rinchi: A RInChI of version 0.02.
         rauxinfo: A RAuxInfo of version 0.02.
-        
+
     Returns:
         rauxinfo: A RAuxInfo of version 0.03.
         rauxinfo: A RAuxInfo of version 0.03.
@@ -144,9 +152,11 @@ def split_rauxinfo(rauxinfo):
         layer4_auxinfos: list of layer 4 auxinfos
 
     """
+
     # Separate version information from the RAuxInfo body.
     rauxinfo_version, rauxinfo_body = rauxinfo.split('=')[1].split('/', 1)
     auxinfo_version = rauxinfo_version.split('.', 2)[2]
+
     # Convert RAuxInfo groups to RAuxInfos
     rauxinfo_groups = rauxinfo_body.split('///')
 
@@ -171,7 +181,7 @@ def split_rauxinfo(rauxinfo):
 def split_rinchi(rinchi):
     """
     Split a v0.02 RInChI into its constituent parts.
-    
+
     Args:
         rinchi: A RInChI of version 0.02
 
@@ -179,12 +189,12 @@ def split_rinchi(rinchi):
         VersionError: RInChI must be version 0.02.
 
     Returns:
-        layer2_inchis, layer3_inchis, layer4_inchis: Lists of the InChIs which made up
-        the RInChI groups, returned in the order they were displayed.
-        direction:"+","-", or "=" representing the direction of the reaction.
+        layer2_inchis, layer3_inchis, layer4_inchis: Lists of the InChIs which made up the RInChI groups, returned in
+        the order they were displayed. direction:"+","-", or "=" representing the direction of the reaction.
         u_structs: unknown structures in each layer in the form of a tuple (#2,#3,#4)
 
     """
+
     # Separate version information from the RInChI body.
     rinchi_version, rinchi_body = rinchi.split('=')[1].split('/', 1)
     if rinchi_version.startswith("0.02"):
@@ -195,6 +205,7 @@ def split_rinchi(rinchi):
             inchi_version = ''
     else:
         raise VersionError("RInChI must be version 0.02")
+
     # Remove reaction data layers.
     direction = ""
     if '/d+' == rinchi_body[-3:]:
@@ -206,6 +217,7 @@ def split_rinchi(rinchi):
     if '/d=' == rinchi_body[-3:]:
         rinchi_body = rinchi_body[:-3]
         direction = "="
+
     # Convert RInChI groups to InChIs
     rinchi_groups = rinchi_body.split('///')
 
@@ -233,4 +245,3 @@ def split_rinchi(rinchi):
         l4u = 0
     u_structs = [l2u, l3u, l4u]
     return layer2_inchis, layer3_inchis, layer4_inchis, direction, u_structs
-

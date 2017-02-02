@@ -1,14 +1,15 @@
 """
-RInChI Object Orientated code as developed by Ben Hammond 2014
+RInChI Object Orientated Molecule Class Module
 
-Significant restructuring of classes by Duncan Hampshire 2016 to gain more consistent and less verbose code.
+This module contains the Molecule class and associated functions
 
-This module contains the Molecule class
+    B. Hammond 2014
+    D. Hampshire 2017 - Significant restructuring of the class to gain more consistent and less verbose code.
 """
 
 import copy
 import re
-from collections import deque, Counter
+from collections import Counter, deque
 from itertools import zip_longest
 
 from numpy.linalg import matrix_rank
@@ -19,10 +20,9 @@ from rinchi_tools.atom import Atom
 
 class Molecule:
     """
-    A class containing a molecule as defined by an inchi.  Contains functions for generating
-    edge lists and node edge tables describing molecular graphs, and functions that use
-    molecular graphs to calculate information about the molecules - ring sizes, atom hybridisation,
-    contained functional groups etc.
+    A class containing a molecule as defined by an inchi.  Contains functions for generating edge lists and node edge
+    tables describing molecular graphs, and functions that use molecular graphs to calculate information about the
+    molecules - ring sizes, atom hybridisation, contained functional groups etc.
     """
 
     def __init__(self, inchi):
@@ -35,12 +35,12 @@ class Molecule:
         self.molecular_graph = None
         self.fingerprint = None
         self.edge_list = None
-        # Flag for whether a ring search has taken place, avoids unnecessary
-        # computation
+
+        # Flag for whether a ring search has taken place, avoids unnecessary computation
         self.has_searched_rings = False
         self.has_set_elements = False
-        # Flag for whether the molecule has a connection layer - whether or not
-        # it is a simple species
+
+        # Flag for whether the molecule has a connection layer - whether or not it is a simple species
         self.has_conlayer = True if self.inchi_to_layer("c") else False
 
         # For all molecules, construct molecular graph
@@ -59,7 +59,8 @@ class Molecule:
         Args:
             inchi: A inchi (usually composite)
 
-        Returns: A list of simple inchis within the composite inchi argument
+        Returns:
+            A list of simple inchis within the composite inchi argument
         """
 
         # Separate the input InChI into the header, formula, and other layers
@@ -92,7 +93,8 @@ class Molecule:
         Args:
             inchi: An InChI string
 
-        Returns: list of Molecule objects.
+        Returns:
+            list of Molecule objects.
 
         """
         if ";" in inchi:
@@ -106,7 +108,10 @@ class Molecule:
 
     def inchi_to_chemical_formula(self):
         """
-        Returns: the Chemical Formula of the Molecule as a string
+        Converts an Inchi to a Chemical formula
+
+        Returns:
+            The Chemical Formula of the Molecule as a string
         """
         layers = self.inchi.split("/")
         return layers[1]
@@ -115,20 +120,19 @@ class Molecule:
         """
         Get the chemical formula as a dictionary
 
-        Returns: a dictionary with elements as keys and number of atoms as value
+        Returns:
+            A dictionary with elements as keys and number of atoms as value
         """
         result = {}
         if not self.formula:
             self.formula = self.inchi_to_chemical_formula()
 
-        # Find all elemental formulae followed by numbers and match the element
-        # to the count
+        # Find all elemental formulae followed by numbers and match the element to the count
         multi_elements = re.findall(r"([A-Z][a-z]?\d+)", self.formula)
         for e in multi_elements:
             result[re.search(r"([A-Z][a-z]?)", e).group()] = int(re.search(r"(\d+)", e).group())
 
-        # Any elements with no following number are implicitly present only
-        # once
+        # Any elements with no following number are implicitly present only once
         single_elements = re.findall(r"([A-Z][a-z]?)(?!\d+)(?![a-z])", self.formula)
         for e in single_elements:
             if e not in result.keys():
@@ -145,8 +149,8 @@ class Molecule:
         ordering = []
         ordered_atoms = []
 
-        # In the canonical InChI labelling scheme, carbon is first, all other elements are arranged
-        # alphabetically, excluding hydrogen
+        # In the canonical InChI labelling scheme, carbon is first, all other elements are arranged alphabetically,
+        # excluding hydrogen
         if "C" in self.formula_dict.keys():
             ordering.append("C")
         heteroatoms = sorted([a for a in self.formula_dict.keys() if not (a == "C" or a == "H")])
@@ -165,10 +169,12 @@ class Molecule:
     def inchi_to_layer(self, l):
         """
         Get a particular layer of the InChI
+
         Args:
             l: The layer of the InChI to retrieve
 
-        Returns: The InChI layer desired
+        Returns:
+            The InChI layer desired
         """
         layers = self.inchi.split("/")
         for layer in layers:
@@ -178,15 +184,15 @@ class Molecule:
             return None
 
     def set_atomic_hydrogen(self):
-        """Takes the molecular graph and the inchi, and sets the number of
-        protons attached to each atom"""
+        """
+        Takes the molecular graph and the inchi, and sets the number of protons attached to each atom
+        """
         h_layer = self.inchi_to_layer("h")
 
         if not h_layer:
             return None
 
-        # Currently ignoring mobile hydrogen
-        # Eliminate mobile hydrogen, stored as bracketed sections of the string
+        # Currently ignoring mobile hydrogen - Eliminate mobile hydrogen, stored as bracketed sections of the string
         mobile_groups = re.findall(r"\(H\d?,([\d,]+)\)", h_layer)
         mobile_protons = []
 
@@ -196,8 +202,7 @@ class Molecule:
 
         h_layer = re.sub(r"\([\d\-,]+\)", "", h_layer)
 
-        # Split the proton layer by the number of protons being attached to
-        # each atom
+        # Split the proton layer by the number of protons being attached to each atom
         list_by_proton = re.findall(r"(?<!H)([\d,\-]+)(?=H(\d?))", h_layer)
         dict_by_proton = {}
 
@@ -208,8 +213,7 @@ class Molecule:
             else:
                 dict_by_proton[int(pair[1])] = pair[0]
 
-        # Split the string of comma separated numbers and ranges into a list of
-        # numbers
+        # Split the string of comma separated numbers and ranges into a list of numbers
         for key in dict_by_proton.keys():
             if dict_by_proton[key].startswith(","):
                 dict_by_proton[key] = dict_by_proton[key][1:]
@@ -221,38 +225,42 @@ class Molecule:
                     indexes.extend(range(int(imin), int(imax) + 1))
                 else:
                     indexes.append(int(entry))
+
             # Give each atom the correct number of protons
             for index in indexes:
                 self.atoms[index].protons = key
-                # Mark atoms with mobile protons as such
+
+        # Mark atoms with mobile protons as such
         for index in mobile_protons:
             self.atoms[index].mobile_protons = 1
 
     def generate_edge_list(self):
-        """ Takes the connective layer of an inchi and returns the molecular graph as an edge list, parsing
-        it directly using re.
+        """
+        Takes the connective layer of an inchi and returns the molecular graph as an edge list, parsing it directly
+        using re.
 
         Returns:
             edges: A list containing the edges of the molecular graph
         """
         conlayer = self.inchi_to_layer("c")
+
         # Check if a connection layer was actually passed
         if not conlayer:
             self.has_conlayer = False
             return None
 
-        # Initialise a list containing the edges of the molecular graph, and copies of the connective layer
-        # that will be destroyed in the process
+        # Initialise a list containing the edges of the molecular graph, and copies of the connective layer that will
+        # be destroyed in the process
         conlayer_mut = copy.deepcopy(conlayer)
         conlayer_comma = copy.deepcopy(conlayer)
         edges = []
 
-        # Timeout variable ensures while loop will terminate, even if a
-        # non-valid string is passed
+        # Timeout variable ensures while loop will terminate, even if a non-valid string is passed
         timeout = 0
 
         # Deal with any comma separated values first
         for i in range(100):
+
             # Remove any bracketed sections that do not contain a comma
             trial_sub = re.sub(r"\([\d\-!]+\)", "!", conlayer_comma)
 
@@ -261,8 +269,7 @@ class Molecule:
                 print("Error - TIMEOUT1")
                 # return None
 
-            # If the substitution did nothing, process is finished, break out
-            # of the loop
+            # If the substitution did nothing, process is finished, break out of the loop
             if trial_sub != conlayer_comma:
                 conlayer_comma = trial_sub
             else:
@@ -273,8 +280,8 @@ class Molecule:
                 print(self.inchi)
                 print("Error - TIMEOUT2")
                 return None
-            # Add correct molecular edges for comma separated pairs of values
-            # MAY work for centres with a valence greater than 4
+            # Add correct molecular edges for comma separated pairs of values MAY work for centres with a valence
+            # greater than 4
             pairs = re.findall(r"(?=\b(\d+)\([\d\-!]+,(\d+))", conlayer_comma)
 
             for p in pairs:
@@ -282,15 +289,13 @@ class Molecule:
             conlayer_comma = re.sub(r"\b(\d+\([\d\-!]+),\d+", r"\1", conlayer_comma)
             conlayer_comma = re.sub(r"\([\d\-!]+\)", "!", conlayer_comma)
 
-        # All pairs of numbers separated by - or ( are edges of the molecular
-        # graph
+        # All pairs of numbers separated by - or ( are edges of the molecular graph
         pairs = re.findall(r"(?=(\b\d+[\-(]\d+\b))", conlayer_mut)
         for p in pairs:
             edges.append(list(map(int, re.findall(r"\d+", p))))
 
-        # While there is still a layer of parenthesis remaining, eliminate the
-        # lowest layer, and join together the atoms on either side of the
-        # parenthesis group
+        # While there is still a layer of parenthesis remaining, eliminate the lowest layer, and join together the
+        # atoms on either side of the parenthesis group
         while "(" in conlayer_mut:
             timeout += 1
             if timeout > 100:
@@ -305,11 +310,12 @@ class Molecule:
         return edges
 
     def generate_atoms(self, lst=None):
-        """Sets the node-edge graph as a dictionary.
+        """
+        Sets the node-edge graph as a dictionary.
 
         Args:
             lst: A molecular graph as a list of edges.  If no list is passed, the function sets the atoms for its
-            own instance.
+                own instance.
         """
         if lst:
             ls = lst
@@ -336,10 +342,10 @@ class Molecule:
 
     def depth_first_search(self, start=1):
         """
-        Performs a DFS over the molecular graph of a given Molecule object, returning a list of edges that form
-        a spanning tree (tree edges), and a list of the edges that would cyclise this spanning tree (back edges)
+        Performs a DFS over the molecular graph of a given Molecule object, returning a list of edges that form a
+        spanning tree (tree edges), and a list of the edges that would cyclise this spanning tree (back edges)
 
-        The number of back edges returned is
+        The number of back edges returned is equal to the number of rings that can be described in the molecule
 
         Args:
             start: Set which atom should be the starting node
@@ -347,7 +353,7 @@ class Molecule:
         Returns:
             tree_edges: A list of tree edges.
             back_edges: A list of back edges.  The list length is equal to the smallest number of cycles that can
-            describe the cycle space of the molecular graph
+                describe the cycle space of the molecular graph
         """
 
         # Ensure that the molecular graph has been generated
@@ -365,22 +371,22 @@ class Molecule:
         node_stack = [starting_node]
         nodes_visited = [starting_node]
 
-        # Sorts the edges of the molecular graph into tree edges and back edges
-        # Back edges cyclise the molecular graph, and so each back edge
-        # corresponds to a cycle
+        # Sorts the edges of the molecular graph into tree edges and back edges Back edges cyclise the molecular
+        # graph, and so each back edge corresponds to a cycle
         tree_edges = []
         back_edges = []
 
         # Main Algorithm
         while node_stack:
+
             # If the current node has any untraversed edges
             if llist_mut[current_node].bonds:
                 for child in llist_mut[current_node].bonds:
                     current_edge = [current_node, child]
 
                     # If the current node has a previously visited node as a child, this must be a back edge,
-                    # forming a cycle.  Otherwise, this is a tree edge to an unexplored node, and the current
-                    # node is changed to this node.
+                    # forming a cycle.  Otherwise, this is a tree edge to an unexplored node, and the current node is
+                    # changed to this node.
                     if child in nodes_visited:
                         back_edges.append(current_edge)
                         llist_mut[current_node].bonds.remove(child)
@@ -395,8 +401,8 @@ class Molecule:
                         node_stack.append(child)
                         current_node = child
                         break
-            # If the current node has no unvisited children, check the parent
-            # node.
+
+            # If the current node has no unvisited children, check the parent node.
             else:
                 node_stack.pop()
                 if node_stack:
@@ -417,17 +423,18 @@ class Molecule:
             start: the starting node
             finish: the finishing node as
 
-        Returns: The shortest path as a list
+        Returns:
+            The shortest path as a list
 
         """
 
-        # Collections.deque is a doubly linked list - supports fast addition
-        # and removal to either end of the list
+        # Collections.deque is a doubly linked list - supports fast addition and removal to either end of the list
         queue = deque([(start, [start])])
         while queue:
             (vertex, path) = queue.popleft()
             for nxt in set(graph[vertex].bonds) - set(path):
                 if nxt == finish:
+
                     # Target node has been found, return the path
                     return path + [nxt]
                 else:
@@ -445,8 +452,8 @@ class Molecule:
             end: the finishing node as a number
             path: latest iteration of the path
 
-        Returns: The shortest path as a list of indices
-
+        Returns:
+            The shortest path as a list of indices
         """
 
         if path is None:
@@ -459,9 +466,8 @@ class Molecule:
 
         shortest_path = []
 
-        # Iterates recursively over all non-cyclic paths linking the target and final nodes
-        # If a path is smaller than the previous smallest path, it replaces the
-        # smallest path.
+        # Iterates recursively over all non-cyclic paths linking the target and final nodes If a path is smaller than
+        # the previous smallest path, it replaces the smallest path.
         for child in graph[start].bonds:
             if child not in path:
                 new = self.find_shortest_path(graph, child, end, path)
@@ -471,15 +477,14 @@ class Molecule:
         return shortest_path
 
     def find_rings_from_back_edges(self):
-        """ Accepts output from the depth_first_search algorithm, returns a list of all rings
-            within the molecule.
+        """
+        Accepts output from the depth_first_search algorithm, returns a list of all rings within the molecule.
 
-            Will NOT find a minimum cycle basis, but can be used to find an initial cycle set
-            when performing the Horton Algorithm (see elsewhere)
+        Will NOT find a minimum cycle basis, but can be used to find an initial cycle set when performing the Horton
+        Algorithm (see elsewhere)
         """
 
-        # Initialise list of all rings in the molecule.  Accepts
-
+        # Initialise list of all rings in the molecule
         rings_list = []
         tree_edges, back_edges = self.depth_first_search()
 
@@ -497,10 +502,12 @@ class Molecule:
         self.rings = rings_list
 
     def find_initial_ring_set(self):
-        """ For every edge in the molecule, find the smallest ring is it a part of, add it to a list
-            NEEDS REIMPLEMENTATION
+        """
+        For every edge in the molecule, find the smallest ring is it a part of, add it to a list
+        NEEDS REIMPLEMENTATION
 
-            Returns: list of all minimal rings, sorted by the number of edges they contain
+        Returns:
+            list of all minimal rings, sorted by the number of edges they contain
         """
         # Ensure that the molecular graph was calculated
         if not self.atoms:
@@ -517,14 +524,17 @@ class Molecule:
                     cycles.append(self.edge_list_to_vector(self.path_to_cycle_edge_list(path)))
             except KeyError:
                 pass
+
         # Return all minimal rings, sorted by the number of edges they contain
         return sorted(cycles, key=sum)
 
     def find_initial_ring_set_trial(self):
-        """ For every edge in the molecule, find the smallest ring is it a part of, add it to a list
-            TRIAL REIMPLEMENTATION, NOT YET WORKING
+        """
+        For every edge in the molecule, find the smallest ring is it a part of, add it to a list
+        TRIAL REIMPLEMENTATION, NOT YET WORKING
 
-            Returns: list of all minimal rings, sorted by the number of edges they contain
+        Returns:
+            list of all minimal rings, sorted by the number of edges they contain
         """
         if not self.atoms:
             return None
@@ -543,18 +553,21 @@ class Molecule:
                             cycles.append(self.edge_list_to_vector(self.path_to_cycle_edge_list(path_a + path_b)))
                 except KeyError:
                     pass
+
         # Return all minimal rings, sorted by the number of edges they contain
         return sorted(cycles, key=sum)
 
     def find_linearly_independent(self, cycles):
-        """ Given a list of candidate cycles, sorted by size, this function attempts to find the
-        smallest, linearly independent basis of cycles that spans the entire cycle space of the
-        molecular graph - the Minimum Cycle Basis.
+        """
+        Given a list of candidate cycles, sorted by size, this function attempts to find the smallest,
+        linearly independent basis of cycles that spans the entire cycle space of the molecular graph - the Minimum
+        Cycle Basis.
 
         Args:
             cycles: list of candidate cycles sorted by size
 
-        Returns: None
+        Returns:
+            None
         """
 
         # If no atoms are set, molecule is a simple species - has no rings
@@ -587,13 +600,15 @@ class Molecule:
         return None
 
     def edge_list_to_vector(self, subset):
-        """Converts an edge list to a vector in the (0, 1)^N vector space spanned by the edges of the molecule
+        """
+        Converts an edge list to a vector in the (0, 1)^N vector space spanned by the edges of the molecule
 
         Args:
             subset: The vector subset to use
 
-        Returns: The vector stored as a list.
-            """
+        Returns:
+            The vector stored as a list.
+        """
         vector = []
         for edge in self.edge_list:
             if edge in subset:
@@ -612,7 +627,8 @@ class Molecule:
         Args:
             path: The path of the cycle stored as an ordered list
 
-        Returns: The edge list
+        Returns:
+            The edge list
         """
         edges = []
         for i in range(len(path)):
@@ -629,7 +645,8 @@ class Molecule:
         Args:
             vector: an edge vector stored in an iterable
 
-        Returns: The edge list
+        Returns:
+            The edge list
         """
         ls = []
         for i in range(len(vector)):
@@ -645,7 +662,8 @@ class Molecule:
         Args:
             edge_list: An edge list
 
-        Returns: A list of all the keys for the atoms which are spanned by the edge list.
+        Returns:
+            A list of all the keys for the atoms which are spanned by the edge list.
         """
         atoms = {}
         for edge in edge_list:
@@ -655,8 +673,8 @@ class Molecule:
 
     def calculate_rings(self):
         """
-        Sets the ring count property which contains the ring sizes in the format
-         { ring size : number of rings present, ...}
+        Sets the ring count property which contains the ring sizes in the format { ring size : number of rings
+        present, ...}
         """
 
         c = self.inchi_to_layer("c")
@@ -680,7 +698,8 @@ class Molecule:
         Args:
             atoms: The atoms in the ring.
 
-        Returns: number of rings
+        Returns:
+            number of rings
         """
 
         if not self.has_searched_rings:
@@ -690,12 +709,12 @@ class Molecule:
 
         count = Counter()
 
-        # Collections.deque is used to store the atom lists - supports fast
-        # cyclic permutation
+        # Collections.deque is used to store the atom lists - supports fast cyclic permutation
         atom_list = deque(atoms.rstrip())
 
         # For each ring in the molecule
         for ring in self.rings:
+
             # For each cyclic permutation of the input string
             ring_deque = deque([self.atoms[j].element for j in ring])
             for i in range(len(atom_list)):
@@ -717,7 +736,8 @@ class Molecule:
         """
         Get the ring count
 
-        Returns: a Counter object containing the number of rings of each size
+        Returns:
+            a Counter object containing the number of rings of each size
         """
         if self.atoms:
             self.calculate_rings()
@@ -729,7 +749,8 @@ class Molecule:
         """
         Does the molecule inchi have an isotopic layer?
 
-        Returns: A boolean value
+        Returns:
+            A boolean value
         """
         if self.inchi_to_layer("i"):
             return True
@@ -740,7 +761,8 @@ class Molecule:
         """
         Calculate the hybridisation of each atom
 
-        Returns: A Counter object containing the hybridisation of the atoms
+        Returns:
+            A Counter object containing the hybridisation of the atoms
         """
         if self.atoms:
             self.set_atomic_elements()
@@ -753,7 +775,8 @@ class Molecule:
         """
         Calculates the valences of each atom in the Molecule
 
-        Returns: A Counter object containing the valences of the atoms
+        Returns:
+            A Counter object containing the valences of the atoms
         """
         if self.atoms:
             self.set_atomic_elements()
@@ -766,7 +789,8 @@ class Molecule:
         """
         Count the rings of a molecule.  Result includes the elements of the ring.
 
-        Returns: a Counter containing the number of rings of each size and the elements contained by a ring
+        Returns:
+            a Counter containing the number of rings of each size and the elements contained by a ring
         """
         if self.atoms:
             self.calculate_rings()
@@ -783,7 +807,8 @@ class Molecule:
         """
         Get chemical empirical formula
 
-        Returns: Chemical formula stored as a counter
+        Returns:
+            Chemical formula stored as a counter
         """
         self.chemical_formula_to_dict()
         return Counter(self.formula_dict)

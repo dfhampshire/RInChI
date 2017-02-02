@@ -1,40 +1,23 @@
 """
-RInChI tools module.
+RInChI C library interface module.
 
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
+This module provides functions defining how RInChIs and RAuxInfos are constructed from InChIs and reaction data.  It
+also interfaces with the RInChI v0.03 software as provided by the InChI trust.
 
-    http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-
-This module provides functions defining how RInChIs and RAuxInfos are
-constructed from InChIs and reaction data.  It also interfaces with the RInChI
-v0.03 software as provided by the InChI trust.
-
-The RInChI library and programs are free software developed under the
-auspices of the International Union of Pure and Applied Chemistry (IUPAC).
-
-This file is based on that provides with the official v0.03 RInChI software release, but with modifications to ensure
+This file is based on that provided with the official v0.03 RInChI software release, but with modifications to ensure
 Python 3 compatibility.  Documentation was adapted from the official v0.03 release document.
 
+    D. Hampshire 2017
 """
 
-import os
 from ctypes import *
 
-# Set RInChIlib Path
-path = os.path.dirname(os.path.abspath(__file__))
-default_path = path + "/rinchi-lib-1"
+from rinchi_tools import external
 
 
 class Asciifier(object):
-    """ Enables seamless use with Python 3 by converting to ascii within the argument objects"""
+    """ Enables seamless use with Python 3 by converting to ascii within the argument objects
+"""
 
     @classmethod
     def from_param(cls, value):
@@ -48,11 +31,10 @@ class RInChI:
     """
     The RInChI class interfaces the C class in the librinchi library
     """
-    def __init__(self, lib_path=default_path):
-        if os.sep == "\\":
-            self.lib_handle = cdll.LoadLibrary(lib_path + "/librinchi.dll")
-        else:
-            self.lib_handle = cdll.LoadLibrary(lib_path + "/librinchi.so.1.0.0")
+
+    def __init__(self, lib_path=external.LIB_RINCHI_PATH):
+
+        self.lib_handle = cdll.LoadLibrary(lib_path)
 
         self.lib_latest_error_message = self.lib_handle.rinchilib_latest_err_msg
         self.lib_latest_error_message.restype = c_char_p
@@ -99,7 +81,8 @@ class RInChI:
             rxnfile_data: text block of RD or RXN file data
             force_equilibrium (bool) : Force interpretation of reaction as equilibrium reaction
 
-        Returns: tuple pair of the RInChI and RAuxInfo generated
+        Returns:
+            tuple pair of the RInChI and RAuxInfo generated
 
         """
         result_rinchi_string = c_char_p()
@@ -122,7 +105,8 @@ class RInChI:
             (Short-RInChIKey), “W” for Web key (Web-RInChIKey)
             force_equilibrium (bool): Force interpretation of reaction as equilibrium reaction
 
-        Returns: a RInChIKey
+        Returns:
+            a RInChIKey
 
         """
 
@@ -141,7 +125,8 @@ class RInChI:
             rinchi_auxinfo: The RAuxInfo to convert (optional, recommended)
             output_format: "RD" or "RXN"
 
-        Returns: The text block for the file
+        Returns:
+            The text block for the file
         """
         result = c_char_p()
         self.rinchi_errorcheck(
@@ -160,17 +145,20 @@ class RInChI:
         Raises:
             Exception: RInChi format related errors
 
-        Returns: A dictionary of five lists: Direction, No-Structures, Reactants, Products, and Agents.
-            Each Reactant, Product, and Agent list contains a set of (InChI, AuxInfo) tuples.  The No-Structures list
-            contains No-Structure counts for Reactants, Products, and Agents.
+        Returns:
+            A dictionary of five lists: Direction, No-Structures, Reactants, Products, and Agents. Each Reactant,
+                Product, and Agent list contains a set of (InChI, AuxInfo) tuples.  The No-Structures list contains
+                No-Structure counts for Reactants, Products, and Agents.
         """
         inchis = c_char_p()
         self.rinchi_errorcheck(self.lib_inchis_from_rinchi(rinchi_string, rinchi_auxinfo, byref(inchis)))
         inchis_unicode = str(inchis.value, 'utf-8')
         lines = inchis_unicode.split("\n")
+
         # Get rid of trailing line, if any.
         if lines[len(lines) - 1] == "":
             lines = lines[:len(lines) - 1]
+
         # Sanity check: Must contain an even number of lines (direction line +
         # No-Structure count line + n * InChI+AuxInfo line pairs).
         if len(lines) % 2 != 0:
@@ -200,6 +188,7 @@ class RInChI:
             component_prefix = lines[i * 2][:2]
             inchi_string = lines[i * 2][2:]
             aux_info = lines[i * 2 + 1][2:]
+
             # Sanity check: Must contain InChI + AuxInfo pairs.
             if not inchi_string.startswith("InChI"):
                 raise Exception("Invalid InChI string '" + inchi_string + "'.")
@@ -226,7 +215,8 @@ class RInChI:
             key_type: 1 letter controlling the type of key generated with “L” for the Long-RInChIKey, “S” for the Short
                 key (Short-RInChIKey), “W” for the Web key (Web-RInChIKey)
 
-        Returns: the RInChiKey
+        Returns:
+            the RInChiKey
         """
         result = c_char_p()
         self.rinchi_errorcheck(self.lib_rinchikey_from_rinchi(rinchi_string, key_type, byref(result)))

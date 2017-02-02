@@ -1,15 +1,16 @@
 """
-RInChI Object Orientated code as developed by Ben Hammond 2014
+RInChI Object Orientated Reaction Class Module
 
-Significant restructuring of classes by Duncan Hampshire 2016 to gain more consistent and less verbose code.
+This module contains the Reaction class and associated functions
 
-This module contains the Reaction class
+    B. Hammond 2014
+    D. Hampshire 2017 - Significant restructuring of the class to gain more consistent and less verbose code.
 """
 
 import tempfile
 from collections import Counter
 
-from numpy import array, all
+from numpy import all, array
 from scipy.sparse import csr_matrix
 
 from rinchi_tools import tools, utils
@@ -18,8 +19,10 @@ from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
 
 
 class Reaction:
-    """ This class defines a reaction, as defined by a RInChI.  Molecule objects are created from all component InChIs,
-    and the member functions of the class can be used to analyse various parameters that may be changing across the reaction
+    """
+    This class defines a reaction, as defined by a RInChI.  Molecule objects are created from all component InChIs,
+    and the member functions of the class can be used to analyse various parameters that may be changing across the
+    reaction
     """
 
     def __init__(self, rinchi):
@@ -36,16 +39,16 @@ class Reaction:
         self.reactant_inchis, self.product_inchis, self.reaction_agent_inchis, self.direction, self.no_struct = tools.split_rinchi(
             rinchi)
 
-        # Create Molecule objects for each inchi, breaking down InChIs
-        # representing composite species into individual molecule objects
+        # Create Molecule objects for each inchi, breaking down InChIs representing composite species into individual
+        # molecule objects
         self.products = []
         self.reactants = []
         self.reaction_agents = []
 
         self.reaction_fingerprint = None
 
-        # Create Molecule objects for each RInChI - Molecule.new will return a list of molecule objects, one for each disconnected component
-        # of the supplied InChI
+        # Create Molecule objects for each RInChI - Molecule.new will return a list of molecule objects, one for each
+        # disconnected component of the supplied InChI
         for i in self.reactant_inchis:
             self.reactants.extend(Molecule.new(i))
 
@@ -60,19 +63,25 @@ class Reaction:
     #########################################
 
     def longkey(self):
-        """Set longkey if not already set, then return longkey"""
+        """
+        Set longkey if not already set, then return longkey
+        """
         if not self.lkey:
             self.lkey = RInChI_Handle().rinchikey_from_rinchi(self.rinchi, "L")
         return self.lkey
 
     def shortkey(self):
-        """Set shortkey if not already set, then return shortkey"""
+        """
+        Set shortkey if not already set, then return shortkey
+        """
         if not self.skey:
             self.skey = RInChI_Handle().rinchikey_from_rinchi(self.rinchi, "S")
         return self.skey
 
     def webkey(self):
-        """Set webkey if not already set, then return webkey"""
+        """
+        Set webkey if not already set, then return webkey
+        """
         if not self.wkey:
             self.wkey = RInChI_Handle().rinchikey_from_rinchi(self.rinchi, "W")
         return self.wkey
@@ -80,10 +89,11 @@ class Reaction:
     def calculate_reaction_fingerprint(self, fingerprint_size=1024):
         """
         Calculates a reaction fingerprint for a given reaction.  Uses a 1024 bit fingerprint by default
-        Method of Daniel M.  Lowe (2015)
 
-        This function generates fingerprints for individual molecules using obabel.
-        Could be simply modified to use other software packages ie.  RDKIT if desired
+        Method of Daniel M. Lowe (2015)
+
+        This function generates fingerprints for individual molecules using obabel. Could be simply modified to use
+        other software packages ie.  RDKIT if desired
 
         Args:
             fingerprint_size: The length of the fingerprint to be generated.
@@ -112,8 +122,7 @@ class Reaction:
         product_f = [sum(i) for i in zip(*[j.fingerprint for j in self.products if j.fingerprint])]
         reaction_agent_f = [sum(i) for i in zip(*[j.fingerprint for j in self.reaction_agents if j.fingerprint])]
 
-        # If a reaction is missing any category, replace the entry with zero
-        # values
+        # If a reaction is missing any category, replace the entry with zero values
         if not reaction_agent_f:
             reaction_agent_f = [0] * fingerprint_size
         if not product_f:
@@ -121,16 +130,15 @@ class Reaction:
         if not reactant_f:
             reactant_f = [0] * fingerprint_size
 
-        # Combining the molecular fingerprints into a reaction fingerprint using the method of Daniel M.  Lowe
-        # omega and omega_na are empirically derived values as suggested in his
-        # 2015 paper
+        # Combining the molecular fingerprints into a reaction fingerprint using the method of Daniel M.  Lowe omega
+        # and omega_na are empirically derived values as suggested in his 2015 paper
         omega_na = 10
         omega_a = 1
         res = []
         for i in range(0, len(reactant_f)):
             res.append(omega_na * (product_f[i] - reactant_f[i]) + omega_a * reaction_agent_f[i])
 
-            # Reaction fingerprint is stored as a numpy sparse array
+        # Reaction fingerprint is stored as a numpy sparse array
         self.reaction_fingerprint = csr_matrix(array(res))
 
     ##########################################
@@ -153,8 +161,7 @@ class Reaction:
                 inchi_tempfile.write(inchi + "\n")
             inchi_tempfile.close()
 
-            # Uses the obabel package - must be installed on the system running
-            # the script
+            # Uses the obabel package - must be installed on the system running the script
             i_out, i_err = utils.call_command(
                 ["obabel", "-iinchi", inchi_tempfile.name, "-osvg", "-xd", "-xC", "-xj", "-xr 1"])
             print(i_err)
@@ -170,14 +177,15 @@ class Reaction:
 
     def change_across_reaction(self, func, args=None):
         """
-        Calculates the total change in a parameter across a molecule, Molecule class function
-        and returns a Python Counter object
+        Calculates the total change in a parameter across a molecule, Molecule class function and returns a Python
+        Counter object
 
         Args:
             func: The class function to calculate the parameter
             args: Args if required for the function
 
-        Returns: the change in the parameter
+        Returns:
+            the change in the parameter
 
         """
         count_products = Counter()
@@ -206,7 +214,8 @@ class Reaction:
         Args:
             func: function of a Molecule object that returns True if a given condition is satisfied
 
-        Returns: If the function returns true for any InChI, the parent RInChI is returned
+        Returns:
+            If the function returns true for any InChI, the parent RInChI is returned
 
         """
         for mol in self.reactants:
@@ -226,7 +235,8 @@ class Reaction:
             layer: A reaction layer
             inchi: an Inchi
 
-        Returns: Returns the rinchi if the inchi is present, otherwise returns None.
+        Returns:
+            Returns the rinchi if the inchi is present, otherwise returns None.
 
         """
         for mol in layer:
@@ -241,7 +251,8 @@ class Reaction:
         Args:
             inchi: A InChI string specifying a molecule
 
-        Returns: True or False (Boolean)
+        Returns:
+            True or False (Boolean)
         """
         return self.present_in_layer(self.reaction_agents, inchi)
 
@@ -249,13 +260,14 @@ class Reaction:
         """
         Determine if a reaction is balanced
 
-        Returns: True if Balanced, False otherwise.
+        Returns:
+            True if Balanced, False otherwise.
         """
         return set(self.change_across_reaction(Molecule.get_formula).values()) == {0}
 
     def detect_reaction(self, hyb_i=None, val_i=None, rings_i=None, formula_i=None):
         """
-        Detect if a reaction satifies certian conditions.  Allows searching for reactions based on ring changes,
+        Detect if a reaction satisfies certain conditions.  Allows searching for reactions based on ring changes,
         valence changes, formula changes, hybridisation of C atom changes.
 
         Args:
@@ -265,7 +277,8 @@ class Reaction:
             rings_i: The ring change(s) desired
             formula_i: The formula change(s) desired
 
-        Returns: True if the given reaction satisfies all the conditions, otherwise False.
+        Returns:
+            True if the given reaction satisfies all the conditions, otherwise False.
         """
 
         if val_i is None:

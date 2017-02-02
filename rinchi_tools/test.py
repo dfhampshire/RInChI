@@ -1,29 +1,25 @@
 """
 RInChI test module.
 
-    2016 D.F. Hampshire
+    D.F. Hampshire 2016
 
 This module tests the module functions.  Not very user friendly...
 
-The RInChI library and programs are free software developed under the
-auspices of the International Union of Pure and Applied Chemistry (IUPAC).
-
 """
 
-from rinchi_tools import tools, rinchi_lib, inchi_tools, conversion, analysis
+from rinchi_tools import analysis, conversion, inchi_tools, rinchi_lib, tools
 
 rinchi_interface = rinchi_lib.RInChI()
 
 print("\n\n\n========Start Test!========\n================")
 
-# Test addition.py
-# Define an arbitrary (and impossible!) three step reaction, inchis names
-# "AAA" , "BBB" etc.
+# Test addition.py - Define an arbitrary (and impossible!) three step reaction, inchis names "AAA" , "BBB" etc.
 three_reactions = ("RInChI=0.03.1S/AAA<>BBB!CCC/d-", "RInChI=0.03.1S/AAA<>DDD/d+", "RInChI=0.03.1S/DDD<>EEE!FFF/d=")
 three_reactions_unknown = (
     "RInChI=0.03.1S/AAA<>BBB!CCC/d-/u1-0-0", "RInChI=0.03.1S/AAA<>DDD/d+", "RInChI=0.03.1S/DDD<>EEE!FFF/d+")
-# Define an arbitrary (and impossible!) three step reaction, inchis names "AAA" , "BBB" etc.  but with unknown structures
-# Print results
+
+# Define an arbitrary (and impossible!) three step reaction, inchis names "AAA" , "BBB" etc.  but with unknown
+# structures and Print results
 print(tools.add(three_reactions))
 try:
     print(tools.add(three_reactions_unknown))

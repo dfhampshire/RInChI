@@ -14,7 +14,6 @@ import argparse
 from rinchi_tools import database
 from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="A collection of RInChI Tools")
     parser.add_argument("input",

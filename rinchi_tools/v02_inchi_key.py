@@ -1,33 +1,29 @@
 """
- --------------------------------------------------------------------------
-     This file is part of OASA - a free chemical python library
-     Copyright (C) 2003-2008 Beda Kosata <beda@zirael.org>
+--------------------------------------------------------------------------
+    This file is part of OASA - a free chemical python library Copyright (C) 2003-2008 Beda Kosata <beda@zirael.org>
 
-     This program is free software; you can redistribute it and/or modify
-     it under the terms of the GNU General Public License as published by
-     the Free Software Foundation; either version 2 of the License, or
-     (at your option) any later version.
+    This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public
+    License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any
+    later version.
 
-     This program is distributed in the hope that it will be useful,
-     but WITHOUT ANY WARRANTY; without even the implied warranty of
-     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-     GNU General Public License for more details.
+    This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
+    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+    more details.
 
-     Complete text of GNU GPL can be found in the file gpl.txt in the
-     main directory of the program
+    Complete text of GNU GPL can be found in the file gpl.txt in the main directory of the program
+--------------------------------------------------------------------------
 
-This file has been extracted from the OASA python Library to provide legacy support for the now deprecated RInChI v0.02.
+This file has been extracted from the OASA python Library to provide legacy support for the now deprecated RInChI
+v0.02.
 
-Small modifications made by D.  Hampshire 2017 to port the code to Python 3.
+    D. Hampshire 2017  - Ported to Python 3.
 
-# --------------------------------------------------------------------------
 """
 
 import hashlib
 import operator
 import re
 import string
-
 
 triplets = ["AAA", "AAB", "AAC", "AAD", "AAE", "AAF", "AAG", "AAH", "AAI", "AAJ", "AAK", "AAL", "AAM", "AAN", "AAO",
             "AAP", "AAQ", "AAR", "AAS", "AAT", "AAU", "AAV", "AAW", "AAX", "AAY", "AAZ", "ABA", "ABB", "ABC", "ABD",
@@ -1245,7 +1241,9 @@ def minor_digest(minor):
 
 
 def compute_inchi_check(key):
-    """this is not used in new InChIKey - starting from 1.02 version of InChI software"""
+    """
+    this is not used in new InChIKey - starting from 1.02 version of InChI software
+    """
     assert isinstance(key, str) or isinstance(key, bytes)
     if key.startswith("InChIKey="):
         key = key[9:]
@@ -1261,7 +1259,9 @@ def compute_inchi_check(key):
 
 
 def flag_old(version, parts):
-    """this code is for InChIKey from 1.02Beta version of InChI software!"""
+    """
+    this code is for InChIKey from 1.02Beta version of InChI software!
+    """
     assert isinstance(version, int) and 1 <= version <= 3
     flag = 0
     starts = set([x[0] for x in parts])
@@ -1276,7 +1276,9 @@ def flag_old(version, parts):
 
 
 def key_from_inchi_old(inp):
-    """this code is for InChIKey from 1.02Beta version of InChI software"""
+    """
+    this code is for InChIKey from 1.02Beta version of InChI software
+    """
     assert type(inp) == type("") or type(inp) == type(u"")
     if inp.startswith("InChI="):
         inp = inp[6:]
@@ -1293,6 +1295,7 @@ def key_from_inchi_old(inp):
     i = 1
     nxt = True
     parts_major = [parts[0]]
+
     # sort the layers into a major and minor part - these are hashed separately
     while nxt:
         if i >= len(parts):
@@ -1314,8 +1317,9 @@ def key_from_inchi_old(inp):
 
 
 def check_inchi_key(key):
-    """checks the InChIKey using the algorithm described in the manual to InChI 1.02beta;
-  check character is not used in 1.02 final"""
+    """
+    checks the InChIKey using the algorithm described in the manual to InChI 1.02beta; check character is not used
+    in 1.02 final """
     assert type(key) == type("") or type(key) == type(u"")
     if key.startswith("InChIKey="):
         key = key[9:]
@@ -1331,7 +1335,9 @@ def check_inchi_key(key):
 
 
 def key_from_inchi(inp):
-    """this is for new InChIKey starting with 1.02 release"""
+    """
+    this is for new InChIKey starting with 1.02 release
+    """
     assert type(inp) == type("") or type(inp) == type(u"")
     if inp.startswith("InChI="):
         inp = inp[6:]
@@ -1352,12 +1358,14 @@ def key_from_inchi(inp):
         raise Exception("Unsupported InChI version '%s' in '%s'" % (version, inp))
     elif standard != "S":
         return key_from_inchi_old(inp)
-        # raise Exception( "InChIKey generation from InChI is only supported for standard InChI (starting with '1S/'); sorry - invalid version part '%s'" % parts[0])
+        # raise Exception( "InChIKey generation from InChI is only supported for standard InChI (starting with
+        # '1S/'); sorry - invalid version part '%s'" % parts[0])
     del parts[0]
     i = 1
     nexti = True
     parts_major = [parts[0]]
     p_count = 0
+
     # sort the layers into a major and minor part - these are hashed separately
     while nexti:
         if i >= len(parts):
@@ -1377,6 +1385,7 @@ def key_from_inchi(inp):
     if len(minor) < 255:  # interesting property of the original algorithm
         minor *= 2
     base = major_digest(major) + "-" + minor_digest(minor) + standard + string.ascii_uppercase[int(version) - 1]
+
     # last letter - we must check bounds
     index = 13 + p_count
     if index < 0:

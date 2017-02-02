@@ -1,7 +1,7 @@
 """
 RInChI utilities module.
 
-    2016 D.F. Hampshire
+    D.F. Hampshire 2016
 
 This module provides functions that perform various non RInChI specific tasks.
 """
@@ -16,7 +16,7 @@ import time
 def output(text, s_out=False, ftype="rxn", input_name="File"):
     """
     Simple output wrapper to print or write outputs.
-    
+
     Args:
          text: text input
          s_out: print the text to the screen.
@@ -24,15 +24,18 @@ def output(text, s_out=False, ftype="rxn", input_name="File"):
          input_name: Specifies the filename for the output file
 
     """
+
     # If specified, print the output.
     if s_out:
         print(text)
+
     # Otherwise, save to a file.
     else:
         # Ensure an output directory exists.
         if not os.path.exists('output'):
             os.mkdir('output')
         os.chdir('output')
+
         # Prevent overwriting.
         if os.path.exists('%s.%s' % (input_name, ftype)):
             index = 1
@@ -41,6 +44,7 @@ def output(text, s_out=False, ftype="rxn", input_name="File"):
             output_name = '%s_%d.%s' % (input_name, index, ftype)
         else:
             output_name = '%s.%s' % (input_name, ftype)
+
         # Write to disk
         output_file = open(output_name, 'w')
         output_file.write(text)
@@ -52,11 +56,12 @@ def output(text, s_out=False, ftype="rxn", input_name="File"):
 def call_command(args):
     """
     Run a command as a subprocess and return the output
-    
+
     Args:
          args: The command to execute as a string
 
-    Returns: The output of query and error code
+    Returns:
+        The output of query and error code
     """
     process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = process.communicate()

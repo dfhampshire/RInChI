@@ -1,5 +1,10 @@
 """
-Databasing tools.  Many are simply Python 3 restructured versions of Ben Hammond 2014. Other work by D. Hampshire 2017
+RInChI Database Module
+
+Provides tools for converting, creating, and removing from SQL databases
+
+    Ben Hammond 2014
+    D. Hampshire 2017 - Python 3 restructuring and new function addition.
 """
 import csv
 import logging
@@ -14,7 +19,7 @@ from heapq import nsmallest
 
 from scipy.spatial import distance
 
-from rinchi_tools import v02_convert, analysis
+from rinchi_tools import analysis, v02_convert
 from rinchi_tools.reaction import Reaction
 from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
 
@@ -64,8 +69,7 @@ def rdf_to_csv(rdf, outfile=None, return_rauxinfo=False, return_longkey=False, r
 
     data_dict = analysis.convert_rdf_to_dict(rdf, header)
 
-    # Prevent overwriting, create output in an output folder in the current
-    # directory
+    # Prevent overwriting, create output in an output folder in the current directory
     if not os.path.exists('output'):
         os.mkdir('output')
 
@@ -101,29 +105,26 @@ def rdf_to_csv_append(rdf, csv_file):
         csv_file: the CSV file path
     """
 
-    # Initialise a list that will contain all the RInChIs currently in the
-    # csv_file
+    # Initialise a list that will contain all the RInChIs currently in the csv_file
     old_rinchis = []
 
-    # Open the existing csv_file and read the header defining which fields are
-    # present
+    # Open the existing csv_file and read the header defining which fields are present
     with open(csv_file) as db:
         reader = csv.reader(db, delimiter="$")
+
         # Add all rinchis in the existing csv_file to a list
         header = reader.next()
         for row in reader:
             old_rinchis.append(row[0])
 
-    # Construct a dictionary of RInChIs and RInChI data from the supplied rd
-    # file
+    # Construct a dictionary of RInChIs and RInChI data from the supplied rd file
     new_data_dict = analysis.convert_rdf_to_dict(rdf, header)
 
     # Convert both lists of rinchis into sets - unique, does not preserve order
     old_rinchis = set(old_rinchis)
     new_rinchis = set(new_data_dict.keys())
 
-    # The rinchis that need to be added to the csv_file are the complement of
-    # the new rinchis in the old
+    # The rinchis that need to be added to the csv_file are the complement of the new rinchis in the old
     rinchis_to_add = list(new_rinchis - old_rinchis)
 
     # Add all new, unique rinchis to the csv_file
@@ -167,8 +168,8 @@ def create_csv_from_directory(root_dir, outname, return_rauxinfo=False, return_l
                                              return_webkey, return_rxninfo)
                         database_has_started = True
             except IndexError:
-                # Send the names of any files that failed to be recognised to
-                # STDOUT
+
+                # Send the names of any files that failed to be recognised to STDOUT
                 print(("Failed to recognise {}".format(filename)))
 
 
@@ -214,7 +215,8 @@ def get_sql_columns(cursor, table_name):
         cursor: The SQLite database cursor object
         table_name: The name of the table
 
-    Returns: A list of column names in order
+    Returns:
+        A list of column names in order
     """
     cursor.execute('select * from {}'.format(table_name))
     names = [description[0] for description in cursor.description]
@@ -252,7 +254,8 @@ def check_table_exists(table_name, cursor):
         table_name: The table name to check for
         cursor: The SQLite database cursor object
 
-    Returns: True if present, False if Not.
+    Returns:
+        True if present, False if Not.
     """
     tb_exists = "SELECT name FROM sqlite_master WHERE type='table' AND name= ?"
     if not cursor.execute(tb_exists, (table_name,)).fetchone():
@@ -295,7 +298,8 @@ def sql_search(cursor, table_name, columns=None, lookup_value=None, field=None, 
         use_like: use Like syntax
         limit: Limit the output to a certain number of results
 
-    Returns: Cursor object which points to the result
+    Returns:
+        Cursor object which points to the result
 
     """
     if columns is None:
@@ -338,7 +342,8 @@ def sql_key_to_rinchi(key, db_filename, table_name, keytype="L"):
     Raises:
         ValueError: The keytype argument must be one of "L" , "S" or "W"
 
-    Returns: the corresponding RInChI
+    Returns:
+        the corresponding RInChI
     """
 
     db = sqlite3.connect(db_filename)
@@ -435,17 +440,15 @@ def rdf_to_sql(rdfile, db_filename, table_name, columns=None):
 
     create_sql_table(cursor, table_name, columns)
 
-    # Repopulate columns variable.  Useful for pre-exisiting table
+    # Repopulate columns variable.  Useful for pre-existing table
     columns = get_sql_columns(cursor, table_name)
 
     pragma_sql_env(cursor)
 
-    # Open the rdfile and convert its contents to a dict of rinchis and rinchi
-    # data
+    # Open the rdfile and convert its contents to a dict of rinchis and rinchi data
     rdf_data = analysis.convert_rdf_to_dict(rdfile, columns)
 
-    # Transform in place the dicts storing rxn info to their string
-    # representations
+    # Transform in place the dicts storing rxn info to their string representations
     for i in rdf_data.keys():
         rdf_data[i][1] = repr(rdf_data[i][1])
 
@@ -484,9 +487,9 @@ def csv_to_sql(csv_name, db_filename, table_name):
 def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=False, v03_rinchi=False, v03_rauxinfo=False,
                     v03_longkey=False, v03_shortkey=False, v03_webkey=False):
     """
-    Converts a database of v02 rinchis into a database of v03 rinchis and associated information.  N.B keys for v02 are
-    not required as new keys must be generated for the database.  Because of the nature of this problem, this is achieved
-    by creating a new database for the processed data and then transferring back to the original
+    Converts a database of v02 rinchis into a database of v03 rinchis and associated information.  N.B keys for v02
+    are not required as new keys must be generated for the database.  Because of the nature of this problem,
+    this is achieved by creating a new database for the processed data and then transferring back to the original
 
     Args:
          db_filename: The database filename to which the changes should be made.  The new database is added as a table.
@@ -549,12 +552,13 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
     db.close()
 
     # Create args and run the queue
-    pop_args = [populate_queue_general,[db_filename, "rinchis02", [v02_rinchi, v02_rauxinfo], processing_function, col_list]]
-    depop_args = [depopulate_queue_general, [columns, table_name]]
-    run_queue(1000,pop_args,depop_args)
+    pop_args = [populate_queue,
+                [db_filename, "rinchis02", [v02_rinchi, v02_rauxinfo], processing_function, col_list]]
+    depop_args = [depopulate_queue, [columns, table_name]]
+    run_queue(1000, pop_args, depop_args)
 
     # Transfer table from temporary database to new database
-    transfer_table("rinchi_temp.db",db_filename,table_name)
+    transfer_table("rinchi_temp.db", db_filename, table_name)
     logging.info("Finished conversion in {} seconds".format(time.time() - start_time))
 
 
@@ -567,9 +571,8 @@ def transfer_table(db_source, db_destination, table_name, drop_source=True):
         db_destination: The name of the destination database
         table_name: The name of the table to transfer
         drop_source: Whether to drop the source database.  Defaults to True
-
     """
-    logging.info("transferring {} from {} to {}...".format(table_name,db_source,db_destination))
+    logging.info("transferring {} from {} to {}...".format(table_name, db_source, db_destination))
 
     # Create connection and attach database
     db = sqlite3.connect(db_destination)
@@ -589,9 +592,11 @@ def transfer_table(db_source, db_destination, table_name, drop_source=True):
     if drop_source:
         os.remove(db_source)
 
+
 def gen_rauxinfo(db_filename, table_name):
     """
     Updates a table in a database to give rauxinfos where the column is null
+
     Args:
         db_filename: Database filename
         table_name: name of table
@@ -600,11 +605,13 @@ def gen_rauxinfo(db_filename, table_name):
     cursor = db.cursor()
 
     def converter(rinchi):
-        """Interfaces the rauxinfo converter in v02_convert.py"""
+        """
+        Interfaces the rauxinfo converter in v02_convert.py
+        """
         rauxinfo = v02_convert.gen_rauxinfo(rinchi)
         return rauxinfo
 
-    # Creating SQL function increases performance
+    # Creating SQL function improves performance
     db.create_function("convert", 1, converter)
     cursor.execute(
         "UPDATE {} SET rauxinfo = convert(rinchi) WHERE rauxinfo IS NULL or rauxinfo = '';".format(table_name))
@@ -658,21 +665,21 @@ def compare_fingerprints(search_term, db_filename, table_name):
 
 def recall_fingerprints(lkey, db_filename, table_name):
     """
-    returns a reaction fingerprint as stored in the reaction database
+    Recall a fingerprint from the database
+
     Args:
         lkey: The long key to search for
         db_filename: The database filename
         table_name: The table name which stores the fingerprints
 
-    Returns: A numpy array the reaction fingerprint as stored in the reaction database
-
+    Returns:
+        A numpy array the reaction fingerprint as stored in the reaction database
     """
     db = sqlite3.connect(db_filename)
     cursor = db.cursor()
     cursor = sql_search(cursor, table_name, ["fingerprint"], lkey, "longkey", )
 
-    # Unpickle the binary data, and return a Numpy array containing the
-    # reaction fingerprint
+    # Unpickle the binary data, and return a Numpy array containing the reaction fingerprint
     fpt = pickle.loads(str(cursor.fetchone()[0])).toarray()[0]
     db.close()
 
@@ -683,14 +690,13 @@ def update_fingerprints(db_filename, table_name, fingerprint_table_name):
     """
     NOT CURRENTLY WORKING.  NEEDS UPDATING TO USE MULTITHREADING FOR USABLE PERFORMANCE
 
-    Calculates the reaction fingerprint as defined in the reaction Reaction class, and stores
-    it in the given database in a compressed form
+    Calculates the reaction fingerprint as defined in the reaction Reaction class, and stores it in the given
+    database in a compressed form
 
     Args:
         db_filename: the database filename to update
         table_name: The table containing the RInChIs
         fingerprint_table_name: The table to contain the fingerprint
-
     """
     db = sqlite3.connect(db_filename)
 
@@ -709,8 +715,7 @@ def update_fingerprints(db_filename, table_name, fingerprint_table_name):
             r = Reaction(lkey[0])
             r.calculate_reaction_fingerprint()
 
-            # Pickle the reaction fingerprint - store it as binary data within
-            # an SQL BLOB field
+            # Pickle the reaction fingerprint - store it as binary data within an SQL BLOB field
             fingerprint = pickle.dumps(r.reaction_fingerprint)
             # cursor.execute('''UPDATE fingerprints SET fingerprint = ? WHERE longkey = ? ''', (fingerprint, lkey[1]))
             cursor2.execute('''INSERT INTO fpts (longkey, fingerprint) VALUES (?, ?) ''', (lkey[1], fingerprint))
@@ -729,10 +734,10 @@ def update_fingerprints(db_filename, table_name, fingerprint_table_name):
 #################################################
 
 
-def populate_queue_general(q, db_filename, table_name, source_columns, processing_function=None, processing_args=None):
+def populate_queue(q, db_filename, table_name, source_columns, processing_function=None, processing_args=None):
     """
-    Populates a queue with items processed from a database using a processing function provided.  If no processing function
-    is provided then each row is simply placed into the queue.
+    Populates a queue with items processed from a database using a processing function provided.  If no processing
+    function is provided then each row is simply placed into the queue.
 
     Args:
         q: A queue object instance
@@ -746,9 +751,9 @@ def populate_queue_general(q, db_filename, table_name, source_columns, processin
         db = sqlite3.connect(db_filename)
         cursor = db.cursor()
         logging.info("populating")
-        for row in sql_search(cursor,table_name):
+        for row in sql_search(cursor, table_name):
             if processing_function is not None:
-                row = processing_function(row,processing_args)
+                row = processing_function(row, processing_args)
             q.put(row)
             while q.full():
                 time.sleep(0.01)
@@ -758,22 +763,22 @@ def populate_queue_general(q, db_filename, table_name, source_columns, processin
         raise ValueError("Function not given as argument 'Processing function'")
 
 
-def depopulate_queue_general(q, columns, table_name):
+def depopulate_queue(q, columns, table_name):
     """
-    Removes items from the queue and processes them
+    Removes items from the queue and processes them to an output table
 
     Args:
         q: The queue to depopulate
-        create_command: the create command to make a temporary database
-        i_command: the insert command for the temporary database
+        columns: the columns to create in the output table
+        table_name: the name of the table to create
     """
     db = sqlite3.connect("rinchi_temp.db")
     cursor = db.cursor()
-    create_sql_table(cursor,table_name,columns)
+    create_sql_table(cursor, table_name, columns)
     logging.info("depopulating")
     while True:
         try:
-            sql_insert(cursor,table_name, q.get(True, 2))
+            sql_insert(cursor, table_name, q.get(True, 2))
             # Waits for 2 seconds, otherwise throws `Queue.Empty`
         except queue.Empty:
             logging.info("Finished depopulating")
@@ -789,7 +794,7 @@ def run_queue(q_length, *threads):
     Args:
         q_length: The length of the queue to populate for converting the data
         *threads: The threads store as a tuple of the function name, and the arguments for that function, excluding
-        the first argument which is the queue object created in this function
+            the first argument which is the queue object created in this function
     """
     q = queue.Queue(q_length)
     thread_list = []

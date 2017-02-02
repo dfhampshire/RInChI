@@ -1,14 +1,16 @@
 """
-RInChI Object Orientated code as developed by Ben Hammond 2014
+RInChI Object Orientated Atom Class Module
 
-Significant restructuring of classes by Duncan Hampshire 2016 to gain more consistent and less verbose code.
+This module contains the Atom class and associated functions
 
-This module contains the Atom class
+    B. Hammond 2014
+    D. Hampshire 2017 - Significant restructuring of the class to gain more consistent and less verbose code.
 """
 
 
 class Atom:
-    """A class containing a brief description of an atom, for use as nodes in a graph describing a molecule
+    """
+    A class containing a brief description of an atom, for use as nodes in a graph describing a molecule
     """
     def __init__(self, index=None):
         self.index = index
@@ -22,7 +24,8 @@ class Atom:
         """
         Get the valence as determined by counting the number of bonds.
 
-        Returns: Number of bonds
+        Returns:
+            Number of bonds
 
         """
         if self.mobile_protons == 0:
@@ -34,7 +37,8 @@ class Atom:
         """
         Gets the atom hybridisation.  Only defined for C atoms but still useful
 
-        Returns: None or a string signalling the hybridisation e.g.  "sp2"
+        Returns:
+            None or a string signalling the hybridisation e.g.  "sp2"
         """
         if self.valence():
             if self.element == "C":

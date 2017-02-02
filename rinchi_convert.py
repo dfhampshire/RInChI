@@ -15,12 +15,15 @@ import argparse
 from rinchi_tools import conversion, utils
 from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
 
+
 # TODO refactor functions into module
 
 
 def __rdf2rinchi(input_path, rauxinfo=False, longkey=False, shortkey=False, webkey=False, equilibrium=False,
                  fileout=False):
-    """Called when -rdf2rinchi is given as the 1st argument of the script"""
+    """
+    Called when -rdf2rinchi is given as the 1st argument of the script
+    """
     input_name = input_path.split('/')[-1].split('.')[0]
     try:
         input_file = open(input_path).read()
@@ -43,7 +46,8 @@ def __rdf2rinchi(input_path, rauxinfo=False, longkey=False, shortkey=False, webk
 
 def __rxn2rinchi(input_path, ret_rauxinfo=False, longkey=False, shortkey=False, webkey=False, force_equilibrium=False,
                  file_out=False):
-    """Called when -rxn2rinchi is given as the 1st argument of the script."""
+    """
+    Called when -rxn2rinchi is given as the 1st argument of the script."""
     input_name = input_path.split('/')[-1].split('.')[0]
 
     try:
@@ -69,7 +73,8 @@ def __rxn2rinchi(input_path, ret_rauxinfo=False, longkey=False, shortkey=False, 
 
 
 def __rinchi2file(input_path, rxnout=True, rdout=False, fileout=True):
-    """Called when -rinchi2rxn is given as the 1st argument of the script."""
+    """
+    Called when -rinchi2rxn is given as the 1st argument of the script."""
 
     # Parse RInChI file input.
     input_name = input_path.split('/')[-1].split('.')[0]
@@ -108,7 +113,8 @@ def __rinchi2file(input_path, rxnout=True, rdout=False, fileout=True):
 
 
 def __rinchi2key(input_path, longkey=False, shortkey=False, webkey=False, inc_rinchi=False, file_out=False):
-    """Called when -rinchi2key is given as the 1st argument of the script."""
+    """
+    Called when -rinchi2key is given as the 1st argument of the script."""
     # Parse RInChI file input.
     input_name = input_path.split('/')[-1].split('.')[0]
     try:

@@ -11,7 +11,7 @@ This script analyses flat files of RInChIs separated by newlines.
 
 import argparse
 
-from rinchi_tools import utils, tools
+from rinchi_tools import tools, utils
 
 # TODO refactor into a more logical command line call interface
 
