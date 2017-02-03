@@ -352,8 +352,9 @@ class Molecule:
 
         Returns:
             tree_edges: A list of tree edges.
-            back_edges: A list of back edges.  The list length is equal to the smallest number of cycles that can
+            back_edges: A list of back edges. The list length is equal to the smallest number of cycles that can
                 describe the cycle space of the molecular graph
+
         """
 
         # Ensure that the molecular graph has been generated
@@ -669,7 +670,7 @@ class Molecule:
         for edge in edge_list:
             atoms[edge[0]] = 1
             atoms[edge[1]] = 1
-        return atoms.keys()
+        return list(atoms.keys())
 
     def calculate_rings(self):
         """

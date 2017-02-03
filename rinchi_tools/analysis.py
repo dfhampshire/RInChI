@@ -23,12 +23,11 @@ def rxn_ring_change(input_rinchi, pm=(False, False), return_ring_counts_only=Fal
         return_ring_counts_only: Only return ring counts in each layer
 
     Returns:
-        Either:
-            reactant_rings, product_rings, agent_rings: The number of rings in the respective layers of the RInChI.
+        reactant_rings, product_rings, agent_rings: The number of rings in the respective layers of the RInChI.
         Or:
-            ring_change: The number of rings created by the reaction.  If rings are destroyed, this will be negative.
-                If the reaction is an equilibrium or direction is unspecified, the value of ring change will be the
-                absolute (i.e.  positive) value.
+        ring_change: The number of rings created by the reaction.  If rings are destroyed, this will be negative.
+            If the reaction is an equilibrium or direction is unspecified, the value of ring change will be the
+            absolute (i.e.  positive) value.
 
     Raises:
         Error: If the ring change cannot be analysed.  This may either be because the reaction contains undefined
