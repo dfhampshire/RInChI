@@ -19,7 +19,8 @@ from heapq import nsmallest
 
 from scipy.spatial import distance
 
-from rinchi_tools import analysis, v02_convert
+import rinchi_tools.conversion
+from rinchi_tools import v02_convert
 from rinchi_tools.reaction import Reaction
 from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
 
@@ -67,7 +68,7 @@ def rdf_to_csv(rdf, outfile=None, return_rauxinfo=False, return_longkey=False, r
     if return_rxninfo:
         header.append("RXNInfo")
 
-    data_dict = analysis.convert_rdf_to_dict(rdf, header)
+    data_dict = rinchi_tools.conversion.convert_rdf_to_dict(rdf, header)
 
     # Prevent overwriting, create output in an output folder in the current directory
     if not os.path.exists('output'):
@@ -118,7 +119,7 @@ def rdf_to_csv_append(rdf, csv_file):
             old_rinchis.append(row[0])
 
     # Construct a dictionary of RInChIs and RInChI data from the supplied rd file
-    new_data_dict = analysis.convert_rdf_to_dict(rdf, header)
+    new_data_dict = rinchi_tools.conversion.convert_rdf_to_dict(rdf, header)
 
     # Convert both lists of rinchis into sets - unique, does not preserve order
     old_rinchis = set(old_rinchis)
@@ -446,7 +447,7 @@ def rdf_to_sql(rdfile, db_filename, table_name, columns=None):
     pragma_sql_env(cursor)
 
     # Open the rdfile and convert its contents to a dict of rinchis and rinchi data
-    rdf_data = analysis.convert_rdf_to_dict(rdfile, columns)
+    rdf_data = rinchi_tools.conversion.convert_rdf_to_dict(rdfile, columns)
 
     # Transform in place the dicts storing rxn info to their string representations
     for i in rdf_data.keys():

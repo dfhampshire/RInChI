@@ -9,20 +9,11 @@ also interfaces with the RInChI v0.03 software as provided by the InChI trust.
 
 """
 
-from rinchi_tools import inchi_tools, rinchi_lib, utils
-
-rinchi_interface = rinchi_lib.RInChI()
-
-# The following variable defines the version number of RInChIs created by this module.
-RINCHI_VERSION = '0.03'
+from rinchi_tools import inchi_tools, utils
+from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
 
 
-# Define exceptions for the module to use.
-class Error(Exception):
-    pass
-
-
-class VersionError(Error):
+class VersionError(ValueError):
     pass
 
 
@@ -80,7 +71,7 @@ def build_rinchi(l2_inchis=None, l3_inchis=None, l4_inchis=None, direction='', u
     # Check that the input layers have the same version info.
     try:
         inchi_version = utils.consolidate(l2_versions + l3_versions + l4_versions)
-    except Error:
+    except ValueError:
         raise VersionError("RInChI can only be made from same-version InChIs.")
 
     # Decide in which order the RInChI layers should be displayed.  Amend no structure flag accordingly.
@@ -294,7 +285,7 @@ def split_rinchi_inc_auxinfo(rinchi, rinchi_auxinfo):
         direction: returns the direction character
         no_structs: returns a list of the numbers of unknown structures in each layer
     """
-    inchi_components = rinchi_interface.inchis_from_rinchi(rinchi, rinchi_auxinfo)
+    inchi_components = RInChI_Handle.inchis_from_rinchi(rinchi, rinchi_auxinfo)
     direction = inchi_components['Direction']
     reactants = inchi_components['Reactants']
     products = inchi_components['Products']
@@ -317,7 +308,7 @@ def split_rinchi(rinchi):
         direction: returns the direction character
         no_structs: returns a list of the numbers of unknown structures in each layer
     """
-    inchi_components = rinchi_interface.inchis_from_rinchi(rinchi, "")
+    inchi_components = RInChI_Handle.inchis_from_rinchi(rinchi, "")
     direction = inchi_components['Direction']
     reactants = inchi_components['Reactants']
     products = inchi_components['Products']
@@ -342,7 +333,7 @@ def split_rinchi_only_auxinfo(rinchi, rinchi_auxinfo):
         pdt_inchis_auxinfo: List of product AuxInfos
         agt_inchis_auxinfo: List of agent AuxInfos
     """
-    inchi_components = rinchi_interface.inchis_from_rinchi(rinchi, rinchi_auxinfo)
+    inchi_components = RInChI_Handle.inchis_from_rinchi(rinchi, rinchi_auxinfo)
     reactants = inchi_components['Reactants']
     products = inchi_components['Products']
     agents = inchi_components['Agents']

@@ -24,7 +24,7 @@ from rinchi_tools import tools
 from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
 
 
-def rxn_2_molfs(rxn):
+def _rxn_2_molfs(rxn):
     """
     Accept an RXNfile and return lists of reactant and product molfiles.
 
@@ -77,7 +77,7 @@ def rxn_2_molfs(rxn):
     return reactants, products, agents, rdata
 
 
-def molfs_2_rxn(rxnt_molfs=None, prod_molfs=None, agnt_molfs=None, name=''):
+def _molfs_2_rxn(rxnt_molfs=None, prod_molfs=None, agnt_molfs=None, name=''):
     """
     Convert a list of reactant and product Molfiles into a RXN file.
 
@@ -125,7 +125,7 @@ def molfs_2_rxn(rxnt_molfs=None, prod_molfs=None, agnt_molfs=None, name=''):
     return rxnfile
 
 
-def molfs_2_rdf(rxnt_molfs=None, prod_molfs=None, agnt_molfs=None, name=''):
+def _molfs_2_rdf(rxnt_molfs=None, prod_molfs=None, agnt_molfs=None, name=''):
     """
     Convert a list of reactant and product Molfiles into a RXN file.
 
@@ -167,7 +167,7 @@ def molfs_2_rdf(rxnt_molfs=None, prod_molfs=None, agnt_molfs=None, name=''):
     return rdfile
 
 
-def split_rdf(rdfile, start=0, stop=0):
+def _split_rdf(rdfile, start=0, stop=0):
     """
     Convert RDFiles to a list of RInChI-friendly RXN files.
 
@@ -199,14 +199,14 @@ def split_rdf(rdfile, start=0, stop=0):
     reactions = []
 
     for rxn_entry in rxn_entries:
-        rxn_variations, rxn_data = rdf_rxn_2_molfs(rxn_entry)
+        rxn_variations, rxn_data = _rdf_rxn_2_molfs(rxn_entry)
         for rxn_variation in rxn_variations:
             reactions.append((rxn_variation, rxn_data))
 
     # Convert the list of reaction tuples into a list of RXN files.
     rxnfiles = []
     for reaction in reactions:
-        rdfile = molfs_2_rdf(reaction[0][0], reaction[0][1], reaction[0][2])
+        rdfile = _molfs_2_rdf(reaction[0][0], reaction[0][1], reaction[0][2])
         rdfile = rdfile.strip() + '\n' + reaction[1].strip()
         rxnfiles.append(rdfile)
 
@@ -214,7 +214,7 @@ def split_rdf(rdfile, start=0, stop=0):
     return rxnfiles
 
 
-def rdf_rxn_2_molfs(rxn_entry):
+def _rdf_rxn_2_molfs(rxn_entry):
     """
     Converts an entry from an RDF to a list of reactions it describes.  Works for entries parsed from an RD file.
 
@@ -275,7 +275,7 @@ def rdf_rxn_2_molfs(rxn_entry):
     # Extract any "reaction agents" saved as embedded molfiles within the data section of the reaction record,
     # and sort them according to variation.
 
-    agents_by_variation = agent_harvester(leftover_data, num_variations)
+    agents_by_variation = _agent_harvester(leftover_data, num_variations)
 
     # Create the final list of reactions
     reactions = []
@@ -294,7 +294,7 @@ def rdf_rxn_2_molfs(rxn_entry):
     return reactions, additional_data
 
 
-def agent_harvester(data, num_variations):
+def _agent_harvester(data, num_variations):
     """
     Parses agent variations from the leftover data at the end of a RD files
 
@@ -348,7 +348,7 @@ def rdf_2_rinchis(rdf, start=0, stop=0, force_equilibrium=False, return_rauxinfo
         rxndata: A list of the &DTYPE/$DATUM data stored in the rxnfiles
     """
     # Split the RDFile into a list of RD files.
-    rdfiles = split_rdf(rdf, start, stop)
+    rdfiles = _split_rdf(rdf, start, stop)
 
     # Looping over the RD files, convert each to a RInChI.
     rinchis = []
@@ -392,3 +392,40 @@ def rdf_2_rinchis(rdf, start=0, stop=0, force_equilibrium=False, return_rauxinfo
         output.append(rxndata)
     output = tuple(output)
     return output
+
+
+def convert_rdf_to_dict(rdf, properties, force_equilibrium=False):
+    """
+    Convert an RDF to a dictionary of properties
+
+    Args:
+        rdf: The RD file as a text block
+        properties: The properties to include in the result, stored as an iterable
+        force_equilibrium: Whether the force the RInChI to be an equilibrium RInChI
+
+    Returns:
+        A dictionary containing the properties, with the property names as the keys
+    """
+    with open(rdf) as data:
+        input_data = data.read()
+
+    # Set optional conversion parameters
+    start_index = 0
+    stop = 0
+
+    # Set which columns to include
+    return_rauxinfo = "RAuxInfo" in properties
+    return_longkey = "LongKey" in properties
+    return_shortkey = "ShortKey" in properties
+    return_webkey = "WebKey" in properties
+    return_rxninfo = "RXNInfo" in properties
+
+    # Run RInChI conversion functions.
+    rinchidata = conversion.rdf_2_rinchis(input_data, start_index, stop, force_equilibrium, return_rauxinfo,
+                                          return_longkey, return_shortkey, return_webkey, return_rxninfo)
+
+    # Transpose nested list into a list of data entries
+    data_transpose = map(list, zip(*rinchidata))
+
+    # Force uniqueness
+    return {x[0]: x[1:] for x in data_transpose}

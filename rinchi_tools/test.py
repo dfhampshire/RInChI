@@ -23,7 +23,7 @@ three_reactions_unknown = (
 print(tools.add(three_reactions))
 try:
     print(tools.add(three_reactions_unknown))
-except tools.Error:
+except tools.VersionError:
     print("Addition Error raised successfully")
 print("================")
 
@@ -53,9 +53,9 @@ print("================")
 print(inchi_tools.inchi_2_auxinfo(test_inchi))
 with open('test-resources/rxn_t1.rxn', 'r') as myfile:
     rxn = myfile.read()
-molfs = conversion.rxn_2_molfs(rxn)
+molfs = conversion._rxn_2_molfs(rxn)
 print(molfs)
-print(conversion.molfs_2_rxn(*molfs))
+print(conversion._molfs_2_rxn(*molfs))
 print(inchi_tools.molf_2_inchi(molfs[0][0]))
 print(inchi_tools.inchi_2_sdf(test_inchi))
 

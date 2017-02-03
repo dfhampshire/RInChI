@@ -24,3 +24,6 @@ INCHI_PATH = path + '{}inchi-1'.format(sep)
 
 # Path to the v0.03 RInChI C library
 LIB_RINCHI_PATH = path + "{}rinchi-lib-1".format(sep) + lib_file
+
+# Set RInChI Version
+RINCHI_VERSION = '0.03'
