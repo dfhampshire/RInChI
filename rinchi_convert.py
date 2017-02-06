@@ -13,148 +13,79 @@ Converts RInChIs to and from various chemical reaction file formats.
 import argparse
 
 from rinchi_tools import conversion, utils
-from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
-
-
-# TODO refactor functions into module
 
 
 def __rdf2rinchi(input_path, rauxinfo=False, longkey=False, shortkey=False, webkey=False, equilibrium=False,
-                 fileout=False):
+                 file_out=False):
     """
     Called when -rdf2rinchi is given as the 1st argument of the script
     """
-    input_name = input_path.split('/')[-1].split('.')[0]
     try:
-        input_file = open(input_path).read()
+        rdf_file, input_name, _ = utils.read_input_file(input_path)
     except IOError:
         print('Could not open file "%s".' % input_path)
         return
 
-    # Generate the requested data.
-    results = conversion.rdf_2_rinchis(input_file, 0, 0, equilibrium, rauxinfo, longkey, shortkey, webkey, False)
-    rinchi_text = ""
-
-    # Construct output string
-    for entry in list(zip(*results)):
-        for item in entry:
-            rinchi_text += str(item)
+    # Generate the requested data and convert to a string
+    results = conversion.rdf_to_rinchis(rdf_file, 0, 0, equilibrium, rauxinfo, longkey, shortkey, webkey, False)
+    rinchi_text = utils.construct_output_text(results)
 
     # Uses the output utility
-    utils.output(rinchi_text, not fileout, "rinchi", input_name)
+    utils.output(rinchi_text, input_name, "rinchi", print_out= not file_out)
 
 
 def __rxn2rinchi(input_path, ret_rauxinfo=False, longkey=False, shortkey=False, webkey=False, force_equilibrium=False,
                  file_out=False):
     """
     Called when -rxn2rinchi is given as the 1st argument of the script."""
-    input_name = input_path.split('/')[-1].split('.')[0]
 
     try:
-        input_file = open(input_path).read()
+        input_file, input_name, _ = utils.read_input_file(input_path)
     except IOError:
         print('Could not open file "%s".' % input_path)
         return
 
     # Generate the requested data.
-    rinchi, rauxinfo = RInChI_Handle().rinchi_from_file_text("RXN", input_file, force_equilibrium)
-    rinchi_text = ''
-    rinchi_text += rinchi + '\n'
-    if ret_rauxinfo:
-        rinchi_text += rauxinfo + '\n'
-    if longkey:
-        rinchi_text += RInChI_Handle().rinchikey_from_rinchi(rinchi, "L") + '\n'
-    if shortkey:
-        rinchi_text += RInChI_Handle().rinchikey_from_rinchi(rinchi, "S") + '\n'
-    if webkey:
-        rinchi_text += RInChI_Handle().rinchikey_from_rinchi(rinchi, "W") + '\n'
+    rinchi_text = utils.construct_output_text(conversion.rxn_to_rinchi(input_file, ret_rauxinfo, longkey, shortkey, webkey,
+                                                                       force_equilibrium, file_out))
     # Uses the output utility
-    utils.output(rinchi_text, not file_out, "rinchi", input_name)
+    utils.output(rinchi_text, input_name, "rinchi", print_out=not file_out)
 
 
-def __rinchi2file(input_path, rxnout=True, rdout=False, fileout=True):
+def __rinchi2file(input_path, rxnout=True, file_out=True):
     """
     Called when -rinchi2rxn is given as the 1st argument of the script."""
 
-    # Parse RInChI file input.
-    input_name = input_path.split('/')[-1].split('.')[0]
     try:
-        input_file = open(input_path)
+        output, input_name, _ = utils.read_input_file(input_path, return_file_object=True)
     except IOError:
         print('Could not open file "%s".' % input_path)
         return
-    input_rinchis = []
-    input_rauxinfos = []
-    rinchi_last = False  # Ensure rinchis are appended correctly
-    for line in input_file.readlines():
-        if line.startswith('RInChI'):
-            input_rinchis.append(line.strip())
-            if rinchi_last:
-                input_rauxinfos.append("")
-            rinchi_last = True
-        elif line.startswith('RAux') and rinchi_last:
-            input_rauxinfos.append(line.strip())
-            rinchi_last = False
 
-    while len(input_rinchis) > len(input_rauxinfos):
-        input_rauxinfos.append("")
+    if rxnout:
+        filetype_args = "rxn"
+    else:
+        filetype_args = "rdf"
 
-    input_file.close()
+    filetext_list = conversion.rinchi_to_file(input_path, rxnout=rxnout)
 
-    # Generate RXN file.
-    if rxnout or not (rxnout or rdout):
-        for index, rinchi_in in enumerate(input_rinchis):
-            rxn = RInChI_Handle().file_text_from_rinchi(rinchi_in, input_rauxinfos[index], "RXN")
-            utils.output(rxn, not fileout, "rxn", input_name)
-    if rdout:
-        for index, rinchi_in in enumerate(input_rinchis):
-            rd = RInChI_Handle().file_text_from_rinchi(rinchi_in, input_rauxinfos[index], "RD")
-            utils.output(rd, not fileout, "rdf", input_name)
+    for filetext in filetext_list:
+        utils.output(filetext, input_name, filetype_args, print_out=not file_out)
 
 
 def __rinchi2key(input_path, longkey=False, shortkey=False, webkey=False, inc_rinchi=False, file_out=False):
     """
     Called when -rinchi2key is given as the 1st argument of the script."""
-    # Parse RInChI file input.
-    input_name = input_path.split('/')[-1].split('.')[0]
+
     try:
-        input_file = open(input_path)
+        input_file, input_name, _ = utils.read_input_file(input_path)
     except IOError:
         print('Could not open file "%s".' % input_path)
         return
-    input_rinchis = []
-    input_rauxinfos = []
-    rinchi_last = False
 
-    # Ensure rinchis are appended correctly
-    for line in input_file.readlines():
-        if line.startswith('RInChI'):
-            input_rinchis.append(line.strip())
-            if rinchi_last:
-                input_rauxinfos.append("")
-            rinchi_last = True
-        elif line.startswith('RAux') and rinchi_last:
-            input_rauxinfos.append(line.strip())
-            rinchi_last = False
-
-    while len(input_rinchis) > len(input_rauxinfos):
-        input_rauxinfos.append("")
-
-    input_file.close()
-
-    # Generate the requested data.
-    rinchi_text = ''
-    for index, rinchi_in in enumerate(input_rinchis):
-        if inc_rinchi:
-            rinchi_text += rinchi_in + '\n'
-        if longkey:
-            rinchi_text += RInChI_Handle().rinchikey_from_rinchi(rinchi_in, "L") + '\n'
-        if shortkey:
-            rinchi_text += RInChI_Handle().rinchikey_from_rinchi(rinchi_in, "S") + '\n'
-        if webkey:
-            rinchi_text += RInChI_Handle().rinchikey_from_rinchi(rinchi_in, "W") + '\n'
-
-    utils.output(rinchi_text, not file_out, "rinchi", input_name)
+    data = conversion.rinchi_to_keys(input_file, longkey, shortkey, webkey, inc_rinchi)
+    key_text = utils.construct_output_text(data)
+    utils.output(key_text,input_name,"rinchi",not file_out)
 
 
 if __name__ == "__main__":

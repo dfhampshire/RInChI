@@ -425,7 +425,7 @@ def process_layer(items, rauxinfodict=None, sort_layer=True):
 
         Args:
             items: A list of items to insert into the layer
-            rauxinfodict: A dictionary of inchis as the keys and Auxinfos as the items
+            rauxinfodict: A dict of inchis as the keys and Auxinfos as the items
             sort_layer: Whether to sort the items in each layer.  Defaults to True.  Typically this should be true
                 for RInChIs which as sorted as such, and False for RAuxinfos which are sorted according to the
                 corresponding RInChI.
@@ -448,7 +448,7 @@ def process_layer(items, rauxinfodict=None, sort_layer=True):
             body = split_inchi[1]
         bodies.append(body)
 
-        # Rename key in the dictionary to just body text
+        # Rename key in the dict to just body text
         if rauxinfodict is not None:
             rauxinfodict[body] = rauxinfodict.pop(item).split('=')[1].split('/', 1)[1]
     if sort_layer:

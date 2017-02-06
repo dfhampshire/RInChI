@@ -19,8 +19,7 @@ from heapq import nsmallest
 
 from scipy.spatial import distance
 
-import rinchi_tools.conversion
-from rinchi_tools import v02_convert
+from rinchi_tools import conversion, utils, v02_convert
 from rinchi_tools.reaction import Reaction
 from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
 
@@ -29,7 +28,7 @@ from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
 # CSV Tools
 ###########
 
-def rdf_to_csv(rdf, outfile=None, return_rauxinfo=False, return_longkey=False, return_shortkey=False,
+def rdf_to_csv(rdf, outfile="File", return_rauxinfo=False, return_longkey=False, return_shortkey=False,
                return_webkey=False, return_rxninfo=False):
     """
     Convert an RD file to a CSV file containing RInChIs and other optional parameters
@@ -47,14 +46,6 @@ def rdf_to_csv(rdf, outfile=None, return_rauxinfo=False, return_longkey=False, r
         The name of the CSV file created with the requested fields
     """
 
-    # Check that input was supplied
-    if not rdf:
-        return None
-
-    # Extract filename only
-    input_name = rdf.split(".")[-2]
-    input_name = input_name.split("/")[-1]
-
     # Generate header line
     header = ["RInChI"]
     if return_rauxinfo:
@@ -68,32 +59,15 @@ def rdf_to_csv(rdf, outfile=None, return_rauxinfo=False, return_longkey=False, r
     if return_rxninfo:
         header.append("RXNInfo")
 
-    data_dict = rinchi_tools.conversion.convert_rdf_to_dict(rdf, header)
-
-    # Prevent overwriting, create output in an output folder in the current directory
-    if not os.path.exists('output'):
-        os.mkdir('output')
-
-    # Set name of new file
-    if outfile:
-        new_name = os.path.join("output", outfile)
-    else:
-        new_name = os.path.join("output", input_name)
-
-    # Add a number suffix if chosen filename already exists
-    if os.path.exists('%s-rinchi.csv' % new_name):
-        index = 1
-        while os.path.exists('%s_%d-rinchi.csv' % (new_name, index)):
-            index += 1
-        output_name = '%s_%d-rinchi.csv' % (new_name, index)
-    else:
-        output_name = '%s-rinchi.csv' % new_name
+    data = conversion.rdf_to_rinchis(rdf, force_equilibrium=False, return_rauxinfos=return_rauxinfo,
+                                     return_longkeys=return_longkey, return_shortkeys=return_shortkey,
+                                     return_webkeys=return_webkey, return_rxndata=return_rxninfo)
 
     # Write new database file as .csv
-    with open(output_name, 'w') as f:
-        writer = csv.writer(f, delimiter='$')
-        writer.writerow(header)
-        writer.writerows([[i] + data_dict[i] for i in data_dict.keys()])
+    output_file, output_name = utils.create_output_file(outfile,csv)
+    writer = csv.writer(output_file, delimiter='$')
+    writer.writerow(header)
+    writer.writerows(data)
     return output_name
 
 
@@ -118,12 +92,20 @@ def rdf_to_csv_append(rdf, csv_file):
         for row in reader:
             old_rinchis.append(row[0])
 
-    # Construct a dictionary of RInChIs and RInChI data from the supplied rd file
-    new_data_dict = rinchi_tools.conversion.convert_rdf_to_dict(rdf, header)
+    return_rauxinfo = "RAuxInfo" in header
+    return_longkey = "LongKey" in header
+    return_shortkey = "ShortKey" in header
+    return_webkey = "WebKey" in header
+    return_rxninfo = "RXNInfo" in header
+
+    # Construct a dict of RInChIs and RInChI data from the supplied rd file
+    data = conversion.rdf_to_rinchis(rdf, force_equilibrium=False, return_rauxinfos=return_rauxinfo,
+                                     return_longkeys=return_longkey, return_shortkeys=return_shortkey,
+                                     return_webkeys=return_webkey, return_rxndata=return_rxninfo)
 
     # Convert both lists of rinchis into sets - unique, does not preserve order
     old_rinchis = set(old_rinchis)
-    new_rinchis = set(new_data_dict.keys())
+    new_rinchis = set(entry['rinchi'] for entry in data)
 
     # The rinchis that need to be added to the csv_file are the complement of the new rinchis in the old
     rinchis_to_add = list(new_rinchis - old_rinchis)
@@ -131,7 +113,8 @@ def rdf_to_csv_append(rdf, csv_file):
     # Add all new, unique rinchis to the csv_file
     with open(csv_file, "a") as db:
         writer = csv.writer(db, delimiter='$')
-        writer.writerows([[i] + new_data_dict[i] for i in rinchis_to_add])
+        # Add rows determined
+        writer.writerows(entry if entry['rinchi'] in rinchis_to_add else None for entry in data)
 
 
 def create_csv_from_directory(root_dir, outname, return_rauxinfo=False, return_longkey=False, return_shortkey=False,
@@ -393,7 +376,7 @@ def advanced_search(inchi, db_filename, table_name, hyb=None, val=None, rings=No
         db_filename: the database to search within
         table_name: the datable to search in
 
-        All args following are dictionaries of the format {property:count,property2:count2,...}
+        All args following are dicts of the format {property:count,property2:count2,...}
         hyb: The hybridisation changes(s) desired
         val: The valence change(s) desired
         rings: The ring change(s) desired
@@ -455,7 +438,7 @@ def rdf_to_sql(rdfile, db_filename, table_name, columns=None):
 
     rdf_data_tuple = [tuple([i] + rdf_data[i]) for i in rdf_data.keys()]
 
-    # Add the rdf data to the dictionary
+    # Add the rdf data to the dict
     sql_insert(cursor, table_name, rdf_data_tuple, columns, True)
     db.commit()
     db.close()

@@ -18,6 +18,7 @@ from rinchi_tools import tools, utils
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="RInChI addition \n{}".format(__doc__))
     parser.add_argument("input_path", help="Path of file to input")
+    parser.add_argument("-o","--output_name",default='file',help="Optionally specify the file output name")
     action = parser.add_mutually_exclusive_group()
     action.add_argument("-f", "--fileout", action="store_false", help="Output to file instead of printing")
     args = parser.parse_args()
@@ -25,4 +26,4 @@ if __name__ == "__main__":
         input_file = open('%s' % args.input_path).read()
         input_rinchis = input_file.strip().splitlines()
         overall_rinchi = tools.add(input_rinchis)
-        utils.output(overall_rinchi, args.fileout, "rinchi")
+        utils.output(overall_rinchi,args.output_name, "rinchi")

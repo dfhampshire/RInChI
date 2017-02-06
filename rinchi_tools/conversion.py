@@ -24,7 +24,7 @@ from rinchi_tools import tools
 from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
 
 
-def _rxn_2_molfs(rxn):
+def _rxn_to_molfs(rxn):
     """
     Accept an RXNfile and return lists of reactant and product molfiles.
 
@@ -77,7 +77,7 @@ def _rxn_2_molfs(rxn):
     return reactants, products, agents, rdata
 
 
-def _molfs_2_rxn(rxnt_molfs=None, prod_molfs=None, agnt_molfs=None, name=''):
+def _molfs_to_rxn(rxnt_molfs=None, prod_molfs=None, agnt_molfs=None, name=''):
     """
     Convert a list of reactant and product Molfiles into a RXN file.
 
@@ -125,7 +125,7 @@ def _molfs_2_rxn(rxnt_molfs=None, prod_molfs=None, agnt_molfs=None, name=''):
     return rxnfile
 
 
-def _molfs_2_rdf(rxnt_molfs=None, prod_molfs=None, agnt_molfs=None, name=''):
+def _molfs_to_rdf(rxnt_molfs=None, prod_molfs=None, agnt_molfs=None, name=''):
     """
     Convert a list of reactant and product Molfiles into a RXN file.
 
@@ -206,7 +206,7 @@ def _split_rdf(rdfile, start=0, stop=0):
     # Convert the list of reaction tuples into a list of RXN files.
     rxnfiles = []
     for reaction in reactions:
-        rdfile = _molfs_2_rdf(reaction[0][0], reaction[0][1], reaction[0][2])
+        rdfile = _molfs_to_rdf(reaction[0][0], reaction[0][1], reaction[0][2])
         rdfile = rdfile.strip() + '\n' + reaction[1].strip()
         rxnfiles.append(rdfile)
 
@@ -321,8 +321,8 @@ def _agent_harvester(data, num_variations):
     return agent_variations
 
 
-def rdf_2_rinchis(rdf, start=0, stop=0, force_equilibrium=False, return_rauxinfos=False, return_longkeys=False,
-                  return_shortkeys=False, return_webkeys=False, return_rxndata=False):
+def rdf_to_rinchis(rdf, start=0, stop=0, force_equilibrium=False, return_rauxinfos=False, return_longkeys=False,
+                   return_shortkeys=False, return_webkeys=False, return_rxndata=False):
     """
     Convert an RDFile to a list of RInChIs.
 
@@ -340,92 +340,178 @@ def rdf_2_rinchis(rdf, start=0, stop=0, force_equilibrium=False, return_rauxinfo
         return_rxndata: If True, returns a list of the &DTYPE/$DATUM data stored in the rxnfiles
 
     Returns:
-        rinchis: A list of RInChIs generated from the RDFile.
-        rauxinfos: A list of the RInChIs' RAuxInfos.
-        longkeys: A list of the RInChIs' Long-RInChIKeys.
-        shortkeys: A list of the RInChIs' Short-RInChIKeys.
-        webkeys: A list of the RInChIs' Web-RInChIKeys.
-        rxndata: A list of the &DTYPE/$DATUM data stored in the rxnfiles
+        List of dicts of reaction data as defined above. The data types are the keys for each dict
     """
     # Split the RDFile into a list of RD files.
     rdfiles = _split_rdf(rdf, start, stop)
 
     # Looping over the RD files, convert each to a RInChI.
+    data_list = []
     rinchis = []
     rauxinfos = []
-    longkeys = []
-    shortkeys = []
-    webkeys = []
-    rxndata = []
     for rdfile in rdfiles:
         rinchi, rauxinfo = tools.deduper(*RInChI_Handle().rinchi_from_file_text("RD", rdfile, force_equilibrium))
-        if not (rinchi in rinchis and ((not return_rauxinfos) or rauxinfo in rauxinfos)):  # Force unique entries
+        if rinchi not in rinchis and not (rauxinfo in rauxinfos or return_rauxinfos):  # Force unique entries
+            data = {'rinchi': rinchi}
             rinchis.append(rinchi)
             if return_rauxinfos:
+                data['rauxinfo'] = rauxinfo
                 rauxinfos.append(rauxinfo)
             if return_longkeys:
                 longkey = RInChI_Handle().rinchikey_from_rinchi(rinchi, "L")
-                longkeys.append(longkey)
+                data['longkey'] = longkey
+
             if return_shortkeys:
                 shortkey = RInChI_Handle().rinchikey_from_rinchi(rinchi, "S")
-                shortkeys.append(shortkey)
+                data['shortkey'] = shortkey
             if return_webkeys:
                 webkey = RInChI_Handle().rinchikey_from_rinchi(rinchi, "W")
-                webkeys.append(webkey)
+                data['webkey'] = webkey
             if return_rxndata:
                 d = rdfile.replace("\n", "")
                 data_pairs = re.findall(r"\$DTYPE ([^$]+)\$DATUM ([^$]+)", d)
                 dict_result = {p[0].replace("\r", ""): p[1].replace("\r", "") for p in data_pairs}
-                rxndata.append(dict_result)
+                data['rxn_data'] = dict_result
+            data_list.append(data)
 
-    # Return everything specified
-    output = [rinchis]
-    if return_rauxinfos:
-        output.append(rauxinfos)
-    if return_longkeys:
-        output.append(longkeys)
-    if return_shortkeys:
-        output.append(shortkeys)
-    if return_webkeys:
-        output.append(webkeys)
-    if return_rxndata:
-        output.append(rxndata)
-    output = tuple(output)
-    return output
+    return data_list
 
 
-def convert_rdf_to_dict(rdf, properties, force_equilibrium=False):
+def rxn_to_rinchi(rxn_text, ret_rauxinfo=False, longkey=False, shortkey=False, webkey=False, force_equilibrium=False,
+                  file_out=False):
     """
-    Convert an RDF to a dictionary of properties
 
     Args:
-        rdf: The RD file as a text block
-        properties: The properties to include in the result, stored as an iterable
-        force_equilibrium: Whether the force the RInChI to be an equilibrium RInChI
+        rxn_text:
+        ret_rauxinfo:
+        longkey:
+        shortkey:
+        webkey:
+        force_equilibrium:
+        file_out:
 
     Returns:
-        A dictionary containing the properties, with the property names as the keys
+
     """
-    with open(rdf) as data:
-        input_data = data.read()
 
-    # Set optional conversion parameters
-    start_index = 0
-    stop = 0
+    # Generate the requested data.
+    rinchi, rauxinfo = RInChI_Handle().rinchi_from_file_text("RXN", rxn_text, force_equilibrium)
+    data = {'rinchi': rinchi}
+    if ret_rauxinfo:
+        data['rauxinfo'] = rauxinfo
+    if longkey:
+        data['longkey'] = RInChI_Handle().rinchikey_from_rinchi(rinchi, "L") + '\n'
+    if shortkey:
+        data['shortkey'] = RInChI_Handle().rinchikey_from_rinchi(rinchi, "S") + '\n'
+    if webkey:
+        data['webkey'] = RInChI_Handle().rinchikey_from_rinchi(rinchi, "W") + '\n'
+    return data
 
-    # Set which columns to include
-    return_rauxinfo = "RAuxInfo" in properties
-    return_longkey = "LongKey" in properties
-    return_shortkey = "ShortKey" in properties
-    return_webkey = "WebKey" in properties
-    return_rxninfo = "RXNInfo" in properties
+def rinchi_to_dict_list(data):
+    """
+    Takes a text block or file object and parse a dictionary of RInChI entries
 
-    # Run RInChI conversion functions.
-    rinchidata = conversion.rdf_2_rinchis(input_data, start_index, stop, force_equilibrium, return_rauxinfo,
-                                          return_longkey, return_shortkey, return_webkey, return_rxninfo)
+    Args:
+        data: The text block or file object to parse
 
-    # Transpose nested list into a list of data entries
-    data_transpose = map(list, zip(*rinchidata))
+    Returns:
+        A list of dictionaries containing each dictionary entry
 
-    # Force uniqueness
-    return {x[0]: x[1:] for x in data_transpose}
+    """
+    rinchi_data = []
+    entry = {}
+
+    class StrR(str):
+        """
+        Extends str so that readlines() can be used for string types too
+        """
+        def readlines(self):
+            """
+            Takes a multi-line string and splits it into lines.
+
+            Returns:
+                A list of lines in the string
+            """
+            return self.split('\n')
+
+    if isinstance(data, str):
+        data = StrR(data)
+
+    rinchi_last = False  # Ensure rinchis are appended correctly
+
+    for line in data.readlines():
+        if line.startswith('RInChI'):
+            # Add previous data entry to data list
+            rinchi_data.append(entry)
+            entry = {'rinchi': line.strip()}
+            rinchi_last = True
+        elif line.startswith('RAux') and rinchi_last:
+            entry['rauxinfo'] = line.strip()
+            rinchi_last = False
+
+    # Close the file if indeed it as a file object
+    try:
+        data.close()
+    except AttributeError:
+        pass
+
+    # Add last data entry
+    rinchi_data.append(entry)
+    return rinchi_data
+
+
+def rinchi_to_file(data, rxnout=True):
+    """
+    Takes a file object or a multiline string and returns a list of output file text blocks (RXN or RDF)
+
+    Args:
+        data:
+        rxnout:
+
+    Returns:
+        A list of rxn of rd file text blocks
+
+    """
+    rinchi_data = rinchi_to_dict_list(data)
+
+    # Generate RXN file.
+    list_files = []
+    for entry in rinchi_data:
+        assert isinstance(entry, dict)
+        if rxnout:
+            file_text = RInChI_Handle().file_text_from_rinchi(entry['rinchi'], entry.get('rauxinfo', ''), "RXN")
+        else:
+            file_text = RInChI_Handle().file_text_from_rinchi(entry['rinchi'], entry.get('rauxinfo', ''), "RD")
+        list_files.append(file_text)
+
+    return list_files
+
+
+def rinchi_to_keys(data, longkey=False, shortkey=False, webkey=False, inc_rinchi=False):
+    """
+    Converts a list of rinchis in a flat file into a dictionary of RInChIs and keys
+
+    Args:
+        data: The data string or file object to parse
+        longkey: Whether to include the longkey
+        shortkey: Whether to include the shortkey
+        webkey: Whether to include the webkey
+        inc_rinchi: Whether to include the original rinchi
+
+    Returns:
+        list of dictionaries containing the data produced.
+    """
+    data_list = rinchi_to_dict_list(data)
+    for entry in data_list:
+        assert isinstance(entry,dict)
+        del entry['rauxinfo']
+        # Calculate keys
+        if longkey:
+            entry['longkey'] = RInChI_Handle().rinchikey_from_rinchi(entry['rinchi'], "L") + '\n'
+        if shortkey:
+            entry['shortkey'] += RInChI_Handle().rinchikey_from_rinchi(entry['rinchi'], "S") + '\n'
+        if webkey:
+            entry['webkey'] += RInChI_Handle().rinchikey_from_rinchi(entry['rinchi'], "W") + '\n'
+        if not inc_rinchi: # Remove rinchi if not needed
+            del entry['rinchi']
+    return data_list

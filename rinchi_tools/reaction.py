@@ -271,7 +271,7 @@ class Reaction:
         valence changes, formula changes, hybridisation of C atom changes.
 
         Args:
-            All args are dictionaries of the format {property:count,property2:count2,...}
+            All args are dicts of the format {property:count,property2:count2,...}
             hyb_i: The hybridisation change(s) desired
             val_i: The valence change(s) desired
             rings_i: The ring change(s) desired

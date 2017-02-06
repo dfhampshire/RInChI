@@ -146,7 +146,7 @@ class RInChI:
             Exception: RInChi format related errors
 
         Returns:
-            A dictionary of five lists: Direction, No-Structures, Reactants, Products, and Agents. Each Reactant,
+            A dict of five lists: Direction, No-Structures, Reactants, Products, and Agents. Each Reactant,
                 Product, and Agent list contains a set of (InChI, AuxInfo) tuples.  The No-Structures list contains
                 No-Structure counts for Reactants, Products, and Agents.
         """

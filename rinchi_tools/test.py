@@ -53,9 +53,9 @@ print("================")
 print(inchi_tools.inchi_2_auxinfo(test_inchi))
 with open('test-resources/rxn_t1.rxn', 'r') as myfile:
     rxn = myfile.read()
-molfs = conversion._rxn_2_molfs(rxn)
+molfs = conversion._rxn_to_molfs(rxn)
 print(molfs)
-print(conversion._molfs_2_rxn(*molfs))
+print(conversion._molfs_to_rxn(*molfs))
 print(inchi_tools.molf_2_inchi(molfs[0][0]))
 print(inchi_tools.inchi_2_sdf(test_inchi))
 

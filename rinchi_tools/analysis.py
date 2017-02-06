@@ -99,7 +99,7 @@ def rxns_ring_changes(rinchis, pm=(False, False)):
             molecule ( pm[1] ).  The default is not to calculate per molecule.
 
     Returns:
-        results: A dictionary, of which the keys are reaction ring changes and the entries are lists of RInChIs.
+        results: A dict, of which the keys are reaction ring changes and the entries are lists of RInChIs.
             This allows for the lookup of RInChIs by the number of rings created or destroyed in the reaction.
     """
     results = dict()
@@ -197,7 +197,7 @@ def rxns_stereochem_changes(rinchis, wd=False, pm=(False, False), sp2=True, sp3=
         sp3: Whether to count sp3 stereocentres.
 
     Returns:
-        results: A dictionary, of which the keys are changes in stereocentres and the entries are lists of RInChIs.
+        results: A dict, of which the keys are changes in stereocentres and the entries are lists of RInChIs.
             This allows for the lookup of RInChIs by the number of stereocentres created or destroyed in the reaction.
     """
     results = dict()

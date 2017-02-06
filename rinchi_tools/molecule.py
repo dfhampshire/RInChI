@@ -118,10 +118,10 @@ class Molecule:
 
     def chemical_formula_to_dict(self):
         """
-        Get the chemical formula as a dictionary
+        Get the chemical formula as a dict
 
         Returns:
-            A dictionary with elements as keys and number of atoms as value
+            A dict with elements as keys and number of atoms as value
         """
         result = {}
         if not self.formula:
@@ -311,7 +311,7 @@ class Molecule:
 
     def generate_atoms(self, lst=None):
         """
-        Sets the node-edge graph as a dictionary.
+        Sets the node-edge graph as a dict.
 
         Args:
             lst: A molecular graph as a list of edges.  If no list is passed, the function sets the atoms for its
