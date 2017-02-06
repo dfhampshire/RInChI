@@ -9,7 +9,7 @@ provided by the InChI trust.
     D. Hampshire 2017
 """
 
-from rinchi_tools import inchi_tools, tools
+from rinchi_tools import _inchi_tools, tools
 
 
 def rxn_ring_change(input_rinchi, pm=(False, False), return_ring_counts_only=False):
@@ -50,7 +50,7 @@ def rxn_ring_change(input_rinchi, pm=(False, False), return_ring_counts_only=Fal
         layer_rings = 0
         cyclic_mols = 0
         for inchi in layer:
-            inchi_rings = inchi_tools.count_rings(inchi)
+            inchi_rings = _inchi_tools.count_rings(inchi)
             layer_rings += inchi_rings
             if inchi_rings:
                 cyclic_mols += 1
@@ -153,13 +153,13 @@ def rxn_stereochem_change(input_rinchi, wd=False, pm=(False, False), sp2=True, s
     for inchi in reactants:
         if no_structs[0] != 0:
             raise ValueError('RInChI Reactants contain undefined structures.')
-        sc_change, sm_change = inchi_tools.count_centres(inchi, wd, sp2, sp3)
+        sc_change, sm_change = _inchi_tools.count_centres(inchi, wd, sp2, sp3)
         reactant_stereocentres += sc_change
         reactant_stereo_mols += sm_change
     for inchi in products:
         if no_structs[1] != 0:
             raise ValueError('RInChI Products contain undefined structures.')
-        sc_change, sm_change = inchi_tools.count_centres(inchi, wd, sp2, sp3)
+        sc_change, sm_change = _inchi_tools.count_centres(inchi, wd, sp2, sp3)
         product_stereocentres += sc_change
         product_stereo_mols += sm_change
 
@@ -213,7 +213,7 @@ def rxns_stereochem_changes(rinchis, wd=False, pm=(False, False), sp2=True, sp3=
     return results
 
 
-def search_4_inchi(sought_inchi, rinchis, location=''):
+def search_inchi_list(sought_inchi, rinchis, location=''):
     """
     Search for an InChI in a list of RInChIs.
 

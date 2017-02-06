@@ -19,7 +19,7 @@ from heapq import nsmallest
 
 from scipy.spatial import distance
 
-from rinchi_tools import conversion, utils, v02_convert
+from rinchi_tools import conversion, utils, v02_tools
 from rinchi_tools.reaction import Reaction
 from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
 
@@ -161,10 +161,10 @@ def create_csv_from_directory(root_dir, outname, return_rauxinfo=False, return_l
 # SQL tools
 ###########
 
-# Regularly used command wrappers
+# Regularly used command wrappers. Not for external use
 #################################
 
-def pragma_sql_env(cursor):
+def _pragma_sql_env(cursor):
     """
     Sets various environmental variables and state flags within the SQLite environment.
 
@@ -178,7 +178,7 @@ def pragma_sql_env(cursor):
     cursor.execute(''' PRAGMA main.cache_size=5000''')
 
 
-def create_sql_table(cursor, table_name, columns):
+def _create_sql_table(cursor, table_name, columns):
     """
     Create an SQL table
 
@@ -191,7 +191,7 @@ def create_sql_table(cursor, table_name, columns):
     cursor.execute('CREATE TABLE IF NOT EXISTS {} ({})'.format(table_name, column_string))
 
 
-def get_sql_columns(cursor, table_name):
+def _get_sql_columns(cursor, table_name):
     """
     Get list of column names quickly
 
@@ -207,7 +207,7 @@ def get_sql_columns(cursor, table_name):
     return names
 
 
-def sql_insert(cursor, table_name, data, columns=None, exec_many=False):
+def _sql_insert(cursor, table_name, data, columns=None, exec_many=False):
     """
     Insert data into a table quickly
 
@@ -219,7 +219,7 @@ def sql_insert(cursor, table_name, data, columns=None, exec_many=False):
         exec_many: Whether to use cursor.execute() or cursor.executemany()
     """
     if columns is None:
-        get_sql_columns(cursor, table_name)
+        _get_sql_columns(cursor, table_name)
 
     command = (
         "INSERT INTO {}({}) VALUES (".format(table_name, ", ".join(columns)) + ", ".join(["?"] * len(columns)) + ")")
@@ -230,7 +230,7 @@ def sql_insert(cursor, table_name, data, columns=None, exec_many=False):
         cursor.execute(command, data)
 
 
-def check_table_exists(table_name, cursor):
+def _check_table_exists(table_name, cursor):
     """
     Checks if a table exists within a database
 
@@ -247,7 +247,7 @@ def check_table_exists(table_name, cursor):
     return True
 
 
-def drop_table_if_needed(table_name, cursor):
+def _drop_table_if_needed(table_name, cursor):
     """
     Checks if table exists and drops the table if it does
 
@@ -255,7 +255,7 @@ def drop_table_if_needed(table_name, cursor):
         table_name: The table to drop
         cursor: The SQLite database cursor object
     """
-    if check_table_exists(table_name, cursor):
+    if _check_table_exists(table_name, cursor):
         approved = input("Table {} will be deleted and recreated. Continue? (type 'yes') :".format(table_name))
         if approved == "yes":
             cursor.execute('drop table if exists {}'.format(table_name))
@@ -266,10 +266,7 @@ def drop_table_if_needed(table_name, cursor):
     return
 
 
-# Searching SQL databases
-#########################
-
-def sql_search(cursor, table_name, columns=None, lookup_value=None, field=None, use_like=False, limit=None):
+def _sql_search(cursor, table_name, columns=None, lookup_value=None, field=None, use_like=False, limit=None):
     """
     Search for a value in an SQL database
 
@@ -313,6 +310,39 @@ def sql_search(cursor, table_name, columns=None, lookup_value=None, field=None, 
     return cursor
 
 
+def _transfer_table(db_source, db_destination, table_name, drop_source=True):
+    """
+    Transfers a table from one database to another.  Optionally drops the source database
+
+    Args:
+        db_source: The name of the database to source the table
+        db_destination: The name of the destination database
+        table_name: The name of the table to transfer
+        drop_source: Whether to drop the source database.  Defaults to True
+    """
+    logging.info("transferring {} from {} to {}...".format(table_name, db_source, db_destination))
+
+    # Create connection and attach database
+    db = sqlite3.connect(db_destination)
+    cursor = db.cursor()
+    cursor.execute("ATTACH DATABASE ? AS db2", (db_source,))
+
+    # Execute SQL create command for the source table on the new table
+    cursor.execute("SELECT sql FROM db2.sqlite_master WHERE type='table' AND name=?", (table_name,))
+    cursor.execute(cursor.fetchone()[0])
+
+    # Insert values from source to destination
+    cursor.execute("INSERT INTO {0} SELECT * FROM db2.{0}".format(table_name))
+    db.commit()
+    db.close()
+
+    # Drop the source table
+    if drop_source:
+        os.remove(db_source)
+
+# Searching SQL databases
+#########################
+
 def sql_key_to_rinchi(key, db_filename, table_name, keytype="L"):
     """
     Returns the RInChI matching the given Long RInChI key for a given database
@@ -341,7 +371,7 @@ def sql_key_to_rinchi(key, db_filename, table_name, keytype="L"):
         field = "webkey"
     else:
         raise ValueError('The keytype argument must be one of "L" , "S" or "W"')
-    cursor = sql_search(cursor, table_name, ["rinchi"], key, field, )
+    cursor = _sql_search(cursor, table_name, ["rinchi"], key, field, )
     rinchi = cursor.fetchone()[0]
     db.close()
     return rinchi
@@ -360,7 +390,7 @@ def search_for_inchi(inchi, db_filename, table_name):
     db = sqlite3.connect(db_filename)
     cursor = db.cursor()
     query = "%" + "/".join(inchi.split("/")[1:]) + "%"
-    cursor = sql_search(cursor, table_name, ["rinchi"], query, "rinchi", True)
+    cursor = _sql_search(cursor, table_name, ["rinchi"], query, "rinchi", True)
     for r in cursor:
         print((r[0]))
 
@@ -422,12 +452,12 @@ def rdf_to_sql(rdfile, db_filename, table_name, columns=None):
     db = sqlite3.connect(db_filename)
     cursor = db.cursor()
 
-    create_sql_table(cursor, table_name, columns)
+    _create_sql_table(cursor, table_name, columns)
 
     # Repopulate columns variable.  Useful for pre-existing table
-    columns = get_sql_columns(cursor, table_name)
+    columns = _get_sql_columns(cursor, table_name)
 
-    pragma_sql_env(cursor)
+    _pragma_sql_env(cursor)
 
     # Open the rdfile and convert its contents to a dict of rinchis and rinchi data
     rdf_data = rinchi_tools.conversion.convert_rdf_to_dict(rdfile, columns)
@@ -439,7 +469,7 @@ def rdf_to_sql(rdfile, db_filename, table_name, columns=None):
     rdf_data_tuple = [tuple([i] + rdf_data[i]) for i in rdf_data.keys()]
 
     # Add the rdf data to the dict
-    sql_insert(cursor, table_name, rdf_data_tuple, columns, True)
+    _sql_insert(cursor, table_name, rdf_data_tuple, columns, True)
     db.commit()
     db.close()
 
@@ -455,14 +485,14 @@ def csv_to_sql(csv_name, db_filename, table_name):
     """
     db = sqlite3.connect(db_filename)
     cursor = db.cursor()
-    pragma_sql_env(cursor)
+    _pragma_sql_env(cursor)
 
     with open(csv_name, 'rb') as csvfile:
         reader = csv.reader(csvfile, delimiter="$")
         columns = reader.next()
-        create_sql_table(cursor, table_name, columns)
+        _create_sql_table(cursor, table_name, columns)
         for row in reader:
-            sql_insert(cursor, table_name, row)
+            _sql_insert(cursor, table_name, row)
 
     db.commit()
     db.close()
@@ -514,12 +544,12 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
         Returns:
             The data to add to the queue
         """
-        the_rinchi = v02_convert.convert_rinchi(row[0])
+        the_rinchi = v02_tools.convert_rinchi(row[0])
         data_to_add = []
         if args[0]:
             data_to_add.append(the_rinchi)
         if args[1]:
-            data_to_add.append(v02_convert.convert_rauxinfo(row[1]))
+            data_to_add.append(v02_tools.convert_rauxinfo(row[1]))
         if args[2]:
             data_to_add.append(RInChI_Handle().rinchikey_from_rinchi(the_rinchi, "L"))
         if args[3]:
@@ -532,49 +562,18 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
     logging.info("Check for original table")  # Doing this now to prevent delays later
     db = sqlite3.connect(db_filename)
     cursor = db.cursor()
-    drop_table_if_needed(table_name, cursor)
+    _drop_table_if_needed(table_name, cursor)
     db.close()
 
     # Create args and run the queue
-    pop_args = [populate_queue,
+    pop_args = [_populate_queue,
                 [db_filename, "rinchis02", [v02_rinchi, v02_rauxinfo], processing_function, col_list]]
-    depop_args = [depopulate_queue, [columns, table_name]]
-    run_queue(1000, pop_args, depop_args)
+    depop_args = [_depopulate_queue, [columns, table_name]]
+    _run_queue(1000, pop_args, depop_args)
 
     # Transfer table from temporary database to new database
-    transfer_table("rinchi_temp.db", db_filename, table_name)
+    _transfer_table("rinchi_temp.db", db_filename, table_name)
     logging.info("Finished conversion in {} seconds".format(time.time() - start_time))
-
-
-def transfer_table(db_source, db_destination, table_name, drop_source=True):
-    """
-    Transfers a table from one database to another.  Optionally drops the source database
-
-    Args:
-        db_source: The name of the database to source the table
-        db_destination: The name of the destination database
-        table_name: The name of the table to transfer
-        drop_source: Whether to drop the source database.  Defaults to True
-    """
-    logging.info("transferring {} from {} to {}...".format(table_name, db_source, db_destination))
-
-    # Create connection and attach database
-    db = sqlite3.connect(db_destination)
-    cursor = db.cursor()
-    cursor.execute("ATTACH DATABASE ? AS db2", (db_source,))
-
-    # Execute SQL create command for the source table on the new table
-    cursor.execute("SELECT sql FROM db2.sqlite_master WHERE type='table' AND name=?", (table_name,))
-    cursor.execute(cursor.fetchone()[0])
-
-    # Insert values from source to destination
-    cursor.execute("INSERT INTO {0} SELECT * FROM db2.{0}".format(table_name))
-    db.commit()
-    db.close()
-
-    # Drop the source table
-    if drop_source:
-        os.remove(db_source)
 
 
 def gen_rauxinfo(db_filename, table_name):
@@ -590,9 +589,9 @@ def gen_rauxinfo(db_filename, table_name):
 
     def converter(rinchi):
         """
-        Interfaces the rauxinfo converter in v02_convert.py
+        Interfaces the rauxinfo converter in v02_tools.py
         """
-        rauxinfo = v02_convert.gen_rauxinfo(rinchi)
+        rauxinfo = v02_tools.generate_rauxinfo(rinchi)
         return rauxinfo
 
     # Creating SQL function improves performance
@@ -634,7 +633,7 @@ def compare_fingerprints(search_term, db_filename, table_name):
 
     res = []
     cursor = db.cursor()
-    cursor = sql_search(cursor, table_name, ["longkey", "fingerprint"], limit=-1)
+    cursor = _sql_search(cursor, table_name, ["longkey", "fingerprint"], limit=-1)
     for r in cursor:
         counter += 1
         res.append((r[0], distance.euclidean(fp1, pickle.loads(str(r[1])).toarray()[0])))
@@ -661,7 +660,7 @@ def recall_fingerprints(lkey, db_filename, table_name):
     """
     db = sqlite3.connect(db_filename)
     cursor = db.cursor()
-    cursor = sql_search(cursor, table_name, ["fingerprint"], lkey, "longkey", )
+    cursor = _sql_search(cursor, table_name, ["fingerprint"], lkey, "longkey", )
 
     # Unpickle the binary data, and return a Numpy array containing the reaction fingerprint
     fpt = pickle.loads(str(cursor.fetchone()[0])).toarray()[0]
@@ -688,7 +687,7 @@ def update_fingerprints(db_filename, table_name, fingerprint_table_name):
     cursor = db.cursor()
     cursor2 = db.cursor()
 
-    cursor = sql_search(cursor, table_name, fingerprint_table_name)
+    cursor = _sql_search(cursor, table_name, fingerprint_table_name)
 
     counter = 0
     for lkey in cursor:
@@ -718,7 +717,7 @@ def update_fingerprints(db_filename, table_name, fingerprint_table_name):
 #################################################
 
 
-def populate_queue(q, db_filename, table_name, source_columns, processing_function=None, processing_args=None):
+def _populate_queue(q, db_filename, table_name, source_columns, processing_function=None, processing_args=None):
     """
     Populates a queue with items processed from a database using a processing function provided.  If no processing
     function is provided then each row is simply placed into the queue.
@@ -735,7 +734,7 @@ def populate_queue(q, db_filename, table_name, source_columns, processing_functi
         db = sqlite3.connect(db_filename)
         cursor = db.cursor()
         logging.info("populating")
-        for row in sql_search(cursor, table_name):
+        for row in _sql_search(cursor, table_name):
             if processing_function is not None:
                 row = processing_function(row, processing_args)
             q.put(row)
@@ -747,7 +746,7 @@ def populate_queue(q, db_filename, table_name, source_columns, processing_functi
         raise ValueError("Function not given as argument 'Processing function'")
 
 
-def depopulate_queue(q, columns, table_name):
+def _depopulate_queue(q, columns, table_name):
     """
     Removes items from the queue and processes them to an output table
 
@@ -758,11 +757,11 @@ def depopulate_queue(q, columns, table_name):
     """
     db = sqlite3.connect("rinchi_temp.db")
     cursor = db.cursor()
-    create_sql_table(cursor, table_name, columns)
+    _create_sql_table(cursor, table_name, columns)
     logging.info("depopulating")
     while True:
         try:
-            sql_insert(cursor, table_name, q.get(True, 2))
+            _sql_insert(cursor, table_name, q.get(True, 2))
             # Waits for 2 seconds, otherwise throws `Queue.Empty`
         except queue.Empty:
             logging.info("Finished depopulating")
@@ -771,7 +770,7 @@ def depopulate_queue(q, columns, table_name):
     db.close()
 
 
-def run_queue(q_length, *threads):
+def _run_queue(q_length, *threads):
     """
     Runs a set of functions as threads which perform functions on a queue and ends them together
 

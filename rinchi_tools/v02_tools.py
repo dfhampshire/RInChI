@@ -4,7 +4,7 @@ RInChI v0.02 to 0.03 conversion scripts.
     D.F. Hampshire 2016
 """
 
-from rinchi_tools import inchi_tools, tools, utils
+from rinchi_tools import _inchi_tools, tools, utils
 
 
 class VersionError(Exception):
@@ -24,12 +24,12 @@ def convert_rinchi(rinchi):
     Returns:
         rinchi: A RInChI of version 0.03.
     """
-    layer2_inchis, layer3_inchis, layer4_inchis, direction, u_structs = split_rinchi(rinchi)
+    layer2_inchis, layer3_inchis, layer4_inchis, direction, u_structs = _split_rinchi(rinchi)
     rinchi = tools.build_rinchi(layer2_inchis, layer3_inchis, layer4_inchis, direction, u_structs)
     return rinchi
 
 
-def gen_rauxinfo(rinchi):
+def generate_rauxinfo(rinchi):
     """
     Create RAuxInfo for a RInChI using a conversion function.
 
@@ -45,13 +45,13 @@ def gen_rauxinfo(rinchi):
     """
 
     # Split the RInChI into constituent InChIs
-    gp1_inchis, gp2_inchis, gp3_inchis, direct, u = split_rinchi(rinchi)
+    gp1_inchis, gp2_inchis, gp3_inchis, direct, u = _split_rinchi(rinchi)
 
     # Look up the AuxInfo for the InChIs.
     def auxinfo_convert(inchis):
         auxinfos = []
         for inchi in inchis:
-            auxinfo = inchi_tools.inchi_2_auxinfo(inchi)
+            auxinfo = _inchi_tools.inchi_2_auxinfo(inchi)
             auxinfos.append(auxinfo)
         return auxinfos
 
@@ -117,7 +117,7 @@ def convert_rauxinfo(rauxinfo):
     Returns:
         rauxinfo: A RAuxInfo of version 0.03.
     """
-    layer2_auxinfos, layer3_auxinfos, layer4_auxinfos = split_rauxinfo(rauxinfo)
+    layer2_auxinfos, layer3_auxinfos, layer4_auxinfos = _split_rauxinfo(rauxinfo)
     rauxinfo = tools.build_rauxinfo(layer2_auxinfos, layer3_auxinfos, layer4_auxinfos)
     return rauxinfo
 
@@ -139,7 +139,7 @@ def convert_all(rinchi, rauxinfo):
     return rinchi, rauxinfo
 
 
-def split_rauxinfo(rauxinfo):
+def _split_rauxinfo(rauxinfo):
     """
     Convert a RAuxInfo to AuxInfos
 
@@ -178,7 +178,7 @@ def split_rauxinfo(rauxinfo):
     return layer2_auxinfos, layer3_auxinfos, layer4_auxinfos
 
 
-def split_rinchi(rinchi):
+def _split_rinchi(rinchi):
     """
     Split a v0.02 RInChI into its constituent parts.
 

@@ -7,7 +7,7 @@ This module tests the module functions.  Not very user friendly...
 
 """
 
-from rinchi_tools import analysis, conversion, inchi_tools, rinchi_lib, tools
+from rinchi_tools import _inchi_tools, analysis, conversion, rinchi_lib, tools
 
 rinchi_interface = rinchi_lib.RInChI()
 
@@ -35,29 +35,29 @@ test_list_rinchi = [test_rinchi, test_rinchi]
 sp2_centre_inchi = "InChI=1S/C4H8/c1-3-4-2/h3-4H,1-2H3/b4-3+"
 sp2_centre_rinchi = ("RInChI=0.03.1S/C4H8/c1-3-4-2/h3-4H,1-2H3/b4-3+!C2H6O/c1-2-3/h3H,2H2,1H3<>C4H8O2/c1-3-6-4(2)5/h3H2"
                      ",1-2H3!H2O/h1H2<>H2O4S/c1-5(2,3)4/h(H2,1,2,3,4)/d=")
-print(inchi_tools.get_conlayer(test_inchi))
-print(inchi_tools.count_rings(test_inchi))
+print(_inchi_tools.get_conlayer(test_inchi))
+print(_inchi_tools.count_rings(test_inchi))
 print(analysis.rxn_ring_change(test_rinchi, (False, False), False))
 print(analysis.rxn_ring_change(test_rinchi, (False, False), True))
 print(analysis.rxn_ring_change(test_rinchi, (True, False), False))
 print(analysis.rxn_ring_change(test_rinchi, (True, True), False))
 print(analysis.rxns_ring_changes(test_list_rinchi))
-print(inchi_tools.count_sp2(sp2_centre_inchi))
-print(inchi_tools.count_sp3(test_inchi))
+print(_inchi_tools.count_sp2(sp2_centre_inchi))
+print(_inchi_tools.count_sp3(test_inchi))
 print(analysis.rxn_stereochem_change(test_rinchi))
 print(analysis.rxns_stereochem_changes(test_list_rinchi))
-print(analysis.search_4_inchi(test_inchi, [test_rinchi]))
+print(analysis.search_inchi_list(test_inchi, [test_rinchi]))
 print("================")
 
 # Test Conversion.py
-print(inchi_tools.inchi_2_auxinfo(test_inchi))
+print(_inchi_tools.inchi_2_auxinfo(test_inchi))
 with open('test-resources/rxn_t1.rxn', 'r') as myfile:
     rxn = myfile.read()
 molfs = conversion._rxn_to_molfs(rxn)
 print(molfs)
 print(conversion._molfs_to_rxn(*molfs))
-print(inchi_tools.molf_2_inchi(molfs[0][0]))
-print(inchi_tools.inchi_2_sdf(test_inchi))
+print(_inchi_tools.molf_2_inchi(molfs[0][0]))
+print(_inchi_tools.inchi_2_sdf(test_inchi))
 
 print("================")
 # Test tools.py
@@ -75,7 +75,7 @@ print("@@@@@@@@@@@@@@@@@@@")
 print(test_rinchi, tools.split_rinchi(test_rinchi))
 print(tools.split_rinchi_only_auxinfo(test_rinchi2, test_rauxinfo2))
 print("================")
-print(tools.gen_rauxinfo(test_rinchi2))
+print(tools.generate_rauxinfo(test_rinchi2))
 print(test_rauxinfo2)
 print("================")
 print(tools.build_rinchi_rauxinfo(*tools.split_rinchi_inc_auxinfo(test_rinchi2, test_rauxinfo2)))
@@ -91,6 +91,6 @@ dedup_raux = ("RAuxInfo=0.03.1/1/N:1,2,3,4/E:(3,4)/rA:4nCCOO/rB:s1;s2;d2;/rC:-3.
               "1/E:(1,2,3,4)/CRV:5.6/rA:5nSOOOO/rB:s1;s1;d1;d1;/rC:6.4257,-2.7792,0;7.1757,-2.7792,0;5.6757,-2.7792,0;6"
               ".4257,-3.5292,0;6.4257,-2.0292,0;")
 print("====\n", rinchi_interface.inchis_from_rinchi(deduper_test, dedup_raux), "\n====")
-print(tools.deduper(deduper_test, dedup_raux))
+print(tools.dedupe_rinchi(deduper_test, dedup_raux))
 
 print("Test Completed!")

@@ -14,7 +14,7 @@ from itertools import zip_longest
 
 from numpy.linalg import matrix_rank
 
-from rinchi_tools import inchi_tools
+from rinchi_tools import _inchi_tools
 from rinchi_tools.atom import Atom
 
 
@@ -45,7 +45,7 @@ class Molecule:
 
         # For all molecules, construct molecular graph
         if self.has_conlayer:
-            self.number_of_rings = inchi_tools.count_rings(inchi)
+            self.number_of_rings = _inchi_tools.count_rings(inchi)
         else:
             self.number_of_rings = 0
 

@@ -44,7 +44,7 @@ def __search(rinchi_path, inchi_path, reactant=False, product=False, eqm=False, 
 
     def results_publisher(role_letter, role_name):
         print(textwrap.fill('Searching for %s acting as a %s:' % (inchi, role_name), 79))
-        results = analysis.search_4_inchi(inchi, rinchis, role_letter)
+        results = analysis.search_inchi_list(inchi, rinchis, role_letter)
         print("Found %d hits!" % (len(results)))
         if list_rinchis:
             for rinchi_entry in results:

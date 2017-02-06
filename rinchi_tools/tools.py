@@ -9,7 +9,7 @@ also interfaces with the RInChI v0.03 software as provided by the InChI trust.
 
 """
 
-from rinchi_tools import inchi_tools, utils
+from rinchi_tools import _inchi_tools, utils
 from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
 
 
@@ -64,9 +64,9 @@ def build_rinchi(l2_inchis=None, l3_inchis=None, l4_inchis=None, direction='', u
     l4_inchis_filtered = sorted(l4_inchis.union(l2_l3_overlap))
 
     # RInChIfy the InChIs
-    l2_versions, l2_rinchi_layer = process_layer(l2_inchis_filtered)
-    l3_versions, l3_rinchi_layer = process_layer(l3_inchis_filtered)
-    l4_versions, l4_rinchi_layer = process_layer(l4_inchis_filtered)
+    l2_versions, l2_rinchi_layer = _process_layer(l2_inchis_filtered)
+    l3_versions, l3_rinchi_layer = _process_layer(l3_inchis_filtered)
+    l4_versions, l4_rinchi_layer = _process_layer(l4_inchis_filtered)
 
     # Check that the input layers have the same version info.
     try:
@@ -169,9 +169,9 @@ def build_rinchi_rauxinfo(l2_input=None, l3_input=None, l4_input=None, direction
     l4_inchis_filtered = sorted(l4_inchis.union(l2_l3_overlap))
 
     # RInChIfy the InChIs
-    l2_versions, l2_rinchi_layer, l2_rauxinfo = process_layer(l2_inchis_filtered, auxinfo_lookup)
-    l3_versions, l3_rinchi_layer, l3_rauxinfo = process_layer(l3_inchis_filtered, auxinfo_lookup)
-    l4_versions, l4_rinchi_layer, l4_rauxinfo = process_layer(l4_inchis_filtered, auxinfo_lookup)
+    l2_versions, l2_rinchi_layer, l2_rauxinfo = _process_layer(l2_inchis_filtered, auxinfo_lookup)
+    l3_versions, l3_rinchi_layer, l3_rauxinfo = _process_layer(l3_inchis_filtered, auxinfo_lookup)
+    l4_versions, l4_rinchi_layer, l4_rauxinfo = _process_layer(l4_inchis_filtered, auxinfo_lookup)
 
     # Check that the input layers have the same version info.
     try:
@@ -253,9 +253,9 @@ def build_rauxinfo(l2_auxinfo, l3_auxinfo, l4_auxinfo):
     """
 
     # Format the AuxInfos for inclusion in the RAuxInfo.
-    l2_auxinfo_versions, auxinfo_l2 = process_layer(l2_auxinfo, None, False)
-    l3_auxinfo_versions, auxinfo_l3 = process_layer(l3_auxinfo, None, False)
-    l4_auxinfo_versions, auxinfo_l4 = process_layer(l4_auxinfo, None, False)
+    l2_auxinfo_versions, auxinfo_l2 = _process_layer(l2_auxinfo, None, False)
+    l3_auxinfo_versions, auxinfo_l3 = _process_layer(l3_auxinfo, None, False)
+    l4_auxinfo_versions, auxinfo_l4 = _process_layer(l4_auxinfo, None, False)
 
     # Check that all the auxinfo layers have the same version info.
     try:
@@ -343,7 +343,7 @@ def split_rinchi_only_auxinfo(rinchi, rinchi_auxinfo):
     return rct_inchis_auxinfo, pdt_inchis_auxinfo, agt_inchis_auxinfo
 
 
-def deduper(rinchi, rauxinfo=""):
+def dedupe_rinchi(rinchi, rauxinfo=""):
     """
     Removes duplicate InChI entries from the RInChI
 
@@ -384,7 +384,7 @@ def deduper(rinchi, rauxinfo=""):
         return rinchi, rauxinfo
 
 
-def gen_rauxinfo(rinchi):
+def generate_rauxinfo(rinchi):
     """
     Create RAuxInfo for a RInChI using the InChI conversion function.
 
@@ -409,7 +409,7 @@ def gen_rauxinfo(rinchi):
     def auxinfo_convert(inchis):
         auxinfos = []
         for inchi in inchis:
-            auxinfo = inchi_tools.inchi_2_auxinfo(inchi)
+            auxinfo = _inchi_tools.inchi_2_auxinfo(inchi)
             auxinfos.append(auxinfo)
         return auxinfos
 
@@ -420,7 +420,7 @@ def gen_rauxinfo(rinchi):
     return rauxinfo
 
 
-def process_layer(items, rauxinfodict=None, sort_layer=True):
+def _process_layer(items, rauxinfodict=None, sort_layer=True):
     """ Processes a layer of InChIs and / or InChi-AuxInfos for outputting as a layer.
 
         Args:
@@ -529,7 +529,7 @@ def add(rinchis):
         # Parse the structures in the RInChI.
         reactants, products, extras, direction, no_structs = split_rinchi(rinchi)
         if not all(v == 0 for v in no_structs):
-            raise Error("No structures present")
+            raise ValueError("No structures present")
 
         # Sort the structures into the various pots as per the algorithm.
         for reactant in reactants:
@@ -574,40 +574,54 @@ def add(rinchis):
     return build_rinchi(used, made, present, '+')
 
 
-def rinchi_file_to_list(input_path):
+def rinchi_to_dict_list(data):
     """
-    Creates a list of rinchis and rauxinfos from a flat file containing rinchis and rauxinfos.  The lists are matched
-    by index - so a list(zip()) on the output will reuturn the results pair-wise
+    Takes a text block or file object and parse a dictionary of RInChI entries
 
     Args:
-        input_path: The file to import to a list
+        data: The text block or file object to parse
 
     Returns:
-        input_rinchis: The list of RInChIs
-        input_rauxinfos: The list of RAuxInfos
+        A list of dictionaries containing each dictionary entry
 
     """
-    # Parse RInChI file input.
-    try:
-        input_file = open(input_path)
-    except IOError:
-        print('Could not open file "%s".' % input_path)
-        return
-    input_rinchis = []
-    input_rauxinfos = []
+    rinchi_data = []
+    entry = {}
+
+    class StrR(str):
+        """
+        Extends str so that readlines() can be used for string types too
+        """
+        def readlines(self):
+            """
+            Takes a multi-line string and splits it into lines.
+
+            Returns:
+                A list of lines in the string
+            """
+            return self.split('\n')
+
+    if isinstance(data, str):
+        data = StrR(data)
+
     rinchi_last = False  # Ensure rinchis are appended correctly
-    for line in input_file.readlines():
+
+    for line in data.readlines():
         if line.startswith('RInChI'):
-            input_rinchis.append(line.strip())
-            if rinchi_last:
-                input_rauxinfos.append("")
+            # Add previous data entry to data list
+            rinchi_data.append(entry)
+            entry = {'rinchi': line.strip()}
             rinchi_last = True
         elif line.startswith('RAux') and rinchi_last:
-            input_rauxinfos.append(line.strip())
+            entry['rauxinfo'] = line.strip()
             rinchi_last = False
 
-    while len(input_rinchis) > len(input_rauxinfos):
-        input_rauxinfos.append("")
+    # Close the file if indeed it as a file object
+    try:
+        data.close()
+    except AttributeError:
+        pass
 
-    input_file.close()
-    return input_rinchis, input_rauxinfos
+    # Add last data entry
+    rinchi_data.append(entry)
+    return rinchi_data

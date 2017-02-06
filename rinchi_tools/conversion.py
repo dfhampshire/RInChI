@@ -22,6 +22,7 @@ from time import strftime
 
 from rinchi_tools import tools
 from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
+from rinchi_tools.tools import rinchi_to_dict_list
 
 
 def _rxn_to_molfs(rxn):
@@ -350,7 +351,7 @@ def rdf_to_rinchis(rdf, start=0, stop=0, force_equilibrium=False, return_rauxinf
     rinchis = []
     rauxinfos = []
     for rdfile in rdfiles:
-        rinchi, rauxinfo = tools.deduper(*RInChI_Handle().rinchi_from_file_text("RD", rdfile, force_equilibrium))
+        rinchi, rauxinfo = tools.dedupe_rinchi(*RInChI_Handle().rinchi_from_file_text("RD", rdfile, force_equilibrium))
         if rinchi not in rinchis and not (rauxinfo in rauxinfos or return_rauxinfos):  # Force unique entries
             data = {'rinchi': rinchi}
             rinchis.append(rinchi)
@@ -406,58 +407,6 @@ def rxn_to_rinchi(rxn_text, ret_rauxinfo=False, longkey=False, shortkey=False, w
     if webkey:
         data['webkey'] = RInChI_Handle().rinchikey_from_rinchi(rinchi, "W") + '\n'
     return data
-
-def rinchi_to_dict_list(data):
-    """
-    Takes a text block or file object and parse a dictionary of RInChI entries
-
-    Args:
-        data: The text block or file object to parse
-
-    Returns:
-        A list of dictionaries containing each dictionary entry
-
-    """
-    rinchi_data = []
-    entry = {}
-
-    class StrR(str):
-        """
-        Extends str so that readlines() can be used for string types too
-        """
-        def readlines(self):
-            """
-            Takes a multi-line string and splits it into lines.
-
-            Returns:
-                A list of lines in the string
-            """
-            return self.split('\n')
-
-    if isinstance(data, str):
-        data = StrR(data)
-
-    rinchi_last = False  # Ensure rinchis are appended correctly
-
-    for line in data.readlines():
-        if line.startswith('RInChI'):
-            # Add previous data entry to data list
-            rinchi_data.append(entry)
-            entry = {'rinchi': line.strip()}
-            rinchi_last = True
-        elif line.startswith('RAux') and rinchi_last:
-            entry['rauxinfo'] = line.strip()
-            rinchi_last = False
-
-    # Close the file if indeed it as a file object
-    try:
-        data.close()
-    except AttributeError:
-        pass
-
-    # Add last data entry
-    rinchi_data.append(entry)
-    return rinchi_data
 
 
 def rinchi_to_file(data, rxnout=True):

@@ -12,7 +12,7 @@ Python 3 compatibility.  Documentation was adapted from the official v0.03 relea
 
 from ctypes import *
 
-from rinchi_tools import external
+from rinchi_tools import _external
 
 
 class Asciifier(object):
@@ -32,7 +32,7 @@ class RInChI:
     The RInChI class interfaces the C class in the librinchi library
     """
 
-    def __init__(self, lib_path=external.LIB_RINCHI_PATH):
+    def __init__(self, lib_path=_external.LIB_RINCHI_PATH):
 
         self.lib_handle = cdll.LoadLibrary(lib_path)
 

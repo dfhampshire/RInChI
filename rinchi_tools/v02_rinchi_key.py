@@ -13,7 +13,7 @@ a free python library for the manipulation of chemical formats, now stored perma
 
 import hashlib
 
-from rinchi_tools import tools, utils, v02_inchi_key
+from rinchi_tools import _v02_inchi_key, tools, utils
 
 # The following variable defines the version number of the RInChIKeys created
 # by this module.
@@ -31,7 +31,7 @@ class InchiError(ValueError):
     pass
 
 
-def inchi_2_inchikey(inchi):
+def _inchi_2_inchikey(inchi):
     """
     Take an InChI and return its InChIKey.
 
@@ -41,7 +41,7 @@ def inchi_2_inchikey(inchi):
     Returns:
         inchikey: The InChI's inchikey.
     """
-    raw_inchikey = v02_inchi_key.key_from_inchi(inchi)
+    raw_inchikey = _v02_inchi_key.key_from_inchi(inchi)
     inchikey = "InChIKey=" + raw_inchikey
     return inchikey
 
@@ -66,7 +66,7 @@ def rinchi_2_longkey(rinchi):
             if inchi.split('/', 1)[1] == 'X':
                 inchikeys.append('')
             else:
-                key = inchi_2_inchikey(inchi)
+                key = _inchi_2_inchikey(inchi)
                 inchikeys.append(key)
         return inchikeys
 
@@ -109,7 +109,7 @@ def rinchi_2_longkey(rinchi):
     inchikey_vers = utils.consolidate(inchikey_gp1_verss + inchikey_gp2_verss + inchikey_gp3_verss)
 
     # Hash reaction layers.
-    rxn_layers_hash = rxn_layers_hasher(rxn_layers)
+    rxn_layers_hash = _rxn_layers_hasher(rxn_layers)
 
     # Construct and return the Long-RInChIKey
     if inchikey_gp3:
@@ -131,17 +131,17 @@ def rinchi_2_shortkey(rinchi):
             The Short-RInChIKey of the RInChI
     """
     gp1, gp2, gp3, rxn_layers = tools.split_rinchi(rinchi)
-    gp1_vers, gp1_major, gp1_minor = rinchi_gp_hasher(gp1)
-    gp2_vers, gp2_major, gp2_minor = rinchi_gp_hasher(gp2)
-    gp3_vers, gp3_major, gp3_minor = rinchi_gp_hasher(gp3)
+    gp1_vers, gp1_major, gp1_minor = _rinchi_gp_hasher(gp1)
+    gp2_vers, gp2_major, gp2_minor = _rinchi_gp_hasher(gp2)
+    gp3_vers, gp3_major, gp3_minor = _rinchi_gp_hasher(gp3)
     vers = utils.consolidate([gp1_vers, gp2_vers, gp3_vers])
-    rxn_layers_hash = rxn_layers_hasher(rxn_layers)
+    rxn_layers_hash = _rxn_layers_hasher(rxn_layers)
     shortkey = 'Short-RInChIKey=%s%s-%s-%s-%s-%s-%s-%s-%s' % (
         RINCHIKEY_VERSION, vers, rxn_layers_hash, gp1_major, gp2_major, gp3_major, gp1_minor, gp2_minor, gp3_minor)
     return shortkey
 
 
-def rinchi_gp_hasher(rinchi_gp):
+def _rinchi_gp_hasher(rinchi_gp):
     """
     Create a two-part hash of a RInChI group.
 
@@ -199,12 +199,12 @@ def rinchi_gp_hasher(rinchi_gp):
         proton_count_letter = 0
     if proton_count_letter > 25:
         proton_count_letter = 0
-    majors_hash = alphabet_hash(majors_group, 10)
-    minors_hash = alphabet[proton_count_letter] + alphabet_hash(minors_group, 4)
+    majors_hash = _alphabet_hash(majors_group, 10)
+    minors_hash = alphabet[proton_count_letter] + _alphabet_hash(minors_group, 4)
     return key_vers, majors_hash, minors_hash
 
 
-def rxn_layers_hasher(rxn_layers):
+def _rxn_layers_hasher(rxn_layers):
     """
     Create a 5char "hash" of a RInChI's reaction layers.
 
@@ -244,13 +244,13 @@ def rxn_layers_hasher(rxn_layers):
 
     # Sort the other layers into a standard format, and hash them up.
     other_layers = '/'.join(rxn_layers)
-    rest_hashed = alphabet_hash(other_layers, 4)
+    rest_hashed = _alphabet_hash(other_layers, 4)
 
     # Concatenate and return the final product.
     return dflag + rest_hashed
 
 
-def alphabet_hash(arg, length='64'):
+def _alphabet_hash(arg, length='64'):
     """
     Hash an argument using sha256 and alphabetical representation.
 

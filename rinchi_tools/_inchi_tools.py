@@ -11,7 +11,7 @@ It also provides a function for searching for InChIs in a database of RInChIs.
 import os
 import tempfile
 
-from rinchi_tools import external, utils
+from rinchi_tools import _external, utils
 
 
 def get_conlayer(inchi):
@@ -255,7 +255,7 @@ def inchi_2_auxinfo(inchi):
     inchi_tempfile.close()
 
     # Run the inchi-1 program, and extract the AuxInfo
-    args = [external.INCHI_PATH, inchi_tempfile.name, '-stdio', '-InChI2Struct']
+    args = [_external.INCHI_PATH, inchi_tempfile.name, '-stdio', '-InChI2Struct']
     raw_inchi_out, inchi_err = utils.call_command(args)
     os.unlink(inchi_tempfile.name)
     auxinfo = raw_inchi_out.splitlines()[2]
@@ -289,7 +289,7 @@ def inchi_2_sdf(inchi, auxinfo=""):
     inchi_aux_file.close()
 
     # Convert the InChI and AuxInfo file to an SDF
-    args = [external.INCHI_PATH, inchi_aux_file.name, '-STDIO', '-NoLabels', '-OutputSDF']
+    args = [_external.INCHI_PATH, inchi_aux_file.name, '-STDIO', '-NoLabels', '-OutputSDF']
     sdf_out, sdf_log = utils.call_command(args)
 
     # Delete the tempfile and return the SDF
@@ -321,7 +321,7 @@ def molf_2_inchi(molf, return_auxinfo=False):
     molf_tempfile.close()
 
     # Runs inchi-1 program on this molfile, and stores the output.
-    inchi_args = [external.INCHI_PATH, molf_tempfile.name, '-STDIO', '-NoLabels']
+    inchi_args = [_external.INCHI_PATH, molf_tempfile.name, '-STDIO', '-NoLabels']
     if not return_auxinfo:
         inchi_args.append('-AuxNone')
     inchi_out, inchi_log = utils.call_command(inchi_args)
