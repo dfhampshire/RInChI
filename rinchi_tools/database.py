@@ -19,142 +19,9 @@ from heapq import nsmallest
 
 from scipy.spatial import distance
 
-from rinchi_tools import conversion, utils, v02_tools
+from rinchi_tools import v02_tools
 from rinchi_tools.reaction import Reaction
 from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
-
-
-###########
-# CSV Tools
-###########
-
-def rdf_to_csv(rdf, outfile="File", return_rauxinfo=False, return_longkey=False, return_shortkey=False,
-               return_webkey=False, return_rxninfo=False):
-    """
-    Convert an RD file to a CSV file containing RInChIs and other optional parameters
-
-    Args:
-        rdf: The RD file as a text block
-        outfile: Optional output file name parameter
-        return_rauxinfo: Include RAuxInfo in the result
-        return_longkey: Include Long key in the result
-        return_shortkey: Include the Short key in the result
-        return_webkey: Include the Web key in the result
-        return_rxninfo: Include RXN info in the result
-
-    Returns:
-        The name of the CSV file created with the requested fields
-    """
-
-    # Generate header line
-    header = ["RInChI"]
-    if return_rauxinfo:
-        header.append("RAuxInfo")
-    if return_longkey:
-        header.append("LongKey")
-    if return_shortkey:
-        header.append("ShortKey")
-    if return_webkey:
-        header.append("WebKey")
-    if return_rxninfo:
-        header.append("RXNInfo")
-
-    data = conversion.rdf_to_rinchis(rdf, force_equilibrium=False, return_rauxinfos=return_rauxinfo,
-                                     return_longkeys=return_longkey, return_shortkeys=return_shortkey,
-                                     return_webkeys=return_webkey, return_rxndata=return_rxninfo)
-
-    # Write new database file as .csv
-    output_file, output_name = utils.create_output_file(outfile,csv)
-    writer = csv.writer(output_file, delimiter='$')
-    writer.writerow(header)
-    writer.writerows(data)
-    return output_name
-
-
-def rdf_to_csv_append(rdf, csv_file):
-    """
-    Append an existing CSV file with values from an RD file
-
-    Args:
-        rdf: The RD file as a text block
-        csv_file: the CSV file path
-    """
-
-    # Initialise a list that will contain all the RInChIs currently in the csv_file
-    old_rinchis = []
-
-    # Open the existing csv_file and read the header defining which fields are present
-    with open(csv_file) as db:
-        reader = csv.reader(db, delimiter="$")
-
-        # Add all rinchis in the existing csv_file to a list
-        header = reader.next()
-        for row in reader:
-            old_rinchis.append(row[0])
-
-    return_rauxinfo = "RAuxInfo" in header
-    return_longkey = "LongKey" in header
-    return_shortkey = "ShortKey" in header
-    return_webkey = "WebKey" in header
-    return_rxninfo = "RXNInfo" in header
-
-    # Construct a dict of RInChIs and RInChI data from the supplied rd file
-    data = conversion.rdf_to_rinchis(rdf, force_equilibrium=False, return_rauxinfos=return_rauxinfo,
-                                     return_longkeys=return_longkey, return_shortkeys=return_shortkey,
-                                     return_webkeys=return_webkey, return_rxndata=return_rxninfo)
-
-    # Convert both lists of rinchis into sets - unique, does not preserve order
-    old_rinchis = set(old_rinchis)
-    new_rinchis = set(entry['rinchi'] for entry in data)
-
-    # The rinchis that need to be added to the csv_file are the complement of the new rinchis in the old
-    rinchis_to_add = list(new_rinchis - old_rinchis)
-
-    # Add all new, unique rinchis to the csv_file
-    with open(csv_file, "a") as db:
-        writer = csv.writer(db, delimiter='$')
-        # Add rows determined
-        writer.writerows(entry if entry['rinchi'] in rinchis_to_add else None for entry in data)
-
-
-def create_csv_from_directory(root_dir, outname, return_rauxinfo=False, return_longkey=False, return_shortkey=False,
-                              return_webkey=False, return_rxninfo=False):
-    """
-    Iterate recursively over all rdf files in the given folder and combine them into a single .csv database.
-
-    Args:
-        root_dir: The directory to search
-        outname: Output file name parameter
-        return_rauxinfo: Include RAuxInfo in the result
-        return_longkey: Include Long key in the result
-        return_shortkey: Include the Short key in the result
-        return_webkey: Include the Web key in the result
-        return_rxninfo: Include RXN info in the result
-
-    Raises:
-        IndexError: File failed to be recognised for importing
-    """
-
-    # Flag for whether the database should be created or appended
-    database_has_started = False
-
-    # Iterate over all files in the roo directory
-    for root, folders, files in os.walk(root_dir):
-        for file in files:
-            filename = os.path.join(root, file)
-            try:
-                # Only try to process files with an .rdf extension
-                if file.split(".")[-1] == "rdf":
-                    if database_has_started:
-                        rdf_to_csv_append(filename, db_name)
-                    else:
-                        db_name = rdf_to_csv(filename, outname, return_rauxinfo, return_longkey, return_shortkey,
-                                             return_webkey, return_rxninfo)
-                        database_has_started = True
-            except IndexError:
-
-                # Send the names of any files that failed to be recognised to STDOUT
-                print(("Failed to recognise {}".format(filename)))
 
 
 ###########
@@ -340,6 +207,31 @@ def _transfer_table(db_source, db_destination, table_name, drop_source=True):
     if drop_source:
         os.remove(db_source)
 
+
+def flat_file_to_search_db(path, delim="$"):
+    """
+    Creates and populates a temporary SQLite database for searching or analysis
+
+    Args:
+        path: The path of the file with which to populate the table
+        delim: The delimiter of the flat file
+
+    Returns:
+        A cursor object pointing to the opened database.
+
+    """
+    search_db = sqlite3.connect("")  # Create temporary database
+    cursor = search_db.cursor()
+    _create_sql_table(cursor, "temp", ['rinchi'])
+
+    def read_flat_file_lines(path, delim):
+        with open(path, 'r') as f:
+            for line in f:
+                yield tuple(line.split(delim))
+
+    cursor.executemany("INSERT INTO temp VALUES (?)", read_flat_file_lines(path, delim))
+    return cursor
+
 # Searching SQL databases
 #########################
 
@@ -377,7 +269,7 @@ def sql_key_to_rinchi(key, db_filename, table_name, keytype="L"):
     return rinchi
 
 
-def search_for_inchi(inchi, db_filename, table_name):
+def inchi_finder(inchi, cursor, table_name, limit):
     """
     Searches for an inchi within a rinchi database.
     Approx.  20x faster than the version in rinchi_tools.analyse
@@ -387,30 +279,33 @@ def search_for_inchi(inchi, db_filename, table_name):
         db_filename: the database to search within
         table_name: the database to search in
     """
-    db = sqlite3.connect(db_filename)
-    cursor = db.cursor()
     query = "%" + "/".join(inchi.split("/")[1:]) + "%"
-    cursor = _sql_search(cursor, table_name, ["rinchi"], query, "rinchi", True)
-    for r in cursor:
-        print((r[0]))
+    cursor = _sql_search(cursor, table_name, ["rinchi"], query, "rinchi", True,limit)
 
-    return [i[0] for i in cursor.fetchall()]
+    return (i[0] for i in cursor.fetchall())
 
 
-def advanced_search(inchi, db_filename, table_name, hyb=None, val=None, rings=None, formula=None):
+def search_master(inchi, database=None, table_name=None, is_sql_db=False, hyb=None, val=None, rings=None, formula=None,
+                  reactant=False, product=False, agent=False, limit=1000):
     """
-    Search for an Inchi within a RInChi database with advanced options.  Output is to stdout.
+    Search for an Inchi within a RInChi database. Includes all options
 
     Args:
         inchi: The InChI to search for
         db_filename: the database to search within
-        table_name: the datable to search in
+        table_name: the table to search in
 
         All args following are dicts of the format {property:count,property2:count2,...}
         hyb: The hybridisation changes(s) desired
         val: The valence change(s) desired
         rings: The ring change(s) desired
         formula: The formula change(s) desired
+        reactant: Search for InChIs in the products
+        product: Search for InChIs in the reactants
+        agent: Search for InChIs in the agents
+
+    Returns:
+        A dictionary of lists where an inchi was found
     """
     if hyb is None:
         hyb = {}
@@ -420,17 +315,42 @@ def advanced_search(inchi, db_filename, table_name, hyb=None, val=None, rings=No
         rings = {}
     if formula is None:
         formula = {}
-    rinchis = search_for_inchi(inchi, db_filename, table_name)
-    print((len(rinchis), "inchi matches found"))
+    if not any((hyb,rings,val,formula)):
+        skip = True
+    else:
+        skip = False
 
-    counter = 0
-    for rin in rinchis:
-        r = Reaction(rin)
-        if r.detect_reaction(hyb_i=hyb, val_i=val, rings_i=rings, formula_i=formula):
-            counter += 1
-            print(r.rinchi)
+    if table_name is None:
+        table_name = "rinchis03"
+    if not (reactant or product or agent):
+        reactant = True
+        product = True
+        agent = True
 
-    print(counter, "exact matches found")
+    if is_sql_db: # Search existing database
+        db = sqlite3.connect(database)
+        cursor = db.cursor()
+        results = inchi_finder(inchi,cursor,table_name,limit)
+    else: # Create a temporary database from a flat file
+        cursor = flat_file_to_search_db(database)
+        results = inchi_finder(inchi, cursor, table_name,limit)
+
+    result_dict = {'as_reactant': [], 'as_product': [], 'as_agent': []}
+
+    for rinchi in results:
+        r = Reaction(rinchi)
+        if r.detect_reaction(hyb_i=hyb, val_i=val, rings_i=rings, formula_i=formula) or skip:
+            if reactant:
+                if inchi in r.reactant_inchis:
+                    result_dict['as_reactant'].append(rinchi)
+            if product:
+                if inchi in r.product_inchis:
+                    result_dict['as_product'].append(rinchi)
+            if agent:
+                if inchi in r.reaction_agent_inchis:
+                    result_dict['as_agent'].append(rinchi)
+
+    return result_dict
 
 
 # Converting to SQL databases

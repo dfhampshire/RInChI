@@ -12,52 +12,11 @@ This script analyses flat files of RInChIs separated by newlines.
 import argparse
 import textwrap
 
+from rinchi_search import __search
 from rinchi_tools import analysis
 
 
 # TODO refactor functions to include new and old search implementations, comment.
-
-def __search(rinchi_path, inchi_path, reactant=False, product=False, eqm=False, agent=False, list_rinchis=False):
-    """
-    Searches a flat files containing RInChIs for a particular InChI.  This is somewhat superseeded by the action of
-    the search function in the database module.
-
-    Args:
-        rinchi_path: Th path to the list of rinchis
-        inchi_path: the path to the file containing the inchi to be searched for
-        reactant: Look for inchi in reactants
-        product: Look for inchi in products
-        eqm: Look for inchi in reactants or products
-        agent: look for inchi in agents layer
-        list_rinchis: list the rinchis containing the inchi
-    """
-    if not (reactant or product or eqm or agent):
-        reactant = True
-        product = True
-        eqm = True
-        agent = True
-
-    inchi_file = open('%s' % inchi_path).read()
-    inchi = inchi_file.strip()
-    rinchi_file = open('%s' % rinchi_path).read()
-    rinchis = rinchi_file.splitlines()
-
-    def results_publisher(role_letter, role_name):
-        print(textwrap.fill('Searching for %s acting as a %s:' % (inchi, role_name), 79))
-        results = analysis.search_inchi_list(inchi, rinchis, role_letter)
-        print("Found %d hits!" % (len(results)))
-        if list_rinchis:
-            for rinchi_entry in results:
-                print(rinchi_entry)
-
-    if reactant:
-        results_publisher('r', 'reactant')
-    if product:
-        results_publisher('p', 'product')
-    if eqm:
-        results_publisher('e', 'equilibrium reagent')
-    if agent:
-        results_publisher('a', 'reaction agent')
 
 
 def __cyclic(input_path, list_rinchis=False, search=False, permol=False, perspecmol=False):

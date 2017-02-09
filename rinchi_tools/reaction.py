@@ -36,8 +36,7 @@ class Reaction:
         self.lkey = None
         self.skey = None
         self.wkey = None
-        self.reactant_inchis, self.product_inchis, self.reaction_agent_inchis, self.direction, self.no_struct = tools.split_rinchi(
-            rinchi)
+        self.reactant_inchis, self.product_inchis, self.reaction_agent_inchis, self.direction, self.no_struct = tools.split_rinchi(rinchi)
 
         # Create Molecule objects for each inchi, breaking down InChIs representing composite species into individual
         # molecule objects
@@ -175,7 +174,7 @@ class Reaction:
     # Calculating changes across reactions
     ###########################################
 
-    def change_across_reaction(self, func, args=None):
+    def change_across_reaction(self, func, args=None, loop=False):
         """
         Calculates the total change in a parameter across a molecule, Molecule class function and returns a Python
         Counter object
@@ -183,6 +182,7 @@ class Reaction:
         Args:
             func: The class function to calculate the parameter
             args: Args if required for the function
+            loop: Whether or not the property to count is a loop i.e. ABCD = BCDA = DCBA
 
         Returns:
             the change in the parameter
@@ -200,11 +200,26 @@ class Reaction:
         for mol in self.products:
             if args:
                 count_products = count_products + func(mol, args)
-
             else:
                 count_products = count_products + func(mol)
 
         count_products.subtract(count_reactants)
+
+        if loop: # Whether or not the property to count is a loop i.e. ABCD = BCDA = DCBA
+            count_products_condensed = Counter()
+            for i in count_products:
+                for j in count_products_condensed:
+                    if len(i) == len(j):
+                        # Checking whether a is in 2 * b is equivalent to checking whether a and b are cyclic
+                        # permutations of each other: ABC is contained within 2 * BCA == BCABCA whereas no non-cyclic
+                        # permutations are contained. Reverse cycle is also possible
+                        if i in 2 * j or i[::-1] in 2 * j:
+                            count_products_condensed[j] += count_products[j]
+                            break
+                else:
+                    count_products_condensed[j] = count_products[j]
+            count_products = count_products_condensed
+
         return count_products
 
     def present_in_reaction(self, func):

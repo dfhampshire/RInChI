@@ -2,7 +2,7 @@
 """
 RInChI addition script
 
-This script analyses flat files of RInChIs separated by newlines.
+This script adds together flat files of RInChIs separated by newlines.
 
     C.H.G. Allen 2012
     D.F. Hampshire 2016- Rewritten to use argparse module and Python3

@@ -11,11 +11,12 @@ Converts, creates, and removes from SQL databases
 
 import argparse
 
+import rinchi_tools.conversion
 from rinchi_tools import database
 from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="A collection of RInChI Tools")
+    parser = argparse.ArgumentParser(description="Database Tools Module")
     parser.add_argument("input",
                         help="Input - the RDFile or directory to be processed, or the search parameter for a search, or new table to be created")
     parser.add_argument("database", nargs="?",
@@ -57,11 +58,11 @@ if __name__ == "__main__":
             pass
 
     if args.rdf2csv:
-        database.rdf_to_csv(args.input, return_longkey=True, return_rxninfo=True)
+        rinchi_tools.conversion.rdf_to_csv(args.input, return_longkey=True, return_rxninfo=True)
     if args.rdfappend:
-        database.rdf_to_csv_append(args.input, args.database)
+        rinchi_tools.conversion.rdf_to_csv_append(args.input, args.database)
     if args.dir2csv:
-        database.create_csv_from_directory(args.input, args.database, return_longkey=True, return_rxninfo=True)
+        rinchi_tools.conversion.create_csv_from_directory(args.input, args.database, return_longkey=True, return_rxninfo=True)
     if args.rdf2sql:
         database.rdf_to_sql(args.input, args.database, args.tablename)
     if args.csv2sql:

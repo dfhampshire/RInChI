@@ -176,11 +176,11 @@ def read_input_file(input_path, filetype_check=False, return_file_object=False):
 
 def construct_output_text(data, header_order=False):
     """
-    Turns a variable containing a list of dicts or a dict into a single string of data
+    Turns a variable containing a list of dicts or a dict or dict of lists into a single string of data
 
     Args:
         data: The data variable
-        header_order
+        header_order: Optional list of keys for the dictionaries. The list can contain non present keys.
 
     Returns:
         data_string: The output as a text block
@@ -188,18 +188,65 @@ def construct_output_text(data, header_order=False):
 
     # Set default order for the output sting
     if not header_order or isinstance(header_order, bool):
-        header_order = ['rinchi','rauxinfo','longkey','shortkey','webkey','rxn_data','rxndata']
+        header_order = ['rinchi','rauxinfo','longkey','shortkey','webkey','rxn_data','rxndata','as_reactant','as_product','as_agent']
 
-    if type(data) is dict:
-        data = [data]
+    assert isinstance(header_order,list)
+
+    def deconstruct_dict(current_data, the_dict, key_order):
+        """
+        Turns a dictionary into a multi-line string
+        """
+        for item in key_order:
+            try:
+                value = the_dict.get(item, False)
+                if value:
+                    if isinstance(value,list):
+                        current_data = deconstruct_list(current_data,value,key_order)
+                    elif isinstance(value,dict):
+                        current_data = deconstruct_dict(current_data,value,key_order)
+                    else:
+                        current_data += str(value) + '\n'
+            except AttributeError:
+                print("Input must be a list of dicts or a dict itself")
+        return current_data
+
+    def deconstruct_list(current_data, the_list, key_order):
+        """
+        Turns a dictionary into a multi-line string
+        """
+        for value in the_list:
+            if isinstance(value,list):
+                current_data = deconstruct_list(current_data,value,key_order)
+            elif isinstance(value,dict):
+                current_data = deconstruct_dict(current_data,value,key_order)
+            else:
+                current_data += str(value) + '\n'
+        return current_data
 
     data_string = ""
 
-    for entry in data:
-        for item in header_order:
-            try:
-                data_string += entry.get(item, "") + "\n"
-            except AttributeError:
-                print("Input must be a list of dicts or a dict itself")
+    if isinstance(data,dict):
+        data_string += deconstruct_dict(data_string,data,header_order)
+    elif isinstance(data,list) or isinstance(data,tuple):
+        data_string += deconstruct_list(data_string,data,header_order)
 
     return data_string
+
+
+class Hashable(object):
+    """
+    Make an object hashable for counting
+    """
+    def __init__(self, val):
+        self.val = val
+
+    def __hash__(self):
+        return hash(str(self.val))
+
+    def __repr__(self):
+        return str(self.val)
+
+    def __eq__(self, other):
+        return str(self.val) == str(other.val)
+
+

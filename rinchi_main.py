@@ -12,10 +12,6 @@ and atom.py module.
 import argparse
 from collections import Counter
 
-import scipy.cluster as cluster
-from numpy import all, array, equal, rot90
-from scipy.spatial import distance
-
 from rinchi_tools import analysis, database
 from rinchi_tools.molecule import Molecule
 from rinchi_tools.reaction import Reaction
@@ -98,44 +94,6 @@ if __name__ == "__main__":
                     counter += 1
                 except ValueError:
                     print("ERROR", rin)
-
-    elif args.test:
-        r1 = Reaction(args.input)
-        r1.calculate_reaction_fingerprint()
-        sparseness = []
-
-        counter = 1
-        with open(args.arg2) as data:
-            for rin in data:
-                r2 = Reaction(rin)
-                r2.calculate_reaction_fingerprint()
-                sparseness.append(1024 - len([i for i in r2.reaction_fingerprint if not i]))
-
-                print(counter, distance.euclidean(r1.reaction_fingerprint, r2.reaction_fingerprint))
-                counter += 1
-        print("Number of non-zero fingerprint entries", sparseness)
-        print("Average", sum(sparseness) / len(sparseness))
-    elif args.clusters:
-        arr = []
-        with open(args.input) as data:
-            for rin in data:
-                r = Reaction(rin)
-                r.calculate_reaction_fingerprint()
-
-                arr.append(r.reaction_fingerprint.toarray()[0])
-
-        arr = array(arr)
-
-        arr90 = rot90(arr)
-        arr = rot90(arr90[~all(equal(arr90, 0), axis=1)])
-
-        cluster.vq.whiten(arr)
-
-        centroids, _ = cluster.vq.kmeans(arr, 8)
-        idx, _ = cluster.vq.vq(arr, centroids)
-
-        print(idx)
-
     elif args.batch:
         counter = 0
         with open(args.input) as data:
