@@ -24,14 +24,14 @@ def add_addition(subparser):
 
     """
 
-    assert isinstance(subparser,argparse.ArgumentParser)
+    assert isinstance(subparser, argparse.ArgumentParser)
 
-    parser.add_argument("input_path", help="Path of file to input")
-    parser.add_argument("-o","--output", nargs='?', const='addition', default=False,
-                        help="Output the result to a file. Optionally specify the file output name")
+    subparser.add_argument("input_path", help="Path of file to input")
+    subparser.add_argument("-o", "--output", nargs='?', const='addition', default=False,
+                           help="Output the result to a file. Optionally specify the file output name")
 
 
-def addition_ops(args,parser):
+def addition_ops(args, parser):
     """
 
     Args:
@@ -41,16 +41,16 @@ def addition_ops(args,parser):
     Returns:
 
     """
-    input_rinchis = (line.strip for line in open(args.input_path)) # Use a generator
-    overall_rinchi = tools.add(input_rinchis)
-    utils.output(overall_rinchi, args.output, "rinchi")
-
+    try:
+        input_rinchis = (line.strip for line in open(args.input_path))  # Use a generator
+        overall_rinchi = tools.add(input_rinchis)
+        utils.output(overall_rinchi, args.output, "rinchi")
+    except ValueError:
+        parser.error('An error occurred')
 
 if __name__ == "__main__":
     role = "RInChI addition"
     parser = argparse.ArgumentParser(description=role)
     add_addition(parser)
     args = parser.parse_args()
-    addition_ops(args,parser)
-
-
+    addition_ops(args, parser)

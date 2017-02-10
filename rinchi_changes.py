@@ -59,18 +59,18 @@ def changes_ops(args, parser):
         elif args.hybrid:
             print(r.change_across_reaction(Molecule.get_hybrid_count))
         elif args.ringcountelements:
-            print(r.change_across_reaction(Molecule.get_ring_count_inc_elements,loop=True))
+            print(r.change_across_reaction(Molecule.get_ring_count_inc_elements, loop=True))
         elif args.ringcountold:
             print(r.ring_change())
         elif args.stereoold:
-            print(r.stereo_change(args.stereoold.get('wd', None),
-                                  args.stereoold.get('sp2', None),
+            print(r.stereo_change(args.stereoold.get('wd', None), args.stereoold.get('sp2', None),
                                   args.stereoold.get('sp3', None)))
         else:
             parser.print_help()
 
     elif args.batch:
-        master_counter = {'ringcount': Counter(),'formula': Counter(),'ringcountelements': Counter(),'valence': Counter(),'hybrid': Counter()}
+        master_counter = {'ringcount': Counter(), 'formula': Counter(), 'ringcountelements': Counter(),
+                          'valence': Counter(), 'hybrid': Counter()}
         with open(args.input) as data:
             for rinchi in data:
                 r = Reaction(rinchi)
@@ -86,7 +86,8 @@ def changes_ops(args, parser):
                 elif args.ringcountelements:
                     # Count the change in rings returning the change in elemental structure of the rings e.g.  (
                     # CCCCCN : 1) would indicate the reaction forms a pyridine ring
-                    ringcountelements = r.change_across_reaction(Molecule.get_ring_count_inc_elements, args.args2, loop=True)
+                    ringcountelements = r.change_across_reaction(Molecule.get_ring_count_inc_elements, args.args2,
+                                                                 loop=True)
                     if ringcountelements and args.list:
                         print(ringcountelements)
                     elif ringcountelements:
@@ -116,9 +117,8 @@ def changes_ops(args, parser):
                     elif ringcountold:
                         master_counter['ringcount'].update(Hashable(ringcountold))
                 elif args.stereoold:
-                    stereoold = r.stereo_change(args.stereoold.get('wd', None),
-                                  args.stereoold.get('sp2', None),
-                                  args.stereoold.get('sp3', None))
+                    stereoold = r.stereo_change(args.stereoold.get('wd', None), args.stereoold.get('sp2', None),
+                                                args.stereoold.get('sp3', None))
                     if stereoold and args.list:
                         print(stereoold)
                     elif stereoold:
@@ -126,30 +126,34 @@ def changes_ops(args, parser):
                 else:
                     parser.print_help()
         for key, value in master_counter.items():
-            print(key,"  ",value)
+            print(key, "  ", value)
     else:
         parser.print_help()
 
 
 def add_changes(subparser):
+    """
 
-    assert isinstance(subparser,argparse.ArgumentParser)
+    Args:
+        subparser:
+    """
+    assert isinstance(subparser, argparse.ArgumentParser)
     subparser.add_argument("input", help="The file or string containing RInChI(s) or Long Key to be processed")
 
     # Add process arguments
     action = subparser.add_mutually_exclusive_group(required=True)
     action.add_argument('-b', '--batch', action='store_true', help='Process multiple RInChIs')
     action.add_argument('-r', '--rinchi', action='store_true', help='Process a single RInChI')
-    action.add_argument("-k","--key", action="store_true", help="Process a RInChI key")
+    action.add_argument("-k", "--key", action="store_true", help="Process a RInChI key")
 
     # Add file options
     file_opt = subparser.add_argument_group("File options")
     file_opt.add_argument("--list", action="store_true",
                           help="List RInChIs along with results. Otherwise returns count populations")
-    file_opt.add_argument("--filein",action="store_true",help="Assert that the input is a file")
+    file_opt.add_argument("--filein", action="store_true", help="Assert that the input is a file")
 
     # Add operation arguments
-    operation = subparser.add_argument_group("Operation")
+    operation = subparser.add_argument_group("Operation").add_mutually_exclusive_group(required=True)
     operation.add_argument("--ringcount", action="store_true", help="Calculate the change in ring populations by size")
     operation.add_argument("--formula", action="store_true", help="Calculate the change in formula across a reaction")
     operation.add_argument("--valence", action="store_true", help="Change in valence across reaction")
@@ -158,14 +162,15 @@ def add_changes(subparser):
                            help="Calculate the change in ring populations by ring elements")
     operation.add_argument("--ringcountold", action="store_true",
                            help="Calculate the change in ring populations. Old method")
-    operation.add_argument("--stereoold", nargs='?',type=json.loads,
+    operation.add_argument("--stereoold", nargs='?', type=json.loads,
                            help="Calculate the change stereocentres. Old method. Takes an argument as a dictionary "
                                 "such as {'sp2':True,'sp3':False,'wd':True} for options to "
                                 "1. Count sp2 centres 2. Count sp3 centre 3. Well defined stereocentres only")
+
 
 if __name__ == "__main__":
     role = "RInChI Analysis and Manipulation"
     parser = argparse.ArgumentParser(description=role)
     add_changes(parser)
-    args = parser.parse_args(['egegege','-k'])
-    changes_ops(args,parser)
+    args = parser.parse_args(['egegege', '-k'])
+    changes_ops(args, parser)

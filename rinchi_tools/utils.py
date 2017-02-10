@@ -21,7 +21,6 @@ def output(text, output_path=False, default_extension=False):
          text: text input
          output_path: Specifies the filename for the output file
          default_extension: specifies the file extension if none in the outputname
-         print_out: print the text to the screen.
 
     """
 
@@ -119,11 +118,13 @@ class Spinner:
     @staticmethod
     def spinning_cursor():
         while 1:
-            for cursor in '|/-\\': yield cursor
+            for cursor in '|/-\\':
+                yield cursor
 
     def __init__(self, delay=None):
         self.spinner_generator = self.spinning_cursor()
-        if delay and float(delay): self.delay = delay
+        if delay and float(delay):
+            self.delay = delay
 
     def __spinner_task(self):
         while self.busy:
@@ -190,7 +191,8 @@ def construct_output_text(data, header_order=False):
 
     # Set default order for the output sting
     if not header_order or isinstance(header_order, bool):
-        header_order = ['rinchi','rauxinfo', 'longkey', 'shortkey','webkey','rxn_data','rxndata','as_reactant','as_product','as_agent']
+        header_order = ['rinchi', 'rauxinfo', 'longkey', 'shortkey', 'webkey', 'rxn_data', 'rxndata', 'as_reactant',
+                        'as_product', 'as_agent']
 
     assert isinstance(header_order, list)
 
@@ -202,10 +204,10 @@ def construct_output_text(data, header_order=False):
             try:
                 value = the_dict.get(item, False)
                 if value:
-                    if isinstance(value,list):
-                        current_data = deconstruct_list(current_data,value,key_order)
-                    elif isinstance(value,dict):
-                        current_data = deconstruct_dict(current_data,value,key_order)
+                    if isinstance(value, list):
+                        current_data = deconstruct_list(current_data, value, key_order)
+                    elif isinstance(value, dict):
+                        current_data = deconstruct_dict(current_data, value, key_order)
                     else:
                         current_data += str(value) + '\n'
             except AttributeError:
@@ -217,20 +219,20 @@ def construct_output_text(data, header_order=False):
         Turns a dictionary into a multi-line string
         """
         for value in the_list:
-            if isinstance(value,list):
-                current_data = deconstruct_list(current_data,value,key_order)
-            elif isinstance(value,dict):
-                current_data = deconstruct_dict(current_data,value,key_order)
+            if isinstance(value, list):
+                current_data = deconstruct_list(current_data, value, key_order)
+            elif isinstance(value, dict):
+                current_data = deconstruct_dict(current_data, value, key_order)
             else:
                 current_data += str(value) + '\n'
         return current_data
 
     data_string = ""
 
-    if isinstance(data,dict):
-        data_string += deconstruct_dict(data_string,data,header_order)
-    elif isinstance(data,list) or isinstance(data,tuple):
-        data_string += deconstruct_list(data_string,data,header_order)
+    if isinstance(data, dict):
+        data_string += deconstruct_dict(data_string, data, header_order)
+    elif isinstance(data, list) or isinstance(data, tuple):
+        data_string += deconstruct_list(data_string, data, header_order)
     else:
         data_string = data
 
@@ -241,6 +243,7 @@ class Hashable(object):
     """
     Make an object hashable for counting
     """
+
     def __init__(self, val):
         self.val = val
 
@@ -252,5 +255,3 @@ class Hashable(object):
 
     def __eq__(self, other):
         return str(self.val) == str(other.val)
-
-

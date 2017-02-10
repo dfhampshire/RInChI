@@ -36,7 +36,7 @@ class Reaction:
         self.lkey = None
         self.skey = None
         self.wkey = None
-        self.reactant_inchis, self.product_inchis, self.reaction_agent_inchis, self.direction, self.no_struct = tools.split_rinchi(rinchi)
+        self.reactant_inchis, self.product_inchis, self.agent_inchis, self.direction, self.no_struct = tools.split_rinchi(rinchi)
 
         # Create Molecule objects for each inchi, breaking down InChIs representing composite species into individual
         # molecule objects
@@ -54,7 +54,7 @@ class Reaction:
         for i in self.product_inchis:
             self.products.extend(Molecule.new(i))
 
-        for i in self.reaction_agent_inchis:
+        for i in self.agent_inchis:
             self.reaction_agents.extend(Molecule.new(i))
 
     #########################################
@@ -153,7 +153,7 @@ class Reaction:
         """
         out = []
 
-        for group in (self.reactant_inchis, self.product_inchis, self.reaction_agent_inchis):
+        for group in (self.reactant_inchis, self.product_inchis, self.agent_inchis):
             inchi_tempfile = tempfile.NamedTemporaryFile(mode='w+t', delete=False)
 
             for inchi in group:
@@ -205,7 +205,8 @@ class Reaction:
 
         count_products.subtract(count_reactants)
 
-        if loop: # Whether or not the property to count is a loop i.e. ABCD = BCDA = DCBA
+        # Whether or not the property to count is a loop i.e. ABCD = BCDA = DCBA
+        if loop:
             count_products_condensed = Counter()
             for i in count_products:
                 for j in count_products_condensed:
@@ -367,6 +368,7 @@ class Reaction:
                 absolute (i.e.  positive) value.
             cyclic_mol_change
         """
+
         def layer_ring_counter(layer):
             """
             Counts the rings in each of the layers
@@ -388,9 +390,7 @@ class Reaction:
 
         reactant_rings, reactant_cyclics = layer_ring_counter(self.reactant_inchis)
         product_rings, product_cyclics = layer_ring_counter(self.product_inchis)
-        changes = {}
-        changes['rings'] = product_rings - reactant_rings
-        changes['molecules'] = product_cyclics - reactant_cyclics
+        changes = {'rings': product_rings - reactant_rings, 'molecules': product_cyclics - reactant_cyclics}
         if self.direction == '=' or self.direction == '':
             changes['molecules'] = abs(changes['molecules'])
             changes['rings'] = abs(changes['rings'])

@@ -132,6 +132,7 @@ def build_rinchi_rauxinfo(l2_input=None, l3_input=None, l4_input=None, direction
         tuple). Any or all of these may be omitted.  All InChIs must be of the same version number.  If a chemical
         which cannot be described by an InChI is desired within the RInChI, it should be added to the u_struct
         argument detailed below.
+        u_struct:
         l2_input:  Chemicals in the second layer of the RInChI
         l3_input:  Chemicals in the third layer of the RInChI
         l4_input:  Chemicals in the fourth layer of a RInChI.  It refers to the substances present at the start and
@@ -266,7 +267,8 @@ def build_rauxinfo(l2_auxinfo, l3_auxinfo, l4_auxinfo):
     # Construct and return the RAuxInfo
     if auxinfo_l4:
         auxinfo_l4 = '<>' + auxinfo_l4
-    rauxinfo = 'RAuxInfo=%s.%s/%s<>%s%s' % (_external.RINCHI_VERSION, auxinfo_version, auxinfo_l2, auxinfo_l3, auxinfo_l4)
+    rauxinfo = 'RAuxInfo={}.{}/{}<>{}{}'.format(_external.RINCHI_VERSION, auxinfo_version, auxinfo_l2, auxinfo_l3,
+                                                auxinfo_l4)
     return rauxinfo
 
 
@@ -592,6 +594,7 @@ def rinchi_to_dict_list(data):
         """
         Extends str so that readlines() can be used for string types too
         """
+
         def readlines(self):
             """
             Takes a multi-line string and splits it into lines.

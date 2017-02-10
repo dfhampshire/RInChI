@@ -208,7 +208,7 @@ def _transfer_table(db_source, db_destination, table_name, drop_source=True):
         os.remove(db_source)
 
 
-def flat_file_to_search_db(path, delim="$"):
+def _flat_file_to_search_db(path, delim="$"):
     """
     Creates and populates a temporary SQLite database for searching or analysis
 
@@ -232,8 +232,11 @@ def flat_file_to_search_db(path, delim="$"):
     cursor.executemany("INSERT INTO temp VALUES (?)", read_flat_file_lines(path, delim))
     return cursor
 
+
 # Searching SQL databases
 #########################
+
+# TODO sort out searching algorithm
 
 def sql_key_to_rinchi(key, db_filename, table_name, keytype="L"):
     """
@@ -275,12 +278,13 @@ def inchi_finder(inchi, cursor, table_name, limit):
     Approx.  20x faster than the version in rinchi_tools.analyse
 
     Args:
+        cursor:
+        limit:
         inchi: The InChI to search for
-        db_filename: the database to search within
         table_name: the database to search in
     """
     query = "%" + "/".join(inchi.split("/")[1:]) + "%"
-    cursor = _sql_search(cursor, table_name, ["rinchi"], query, "rinchi", True,limit)
+    cursor = _sql_search(cursor, table_name, ["rinchi"], query, "rinchi", True, limit)
 
     return (i[0] for i in cursor.fetchall())
 
@@ -291,8 +295,10 @@ def search_master(inchi, database=None, table_name=None, is_sql_db=False, hyb=No
     Search for an Inchi within a RInChi database. Includes all options
 
     Args:
+        database:
+        is_sql_db:
+        limit:
         inchi: The InChI to search for
-        db_filename: the database to search within
         table_name: the table to search in
 
         All args following are dicts of the format {property:count,property2:count2,...}
@@ -315,7 +321,7 @@ def search_master(inchi, database=None, table_name=None, is_sql_db=False, hyb=No
         rings = {}
     if formula is None:
         formula = {}
-    if not any((hyb,rings,val,formula)):
+    if not any((hyb, rings, val, formula)):
         skip = True
     else:
         skip = False
@@ -327,13 +333,13 @@ def search_master(inchi, database=None, table_name=None, is_sql_db=False, hyb=No
         product = True
         agent = True
 
-    if is_sql_db: # Search existing database
+    if is_sql_db:  # Search existing database
         db = sqlite3.connect(database)
         cursor = db.cursor()
-        results = inchi_finder(inchi,cursor,table_name,limit)
-    else: # Create a temporary database from a flat file
-        cursor = flat_file_to_search_db(database)
-        results = inchi_finder(inchi, cursor, table_name,limit)
+        results = inchi_finder(inchi, cursor, table_name, limit)
+    else:  # Create a temporary database from a flat file
+        cursor = _flat_file_to_search_db(database)
+        results = inchi_finder(inchi, cursor, table_name, limit)
 
     result_dict = {'as_reactant': [], 'as_product': [], 'as_agent': []}
 
@@ -347,7 +353,7 @@ def search_master(inchi, database=None, table_name=None, is_sql_db=False, hyb=No
                 if inchi in r.product_inchis:
                     result_dict['as_product'].append(rinchi)
             if agent:
-                if inchi in r.reaction_agent_inchis:
+                if inchi in r.agent_inchis:
                     result_dict['as_agent'].append(rinchi)
 
     return result_dict
@@ -380,7 +386,7 @@ def rdf_to_sql(rdfile, db_filename, table_name, columns=None):
     _pragma_sql_env(cursor)
 
     # Open the rdfile and convert its contents to a dict of rinchis and rinchi data
-    rdf_data = conversion.rdf_to_rinchis(rdfile,columns=columns)
+    rdf_data = conversion.rdf_to_rinchis(rdfile, columns=columns)
 
     # Transform in place the dicts storing rxn info to their string representations
     for i in rdf_data.keys():
@@ -449,7 +455,7 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
     columns = [column for column in col_list if column]
 
     # Check at least one column is desired
-    if all(i == False for i in col_list):
+    if all(i is False for i in col_list):
         raise ValueError("Cannot create empty table")
 
     # Define the processing function
@@ -486,8 +492,7 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
     db.close()
 
     # Create args and run the queue
-    pop_args = [_populate_queue,
-                [db_filename, "rinchis02", [v02_rinchi, v02_rauxinfo], processing_function, col_list]]
+    pop_args = [_populate_queue, [db_filename, "rinchis02", [v02_rinchi, v02_rauxinfo], processing_function, col_list]]
     depop_args = [_depopulate_queue, [columns, table_name]]
     _run_queue(1000, pop_args, depop_args)
 
@@ -654,7 +659,7 @@ def _populate_queue(q, db_filename, table_name, source_columns, processing_funct
         db = sqlite3.connect(db_filename)
         cursor = db.cursor()
         logging.info("populating")
-        for row in _sql_search(cursor, table_name):
+        for row in _sql_search(cursor, table_name, source_columns):
             if processing_function is not None:
                 row = processing_function(row, processing_args)
             q.put(row)

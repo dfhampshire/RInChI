@@ -323,7 +323,8 @@ def _agent_harvester(data, num_variations):
 
 
 def rdf_to_rinchis(rdf, start=0, stop=0, force_equilibrium=False, return_rauxinfos=False, return_longkeys=False,
-                   return_shortkeys=False, return_webkeys=False, return_rxndata=False,return_rinchis=True, columns=None):
+                   return_shortkeys=False, return_webkeys=False, return_rxndata=False, return_rinchis=True,
+                   columns=None):
     """
     Convert an RDFile to a list of RInChIs.
 
@@ -388,7 +389,6 @@ def rdf_to_rinchis(rdf, start=0, stop=0, force_equilibrium=False, return_rauxinf
                 dict_result = {p[0].replace("\r", ""): p[1].replace("\r", "") for p in data_pairs}
                 data['rxn_data'] = dict_result
             data_list.append(data)
-
     return data_list
 
 
@@ -402,10 +402,9 @@ def rxn_to_rinchi(rxn_text, ret_rauxinfo=False, longkey=False, shortkey=False, w
         shortkey:
         webkey:
         force_equilibrium:
-        file_out:
 
     Returns:
-
+        a dictionary of data
     """
 
     # Generate the requested data.
@@ -424,7 +423,7 @@ def rxn_to_rinchi(rxn_text, ret_rauxinfo=False, longkey=False, shortkey=False, w
 
 def rinchi_to_file(data, rxnout=True):
     """
-    Takes a file object or a multiline string and returns a list of output file text blocks (RXN or RDF)
+    Takes a file object or a multi-line string and returns a list of output file text blocks (RXN or RDF)
 
     Args:
         data:
@@ -465,7 +464,7 @@ def rinchis_to_keys(data, longkey=False, shortkey=False, webkey=False, inc_rinch
     """
     data_list = tools.rinchi_to_dict_list(data)
     for entry in data_list:
-        assert isinstance(entry,dict)
+        assert isinstance(entry, dict)
         del entry['rauxinfo']
         # Calculate keys
         if longkey:
@@ -474,7 +473,7 @@ def rinchis_to_keys(data, longkey=False, shortkey=False, webkey=False, inc_rinch
             entry['shortkey'] += RInChI_Handle().rinchikey_from_rinchi(entry['rinchi'], "S") + '\n'
         if webkey:
             entry['webkey'] += RInChI_Handle().rinchikey_from_rinchi(entry['rinchi'], "W") + '\n'
-        if not inc_rinchi: # Remove rinchi if not needed
+        if not inc_rinchi:  # Remove rinchi if not needed
             del entry['rinchi']
     return data_list
 
@@ -516,11 +515,11 @@ def rdf_to_csv(rdf, outfile="rinchi", return_rauxinfo=False, return_longkey=Fals
         header.append("RXNInfo")
 
     data = rdf_to_rinchis(rdf, force_equilibrium=False, return_rauxinfos=return_rauxinfo,
-                                     return_longkeys=return_longkey, return_shortkeys=return_shortkey,
-                                     return_webkeys=return_webkey, return_rxndata=return_rxninfo)
+                          return_longkeys=return_longkey, return_shortkeys=return_shortkey,
+                          return_webkeys=return_webkey, return_rxndata=return_rxninfo)
 
     # Write new database file as .csv
-    output_file, output_name = utils.create_output_file(outfile,csv)
+    output_file, output_name = utils.create_output_file(outfile, csv)
     writer = csv.writer(output_file, delimiter='$')
     writer.writerow(header)
     writer.writerows(data)
@@ -556,8 +555,8 @@ def rdf_to_csv_append(rdf, csv_file):
 
     # Construct a dict of RInChIs and RInChI data from the supplied rd file
     data = rdf_to_rinchis(rdf, force_equilibrium=False, return_rauxinfos=return_rauxinfo,
-                                     return_longkeys=return_longkey, return_shortkeys=return_shortkey,
-                                     return_webkeys=return_webkey, return_rxndata=return_rxninfo)
+                          return_longkeys=return_longkey, return_shortkeys=return_shortkey,
+                          return_webkeys=return_webkey, return_rxndata=return_rxninfo)
 
     # Convert both lists of rinchis into sets - unique, does not preserve order
     old_rinchis = set(old_rinchis)
@@ -611,5 +610,3 @@ def create_csv_from_directory(root_dir, outname, return_rauxinfo=False, return_l
 
                 # Send the names of any files that failed to be recognised to STDOUT
                 print(("Failed to recognise {}".format(filename)))
-
-

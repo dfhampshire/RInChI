@@ -46,12 +46,11 @@ print(_inchi_tools.count_sp2(sp2_centre_inchi))
 print(_inchi_tools.count_sp3(test_inchi))
 print(_old_analysis.rxn_stereochem_change(test_rinchi))
 print(_old_analysis.rxns_stereochem_changes(test_list_rinchi))
-print(_old_analysis.search_inchi_list(test_inchi, [test_rinchi]))
 print("================")
 
 # Test Conversion.py
 print(_inchi_tools.inchi_2_auxinfo(test_inchi))
-with open('test-resources/rxn_t1.rxn', 'r') as myfile:
+with open('../test-resources/rxn_t1.rxn', 'r') as myfile:
     rxn = myfile.read()
 molfs = conversion._rxn_to_molfs(rxn)
 print(molfs)
@@ -79,7 +78,7 @@ print(tools.generate_rauxinfo(test_rinchi2))
 print(test_rauxinfo2)
 print("================")
 print(tools.build_rinchi_rauxinfo(*tools.split_rinchi_inc_auxinfo(test_rinchi2, test_rauxinfo2)))
-input_file = open("test-resources/test.rdf").read()
+input_file = open("../test-resources/test.rdf").read()
 print(rinchi_interface.rinchi_from_file_text("RD", input_file, False))
 deduper_test = ("RInChI=0.03.1S/C2H4O2/c1-2(3)4/h1H3,(H,3,4)!C2H4O2/c1-2(3)4/h1H3,(H,3,4)!C2H6O/c1-2-3/h3H,2H2,1H3<>C4H"
                 "8O2/c1-3-6-4(2)5/h3H2,1-2H3!H2O/h1H2<>H2O4S/c1-5(2,3)4/h(H2,1,2,3,4)/d=")

@@ -15,41 +15,52 @@ import rinchi_tools.conversion
 from rinchi_tools import database
 from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Database Tools Module")
-    parser.add_argument("input",
-                        help="Input - the RDFile or directory to be processed, or the search parameter for a search, or new table to be created")
-    parser.add_argument("database", nargs="?",
-                        help="The existing database to be modified or searched, or the name of new database to be created")
-    parser.add_argument("tablename", nargs="?", help="The table name")
 
-    action = parser.add_mutually_exclusive_group(required=True)
-    action.add_argument('--rdf2csv', action='store_true', help='Create a new .csv from an rdfile')
-    action.add_argument('--rdfappend', action='store_true',
-                        help='Append the contents of an rdfile to an existing .csv file')
-    action.add_argument('--dir2csv', action='store_true', help='Convert a directory of rdfiles to a single csv file')
-    action.add_argument('--rdf2sql', action='store_true', help='Convert and add an rdfile to an SQL database')
-    action.add_argument('--csv2sql', action='store_true',
+def add_db(subparser):
+    """
+
+    Args:
+        subparser:
+    """
+    assert isinstance(subparser, argparse.ArgumentParser)
+
+    # Add main input arguments
+    subparser.add_argument("database", nargs="?", default="../rinchi.db",
+                           help="The existing database to manipulate, or the name of database to be created")
+    subparser.add_argument("input", nargs="?", default="rinchis03", help="The name of the input data file or table")
+    subparser.add_argument('-o', "--output", nargs="?", help="The output table name or something else to output")
+
+    action = subparser.add_argument_group("Operation").add_mutually_exclusive_group(required=True)
+
+    # Add data insertion options
+    adding = action.add_argument_group("Adding Data to a database")
+    adding.add_argument('--rdf2db', action='store_true', help='Convert and add an rdfile to an SQL database')
+    adding.add_argument('--csv2db', action='store_true',
                         help='Add the contents of a rinchi .csv file to an SQL database')
 
-    action.add_argument('--lkey2rinchi', action='store_true',
-                        help='Returns the RInChI corresponding to a given Long Key')
-    action.add_argument('--inchisearch', action='store_true',
-                        help='Returns all RInChIs containing the given InChI to STDOUT')
-    action.add_argument('--TEST', action='store_true', help='Returns all RInChIs containing the given InChI to STDOUT')
+    # Add fingerprint related operations
+    fpts = action.add_argument_group("Fingerprints")
+    fpts.add_argument('--ufingerprints', action='store_true',
+                      help='Adds new entries to the fpts table containing fingerprint data')
+    fpts.add_argument('--rfingerprints', action='store_true', help='Returns the fingerprint of a given key')
+    fpts.add_argument('--cfingerprints', action='store_true',
+                      help='Returns all RInChIs containing the given InChI to STDOUT')
 
-    action.add_argument('--ufingerprints', action='store_true',
-                        help='Adds new entries to the fpts table containing fingerprint data')
-    action.add_argument('--rfingerprints', action='store_true', help='Returns the fingerprint of a given key')
-    action.add_argument('--cfingerprints', action='store_true',
-                        help='Returns all RInChIs containing the given InChI to STDOUT')
-    action.add_argument('--conv0203', action='store_true',
-                        help='Creates a new table of v.03 rinchis from a table of v.02 rinchis')
-    action.add_argument('--genrauxinfo', action='store_true',
-                        help='Generate RAuxinfos from rinchis within a SQL database')
+    # Add converting data operations
+    convert = action.add_argument_group("Converting databases")
+    convert.add_argument('--convert2_to_3', action='store_true',
+                         help='Creates a new table of v.03 rinchis from a table of v.02 rinchis')
+    convert.add_argument('--generate_rauxinfo', action='store_true',
+                         help='Generate RAuxInfos from rinchis within a SQL database')
 
-    args = parser.parse_args()
 
+def db_ops(args, parser):
+    """
+
+    Args:
+        args:
+        parser:
+    """
     if args.lkey2rxninfo and args.input.startswith("RInChI"):
         try:
             args.input = RInChI_Handle().rinchikey_from_rinchi(args.input, "L")
@@ -62,7 +73,8 @@ if __name__ == "__main__":
     if args.rdfappend:
         rinchi_tools.conversion.rdf_to_csv_append(args.input, args.database)
     if args.dir2csv:
-        rinchi_tools.conversion.create_csv_from_directory(args.input, args.database, return_longkey=True, return_rxninfo=True)
+        rinchi_tools.conversion.create_csv_from_directory(args.input, args.database, return_longkey=True,
+                                                          return_rxninfo=True)
     if args.rdf2sql:
         database.rdf_to_sql(args.input, args.database, args.tablename)
     if args.csv2sql:
@@ -74,19 +86,8 @@ if __name__ == "__main__":
         print(list(database.recall_fingerprints(args.input, args.database, args.tablename)))
     if args.cfingerprints:
         database.compare_fingerprints(args.input, args.database, args.tablename)
-
-    if args.TEST:
-        tinchis = ["InChI=1S/C3H5Cl/c1-2-3-4/h2H,1,3H2", "InChI=1S/C3H5Br/c1-2-3-4/h2H,1,3H2",
-                   "InChI=1S/C3H5I/c1-2-3-4/h2H,1,3H2", "InChI=1S/C3H6O/c1-2-3-4/h2,4H,1,3H2",
-                   "InChI=1S/C3H5F/c1-2-3-4/h2H,1,3H2", "InChI=1S/C3H6/c1-3-2/h3H,1H2,2H3"]
-        for inchi in tinchis:
-            print(inchi, len(database.search_for_inchi(inchi, args.database, args.tablename)))
-
     if args.lkey2rinchi:
         print(database.sql_key_to_rinchi(args.input, args.database, args.tablename))
-    if args.inchisearch:
-        print("start")
-        database.search_for_inchi(args.input, args.database, args.tablename)
     if args.conv0203:
         # Names hardcoded because significant modification of the arparse system would be needed and would be complex
         v02_column_names = ["rinchi", "rauxinfo"]
@@ -96,4 +97,12 @@ if __name__ == "__main__":
     if args.genrauxinfo:
         database.gen_rauxinfo(args.database, args.input)
     else:
-        print(__doc__)
+        parser.print_help()
+
+
+if __name__ == "__main__":
+    role = "Database Tools Module"
+    parser = argparse.ArgumentParser(description=role)
+    add_db(parser)
+    args = parser.parse_args()
+    db_ops(args, parser)

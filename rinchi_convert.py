@@ -17,7 +17,7 @@ from rinchi_tools import conversion, utils
 from rinchi_tools.reaction import Reaction
 
 
-def convert_ops(args,parser):
+def convert_ops(args, parser):
     """
     Contains the operations for running the script
 
@@ -29,14 +29,14 @@ def convert_ops(args,parser):
     if args.filein:
         args.input, input_name, extension = utils.read_input_file(args.input)
     if args.rxn2rinchi:
-        data = conversion.rxn_to_rinchi(args.input, force_equilibrium=args.equilibrium,ret_rauxinfo=args.rauxinfo,
-                                        longkey=args.longkey,shortkey=args.shortkey, webkey=args.webkey)
+        data = conversion.rxn_to_rinchi(args.input, force_equilibrium=args.equilibrium, ret_rauxinfo=args.rauxinfo,
+                                        longkey=args.longkey, shortkey=args.shortkey, webkey=args.webkey)
         text = utils.construct_output_text(data)
         utils.output(text, args.fileout, ".rinchi")
     elif args.rdf2rinchi:
-        data = conversion.rdf_to_rinchis(args.input, force_equilibrium=args.equilibrium,
-                                         return_rauxinfos=args.rauxinfo, return_longkeys=args.longkey,
-                                         return_shortkeys=args.shortkey, return_webkeys=args.webkey)
+        data = conversion.rdf_to_rinchis(args.input, force_equilibrium=args.equilibrium, return_rauxinfos=args.rauxinfo,
+                                         return_longkeys=args.longkey, return_shortkeys=args.shortkey,
+                                         return_webkeys=args.webkey)
         text = utils.construct_output_text(data)
         utils.output(text, args.fileout, ".rinchi")
     elif args.rinchi2file:
@@ -44,24 +44,27 @@ def convert_ops(args,parser):
         text = utils.construct_output_text(data)
         utils.output(text, args.fileout, '.rxn' if args.rxnfileoutput else 'rdf')
     elif args.rinchi2key:
-        data = conversion.rinchis_to_keys(args.input, longkey=args.longkey, shortkey=args.shortkey,
-                                          webkey=args.webkey,inc_rinchi=args.include_rinchi)
+        data = conversion.rinchis_to_keys(args.input, longkey=args.longkey, shortkey=args.shortkey, webkey=args.webkey,
+                                          inc_rinchi=args.include_rinchi)
         text = utils.construct_output_text(data)
         utils.output(text, args.fileout, ".rinchi")
     elif args.rdf2csv:
         if not args.fileout:
             parser.error('IOError - Fileout path required')
-        if os.path.isfile(args.fileout): # Append the file out if it exists
-            conversion.rdf_to_csv_append(args.input,args.fileout)
-        else: # Otherwise create a file
-            conversion.rdf_to_csv(args.input, args.fileout, return_rauxinfo=args.rauxinfo, return_longkey=args.longkey, return_shortkey=args.shortkey, return_webkey=args.webkey)
+        if os.path.isfile(args.fileout):  # Append the file out if it exists
+            conversion.rdf_to_csv_append(args.input, args.fileout)
+        else:  # Otherwise create a file
+            conversion.rdf_to_csv(args.input, args.fileout, return_rauxinfo=args.rauxinfo, return_longkey=args.longkey,
+                                  return_shortkey=args.shortkey, return_webkey=args.webkey)
     elif args.dir2csv:
         if not args.fileout:
             parser.error('IOError - Fileout path required')
-        conversion.create_csv_from_directory(args.input,args.fileout,return_rauxinfo=args.rauxinfo, return_longkey=args.longkey, return_shortkey=args.shortkey, return_webkey=args.webkey)
+        conversion.create_csv_from_directory(args.input, args.fileout, return_rauxinfo=args.rauxinfo,
+                                             return_longkey=args.longkey, return_shortkey=args.shortkey,
+                                             return_webkey=args.webkey)
     elif args.svg:
         for rinchi in args.input.splitlines():
-            r=Reaction(rinchi)
+            r = Reaction(rinchi)
             r.generate_svg_image(os.path.splitext(args.fileout)[0])
     else:
         parser.print_help()
@@ -96,8 +99,8 @@ def add_convert(subparser):
 
     # Add options for all commands
     opt_all = optional.add_argument_group("All operations")
-    opt_all.add_argument("-o", "--fileout", nargs='?',const='output', default=False, help="Save the output to disk. ")
-    opt_all.add_argument('-i','--filein',action='store_true',help='Assert that the input is a file')
+    opt_all.add_argument("-o", "--fileout", nargs='?', const='output', default=False, help="Save the output to disk. ")
+    opt_all.add_argument('-i', '--filein', action='store_true', help='Assert that the input is a file')
 
     # Add options for converting to RInChI filetype
     opt_to_rinchi = optional.add_argument_group("Conversion to RInChI file")
@@ -119,7 +122,7 @@ def add_convert(subparser):
     opt_to_file = optional.add_argument_group("Converting to a RXN/RDF")
     opt_to_file.add_argument("-ordf", "--rdfileoutput", action="store_false", dest='rxnfileoutput',
                              help="Output as RDFile. Otherwise RXN file(s) are produced")
-    opt_to_file.add_argument("-orxn",'--rxnfileoutput',action="store_true",
+    opt_to_file.add_argument("-orxn", '--rxnfileoutput', action="store_true",
                              help="Output as RDFile. Otherwise RXN file(s) are produced")
 
 
@@ -128,5 +131,4 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=role)
     add_convert(parser)
     args = parser.parse_args()
-    convert_ops(args,parser)
-
+    convert_ops(args, parser)

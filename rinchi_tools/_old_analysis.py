@@ -17,9 +17,10 @@ def rxn_ring_change(input_rinchi, pm=False, pcm=False, return_ring_counts_only=F
     Determine how the number of rings changes in a reaction.
 
     Args:
+        pcm: Whether to calculate per cyclic molecule
         input_rinchi: A RInChI to analyse.
-        pm: A tuple containing booleans for whether to calculate ring changes per molecule ( pm[0] ) or per cyclic
-        molecule ( pm[1] ).  The default is not to calculate per molecule.
+        pm: whether to calculate ring changes per molecule
+
         return_ring_counts_only: Only return ring counts in each layer
 
     Returns:
@@ -94,6 +95,7 @@ def rxns_ring_changes(rinchis, pm=False, pcm=False):
     Analyse a list of rinchis for ring changes.
 
     Args:
+        pcm:
         rinchis: A list of RInChIs.
         pm: Whether to calculate ring changes per molecule or per cyclic
             molecule ( pcm ).  The default is not to calculate per molecule.
@@ -111,7 +113,7 @@ def rxns_ring_changes(rinchis, pm=False, pcm=False):
             except KeyError:
                 results[ring_change] = [rinchi_entry]
         except Exception:
-            pass
+            print('{} failed to be converted')
     return results
 
 
@@ -120,6 +122,7 @@ def rxn_stereochem_change(input_rinchi, wd=False, pm=False, pcm=False, sp2=True,
     Determine whether a reaction creates or destroys stereochemistry.
 
     Args:
+        pcm:
         wd: Whether only well-defined stereocentres count.
         input_rinchi: A RInChI.
         pm: A tuple of booleans.  The first boolean determines whether to count the change in number of
@@ -187,6 +190,7 @@ def rxns_stereochem_changes(rinchis, wd=False, pm=False, pcm=False, sp2=True, sp
     Analyse a list of RInChIs for stereochemical changes.
 
     Args:
+        pcm:
         rinchis: A list of RInChIs.
         wd: Whether only well-defined stereocentres count.
         pm: A tuple of booleans.  The first boolean determines whether to count the change in number of
