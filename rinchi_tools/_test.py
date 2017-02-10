@@ -7,7 +7,7 @@ This module tests the module functions.  Not very user friendly...
 
 """
 
-from rinchi_tools import _inchi_tools, analysis, conversion, rinchi_lib, tools
+from rinchi_tools import _inchi_tools, _old_analysis, conversion, rinchi_lib, tools
 
 rinchi_interface = rinchi_lib.RInChI()
 
@@ -23,11 +23,11 @@ three_reactions_unknown = (
 print(tools.add(three_reactions))
 try:
     print(tools.add(three_reactions_unknown))
-except tools.VersionError:
+except ValueError:
     print("Addition Error raised successfully")
 print("================")
 
-# Test analysis.py
+# Test _old_analysis.py
 test_inchi = "InChI=1S/C6H12O/c1-4-6(3)5(2)7-6/h5H,4H2,1-3H3/t5-,6-/m0/s1"
 test_rinchi = ("RInChI=0.03.1S/H2O/h1H2/p-1!C6H12O/c1-4-6(3)5(2)7-6/h5H,4H2,1-3H3/t5-,6-/m0/s1<>C6H14O2/c1-4-6(3,8)5(2)"
                "7/h5,7-8H,4H2,1-3H3/t5-,6+/m1/s1/d-")
@@ -37,16 +37,16 @@ sp2_centre_rinchi = ("RInChI=0.03.1S/C4H8/c1-3-4-2/h3-4H,1-2H3/b4-3+!C2H6O/c1-2-
                      ",1-2H3!H2O/h1H2<>H2O4S/c1-5(2,3)4/h(H2,1,2,3,4)/d=")
 print(_inchi_tools.get_conlayer(test_inchi))
 print(_inchi_tools.count_rings(test_inchi))
-print(analysis.rxn_ring_change(test_rinchi, (False, False), False))
-print(analysis.rxn_ring_change(test_rinchi, (False, False), True))
-print(analysis.rxn_ring_change(test_rinchi, (True, False), False))
-print(analysis.rxn_ring_change(test_rinchi, (True, True), False))
-print(analysis.rxns_ring_changes(test_list_rinchi))
+print(_old_analysis.rxn_ring_change(test_rinchi, (False, False), False))
+print(_old_analysis.rxn_ring_change(test_rinchi, (False, False), True))
+print(_old_analysis.rxn_ring_change(test_rinchi, (True, False), False))
+print(_old_analysis.rxn_ring_change(test_rinchi, (True, True), False))
+print(_old_analysis.rxns_ring_changes(test_list_rinchi))
 print(_inchi_tools.count_sp2(sp2_centre_inchi))
 print(_inchi_tools.count_sp3(test_inchi))
-print(analysis.rxn_stereochem_change(test_rinchi))
-print(analysis.rxns_stereochem_changes(test_list_rinchi))
-print(analysis.search_inchi_list(test_inchi, [test_rinchi]))
+print(_old_analysis.rxn_stereochem_change(test_rinchi))
+print(_old_analysis.rxns_stereochem_changes(test_list_rinchi))
+print(_old_analysis.search_inchi_list(test_inchi, [test_rinchi]))
 print("================")
 
 # Test Conversion.py

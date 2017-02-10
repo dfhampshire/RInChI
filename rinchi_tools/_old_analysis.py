@@ -1,5 +1,5 @@
 """
-RInChI analysis module.
+RInChI analysis module. Deprecated. Functionality now in reaction.py as a method of the reaction class.
 
 This module provides functions for the counting rings and stereocentres in InChIs and RInChIs.  It also provides a
 function for searching for InChIs in a database of RInChIs.  It also interfaces with the RInChI v0.03 software as
@@ -12,7 +12,7 @@ provided by the InChI trust.
 from rinchi_tools import _inchi_tools, tools
 
 
-def rxn_ring_change(input_rinchi, pm=(False, False), return_ring_counts_only=False):
+def rxn_ring_change(input_rinchi, pm=False, pcm=False, return_ring_counts_only=False):
     """
     Determine how the number of rings changes in a reaction.
 
@@ -74,29 +74,29 @@ def rxn_ring_change(input_rinchi, pm=(False, False), return_ring_counts_only=Fal
         raise ValueError('RInChI must have reactants and products.')
 
     # If required, divide the number of rings by the number of molecules.
-    if pm[0]:
-        if pm[1]:
-            if reactant_cyclics:
-                reactant_rings /= reactant_cyclics
-            if product_cyclics:
-                product_rings /= product_cyclics
-        else:
-            reactant_rings /= len(reactants)
-            product_rings /= len(products)
+    if pcm:
+        if reactant_cyclics:
+            reactant_rings /= reactant_cyclics
+        if product_cyclics:
+            product_rings /= product_cyclics
+    elif pm:
+        reactant_rings /= len(reactants)
+        product_rings /= len(products)
+
     ring_change = product_rings - reactant_rings
     if (direction == '=') or (direction == ''):
         ring_change = abs(ring_change)
     return ring_change
 
 
-def rxns_ring_changes(rinchis, pm=(False, False)):
+def rxns_ring_changes(rinchis, pm=False, pcm=False):
     """
     Analyse a list of rinchis for ring changes.
 
     Args:
         rinchis: A list of RInChIs.
-        pm: A tuple containing booleans for whether to calculate ring changes per molecule ( pm[0] ) or per cyclic
-            molecule ( pm[1] ).  The default is not to calculate per molecule.
+        pm: Whether to calculate ring changes per molecule or per cyclic
+            molecule ( pcm ).  The default is not to calculate per molecule.
 
     Returns:
         results: A dict, of which the keys are reaction ring changes and the entries are lists of RInChIs.
@@ -105,7 +105,7 @@ def rxns_ring_changes(rinchis, pm=(False, False)):
     results = dict()
     for rinchi_entry in rinchis:
         try:
-            ring_change = rxn_ring_change(rinchi_entry, pm)
+            ring_change = rxn_ring_change(rinchi_entry, pm, pcm)
             try:
                 results[ring_change].append(rinchi_entry)
             except KeyError:
@@ -115,7 +115,7 @@ def rxns_ring_changes(rinchis, pm=(False, False)):
     return results
 
 
-def rxn_stereochem_change(input_rinchi, wd=False, pm=(False, False), sp2=True, sp3=True):
+def rxn_stereochem_change(input_rinchi, wd=False, pm=False, pcm=False, sp2=True, sp3=True):
     """
     Determine whether a reaction creates or destroys stereochemistry.
 
@@ -164,15 +164,15 @@ def rxn_stereochem_change(input_rinchi, wd=False, pm=(False, False), sp2=True, s
         product_stereo_mols += sm_change
 
     # If required, divide stereocentres by the number of molecules.
-    if pm[0]:
-        if pm[1]:
-            if reactant_stereo_mols:
-                reactant_stereocentres /= reactant_stereo_mols
-            if product_stereo_mols:
-                product_stereocentres /= product_stereo_mols
-        else:
-            reactant_stereocentres /= len(reactants)
-            product_stereocentres /= len(products)
+
+    if pcm:
+        if reactant_stereo_mols:
+            reactant_stereocentres /= reactant_stereo_mols
+        if product_stereo_mols:
+            product_stereocentres /= product_stereo_mols
+    elif pm:
+        reactant_stereocentres /= len(reactants)
+        product_stereocentres /= len(products)
 
     # Calculate the change.
     stereocentre_change = product_stereocentres - reactant_stereocentres
@@ -182,7 +182,7 @@ def rxn_stereochem_change(input_rinchi, wd=False, pm=(False, False), sp2=True, s
         return abs(stereocentre_change)
 
 
-def rxns_stereochem_changes(rinchis, wd=False, pm=(False, False), sp2=True, sp3=True):
+def rxns_stereochem_changes(rinchis, wd=False, pm=False, pcm=False, sp2=True, sp3=True):
     """
     Analyse a list of RInChIs for stereochemical changes.
 
@@ -203,7 +203,7 @@ def rxns_stereochem_changes(rinchis, wd=False, pm=(False, False), sp2=True, sp3=
     results = dict()
     for rinchi_entry in rinchis:
         try:
-            stereochange = rxn_stereochem_change(rinchi_entry, wd, pm, sp2, sp3)
+            stereochange = rxn_stereochem_change(rinchi_entry, wd, pm, pcm, sp2, sp3)
             try:
                 results[stereochange].append(rinchi_entry)
             except KeyError:
@@ -212,56 +212,5 @@ def rxns_stereochem_changes(rinchis, wd=False, pm=(False, False), sp2=True, sp3=
             pass
     return results
 
-
-def search_inchi_list(sought_inchi, rinchis, location=''):
-    """
-    Search for an InChI in a list of RInChIs.
-
-    Args:
-        sought_inchi: The InChI to search for.
-        rinchis: The list of RInChIs in which to search for the InChI.
-
-        location: Where in the RInChIs to search for the InChI.  This is a single character which can be either 'r'
-            for Reactants, 'p' for Products, 'e' for Equilibrium reactants, 'a' for reaction Agents.
-
-    Returns:
-        results: A list of RInChIs in which the InChI is found in the location
-            specified.
-    """
-    results = []
-    for rinchi in rinchis:
-        reactants, products, agents, direction, no_structs = tools.split_rinchi(rinchi)
-        if direction == '+' or direction == '-':
-            eqibs = []
-        elif direction == '=':
-            eqibs = reactants + products
-        else:
-            reactants = []
-            products = []
-            eqibs = []
-
-        def they_call_me_the_seeker(search_inchi, group):
-            """
-            Find InChI occurrences in a group of InChIs
-
-            Args:
-                search_inchi: the InChI to search for
-                group: the group of InChIs to look within
-            """
-            for inchi in group:
-                if search_inchi == inchi:
-                    results.append(rinchi)
-
-        if location.startswith('r'):
-            they_call_me_the_seeker(sought_inchi, reactants)
-        elif location.startswith('p'):
-            they_call_me_the_seeker(sought_inchi, products)
-        elif location.startswith('a'):
-            they_call_me_the_seeker(sought_inchi, agents)
-        elif location.startswith('e'):
-            they_call_me_the_seeker(sought_inchi, eqibs)
-        else:
-            they_call_me_the_seeker(sought_inchi, (reactants + products + agents))
-    return results
 
 

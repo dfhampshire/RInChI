@@ -13,7 +13,7 @@ import argparse
 import textwrap
 
 from rinchi_search import __search
-from rinchi_tools import analysis
+from rinchi_tools import _old_analysis
 
 
 # TODO refactor functions to include new and old search implementations, comment.
@@ -37,7 +37,7 @@ def __cyclic(input_path, list_rinchis=False, search=False, permol=False, perspec
         pm[1] = True
     input_file = open('%s' % input_path).read()
     rinchis = input_file.splitlines()
-    results = analysis.rxns_ring_changes(rinchis, pm)
+    results = _old_analysis.rxns_ring_changes(rinchis, pm)
     qualifier = ''
     if pm[0]:
         if pm[1]:
@@ -94,7 +94,7 @@ def __stereochem(input_path, list_rinchis=False, well_defined=False, sp2=True, s
         return
     input_file = open('%s' % input_path).read()
     rinchis = input_file.splitlines()
-    results = analysis.rxns_stereochem_changes(rinchis, well_defined, pm, sp2, sp3)
+    results = _old_analysis.rxns_stereochem_changes(rinchis, well_defined, pm, sp2, sp3)
     qualifier = ''
     if pm[0]:
         if pm[1]:

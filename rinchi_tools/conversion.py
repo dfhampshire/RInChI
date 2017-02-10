@@ -323,7 +323,7 @@ def _agent_harvester(data, num_variations):
 
 
 def rdf_to_rinchis(rdf, start=0, stop=0, force_equilibrium=False, return_rauxinfos=False, return_longkeys=False,
-                   return_shortkeys=False, return_webkeys=False, return_rxndata=False):
+                   return_shortkeys=False, return_webkeys=False, return_rxndata=False,return_rinchis=True, columns=None):
     """
     Convert an RDFile to a list of RInChIs.
 
@@ -339,12 +339,25 @@ def rdf_to_rinchis(rdf, start=0, stop=0, force_equilibrium=False, return_rauxinf
         return_shortkeys: If True, generates and returns Short-RInChIKeys for each generated RInChI.
         return_webkeys: If True, generates and returns Web-RInChIKeys for each generated RInChI.
         return_rxndata: If True, returns a list of the &DTYPE/$DATUM data stored in the rxnfiles
+        return_rinchis: Return the rinchi. Defaults to True
+        columns: the data to return may be given as list of headers instead.
 
     Returns:
         List of dicts of reaction data as defined above. The data types are the keys for each dict
     """
     # Split the RDFile into a list of RD files.
     rdfiles = _split_rdf(rdf, start, stop)
+    if columns:
+        if "rinchi" not in columns:
+            return_rinchis = False
+        if "rauxinfo" in columns:
+            return_rauxinfos = True
+        if "longkey" in columns:
+            return_longkeys = True
+        if "shortkey" in columns:
+            return_shortkeys = True
+        if "webkey" in columns:
+            return_webkeys = True
 
     # Looping over the RD files, convert each to a RInChI.
     data_list = []
@@ -353,8 +366,10 @@ def rdf_to_rinchis(rdf, start=0, stop=0, force_equilibrium=False, return_rauxinf
     for rdfile in rdfiles:
         rinchi, rauxinfo = tools.dedupe_rinchi(*RInChI_Handle().rinchi_from_file_text("RD", rdfile, force_equilibrium))
         if rinchi not in rinchis and not (rauxinfo in rauxinfos or return_rauxinfos):  # Force unique entries
-            data = {'rinchi': rinchi}
-            rinchis.append(rinchi)
+            data = {}
+            if return_rinchis:
+                data['rinchi'] = rinchi
+                rinchis.append(rinchi)
             if return_rauxinfos:
                 data['rauxinfo'] = rauxinfo
                 rauxinfos.append(rauxinfo)
@@ -377,8 +392,7 @@ def rdf_to_rinchis(rdf, start=0, stop=0, force_equilibrium=False, return_rauxinf
     return data_list
 
 
-def rxn_to_rinchi(rxn_text, ret_rauxinfo=False, longkey=False, shortkey=False, webkey=False, force_equilibrium=False,
-                  file_out=False):
+def rxn_to_rinchi(rxn_text, ret_rauxinfo=False, longkey=False, shortkey=False, webkey=False, force_equilibrium=False):
     """
 
     Args:
@@ -435,7 +449,7 @@ def rinchi_to_file(data, rxnout=True):
     return list_files
 
 
-def rinchi_to_keys(data, longkey=False, shortkey=False, webkey=False, inc_rinchi=False):
+def rinchis_to_keys(data, longkey=False, shortkey=False, webkey=False, inc_rinchi=False):
     """
     Converts a list of rinchis in a flat file into a dictionary of RInChIs and keys
 
@@ -470,7 +484,7 @@ def rinchi_to_keys(data, longkey=False, shortkey=False, webkey=False, inc_rinchi
 ###########
 
 
-def rdf_to_csv(rdf, outfile="File", return_rauxinfo=False, return_longkey=False, return_shortkey=False,
+def rdf_to_csv(rdf, outfile="rinchi", return_rauxinfo=False, return_longkey=False, return_shortkey=False,
                return_webkey=False, return_rxninfo=False):
     """
     Convert an RD file to a CSV file containing RInChIs and other optional parameters

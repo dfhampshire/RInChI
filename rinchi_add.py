@@ -13,17 +13,44 @@ import argparse
 
 from rinchi_tools import tools, utils
 
-# TODO refactor into a more logical command line call interface
+
+def add_addition(subparser):
+    """
+
+    Args:
+        subparser:
+
+    Returns:
+
+    """
+
+    assert isinstance(subparser,argparse.ArgumentParser)
+
+    parser.add_argument("input_path", help="Path of file to input")
+    parser.add_argument("-o","--output", nargs='?', const='addition', default=False,
+                        help="Output the result to a file. Optionally specify the file output name")
+
+
+def addition_ops(args,parser):
+    """
+
+    Args:
+        args:
+        parser:
+
+    Returns:
+
+    """
+    input_rinchis = (line.strip for line in open(args.input_path)) # Use a generator
+    overall_rinchi = tools.add(input_rinchis)
+    utils.output(overall_rinchi, args.output, "rinchi")
+
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="RInChI addition \n{}".format(__doc__))
-    parser.add_argument("input_path", help="Path of file to input")
-    parser.add_argument("-o","--output_name",default='file',help="Optionally specify the file output name")
-    action = parser.add_mutually_exclusive_group()
-    action.add_argument("-f", "--fileout", action="store_false", help="Output to file instead of printing")
+    role = "RInChI addition"
+    parser = argparse.ArgumentParser(description=role)
+    add_addition(parser)
     args = parser.parse_args()
-    if args.input_path:
-        input_file = open('%s' % args.input_path).read()
-        input_rinchis = input_file.strip().splitlines()
-        overall_rinchi = tools.add(input_rinchis)
-        utils.output(overall_rinchi,args.output_name, "rinchi")
+    addition_ops(args,parser)
+
+

@@ -11,122 +11,122 @@ Converts RInChIs to and from various chemical reaction file formats.
 """
 
 import argparse
+import os
 
 from rinchi_tools import conversion, utils
+from rinchi_tools.reaction import Reaction
 
 
-def __rdf2rinchi(input_path, rauxinfo=False, longkey=False, shortkey=False, webkey=False, equilibrium=False,
-                 file_out=False):
+def convert_ops(args,parser):
     """
-    Called when -rdf2rinchi is given as the 1st argument of the script
+    Contains the operations for running the script
+
+    Args:
+        args: the args from the command line
+        parser: the parser object
     """
-    try:
-        rdf_file, input_name, _ = utils.read_input_file(input_path)
-    except IOError:
-        print('Could not open file "%s".' % input_path)
-        return
 
-    # Generate the requested data and convert to a string
-    results = conversion.rdf_to_rinchis(rdf_file, 0, 0, equilibrium, rauxinfo, longkey, shortkey, webkey, False)
-    rinchi_text = utils.construct_output_text(results)
-
-    # Uses the output utility
-    utils.output(rinchi_text, input_name, "rinchi", print_out= not file_out)
-
-
-def __rxn2rinchi(input_path, ret_rauxinfo=False, longkey=False, shortkey=False, webkey=False, force_equilibrium=False,
-                 file_out=False):
-    """
-    Called when -rxn2rinchi is given as the 1st argument of the script."""
-
-    try:
-        input_file, input_name, _ = utils.read_input_file(input_path)
-    except IOError:
-        print('Could not open file "%s".' % input_path)
-        return
-
-    # Generate the requested data.
-    rinchi_text = utils.construct_output_text(conversion.rxn_to_rinchi(input_file, ret_rauxinfo, longkey, shortkey, webkey,
-                                                                       force_equilibrium, file_out))
-    # Uses the output utility
-    utils.output(rinchi_text, input_name, "rinchi", print_out=not file_out)
-
-
-def __rinchi2file(input_path, rxnout=True, file_out=True):
-    """
-    Called when -rinchi2rxn is given as the 1st argument of the script."""
-
-    try:
-        output, input_name, _ = utils.read_input_file(input_path, return_file_object=True)
-    except IOError:
-        print('Could not open file "%s".' % input_path)
-        return
-
-    if rxnout:
-        filetype_args = "rxn"
+    if args.filein:
+        args.input, input_name, extension = utils.read_input_file(args.input)
+    if args.rxn2rinchi:
+        data = conversion.rxn_to_rinchi(args.input, force_equilibrium=args.equilibrium,ret_rauxinfo=args.rauxinfo,
+                                        longkey=args.longkey,shortkey=args.shortkey, webkey=args.webkey)
+        text = utils.construct_output_text(data)
+        utils.output(text, args.fileout, ".rinchi")
+    elif args.rdf2rinchi:
+        data = conversion.rdf_to_rinchis(args.input, force_equilibrium=args.equilibrium,
+                                         return_rauxinfos=args.rauxinfo, return_longkeys=args.longkey,
+                                         return_shortkeys=args.shortkey, return_webkeys=args.webkey)
+        text = utils.construct_output_text(data)
+        utils.output(text, args.fileout, ".rinchi")
+    elif args.rinchi2file:
+        data = conversion.rinchi_to_file(args.input, args.rxnfileoutput)
+        text = utils.construct_output_text(data)
+        utils.output(text, args.fileout, '.rxn' if args.rxnfileoutput else 'rdf')
+    elif args.rinchi2key:
+        data = conversion.rinchis_to_keys(args.input, longkey=args.longkey, shortkey=args.shortkey,
+                                          webkey=args.webkey,inc_rinchi=args.include_rinchi)
+        text = utils.construct_output_text(data)
+        utils.output(text, args.fileout, ".rinchi")
+    elif args.rdf2csv:
+        if not args.fileout:
+            parser.error('IOError - Fileout path required')
+        if os.path.isfile(args.fileout): # Append the file out if it exists
+            conversion.rdf_to_csv_append(args.input,args.fileout)
+        else: # Otherwise create a file
+            conversion.rdf_to_csv(args.input, args.fileout, return_rauxinfo=args.rauxinfo, return_longkey=args.longkey, return_shortkey=args.shortkey, return_webkey=args.webkey)
+    elif args.dir2csv:
+        if not args.fileout:
+            parser.error('IOError - Fileout path required')
+        conversion.create_csv_from_directory(args.input,args.fileout,return_rauxinfo=args.rauxinfo, return_longkey=args.longkey, return_shortkey=args.shortkey, return_webkey=args.webkey)
+    elif args.svg:
+        for rinchi in args.input.splitlines():
+            r=Reaction(rinchi)
+            r.generate_svg_image(os.path.splitext(args.fileout)[0])
     else:
-        filetype_args = "rdf"
-
-    filetext_list = conversion.rinchi_to_file(input_path, rxnout=rxnout)
-
-    for filetext in filetext_list:
-        utils.output(filetext, input_name, filetype_args, print_out=not file_out)
+        parser.print_help()
 
 
-def __rinchi2key(input_path, longkey=False, shortkey=False, webkey=False, inc_rinchi=False, file_out=False):
+def add_convert(subparser):
     """
-    Called when -rinchi2key is given as the 1st argument of the script."""
+    Add the arguments for converting the files
 
-    try:
-        input_file, input_name, _ = utils.read_input_file(input_path)
-    except IOError:
-        print('Could not open file "%s".' % input_path)
-        return
+    Args:
+        subparser: The parser or subparser to add the argument to
+    """
 
-    data = conversion.rinchi_to_keys(input_file, longkey, shortkey, webkey, inc_rinchi)
-    key_text = utils.construct_output_text(data)
-    utils.output(key_text, input_name, "rinchi", not file_out)
+    assert isinstance(subparser, argparse.ArgumentParser)
+
+    subparser.add_argument("input", help="The path of the file or folder to be converted, or the input string")
+
+    # Add options for the type of conversion desired
+    action = subparser.add_argument_group('Conversion Type',
+                                          'Choose a type of conversion').add_mutually_exclusive_group(required=True)
+    action.add_argument("--rxn2rinchi", action="store_true", help="RXN to RInChI conversion")
+    action.add_argument("--rdf2rinchi", action="store_true", help="RDF to RInChI conversion")
+    action.add_argument("--rinchi2file", action="store_true",
+                        help="RInChI-to-File conversion. Accepts any file containing a rinchi and optionally rauxinfo. "
+                             "The RAuxInfo must immediately follow the RInChI")
+    action.add_argument("--rinchi2key", action="store_true", help="RInChi to RInChI-Key conversion")
+    action.add_argument('--rdf2csv', action='store_true', help='Create or append a .csv with an rdfile')
+    action.add_argument('--dir2csv', action='store_true', help='Convert a directory of rdfiles to a single csv file')
+    action.add_argument("--svg", action="store_true", help="Convert a RInChI to a collection of .svg files")
+
+    optional = subparser.add_argument_group("Optional Arguments")
+
+    # Add options for all commands
+    opt_all = optional.add_argument_group("All operations")
+    opt_all.add_argument("-o", "--fileout", nargs='?',const='output', default=False, help="Save the output to disk. ")
+    opt_all.add_argument('-i','--filein',action='store_true',help='Assert that the input is a file')
+
+    # Add options for converting to RInChI filetype
+    opt_to_rinchi = optional.add_argument_group("Conversion to RInChI file")
+    opt_to_rinchi.add_argument("-e", "--equilibrium", action="store_true",
+                               help="Force output to be an equilibrium reaction")
+    opt_to_rinchi.add_argument("-ra", "--rauxinfo", action="store_true", help="Generate and return RAuxInfo")
+    opt_to_rinchi.add_argument("-l", "--longkey", action="store_true",
+                               help="Generate and return the Long-RInChIKey along with the RInChI")
+    opt_to_rinchi.add_argument("-s", "--shortkey", action="store_true",
+                               help="Generate and return the Short-RInChIKey along with the RInChI")
+    opt_to_rinchi.add_argument("-w", "--webkey", action="store_true",
+                               help="Generate and return the Web-RInChIKey along with the RInChI")
+
+    # Add options for converting to Keys
+    opt_to_key = optional.add_argument_group("Converting RInChIs to Keys")
+    opt_to_key.add_argument("-r", "--include_rinchi", action="store_true", help="Include original RInChI in the output")
+
+    # Add options for converting to RXN/RDF. n.b the order of the 2nd and 3rd statements IS important
+    opt_to_file = optional.add_argument_group("Converting to a RXN/RDF")
+    opt_to_file.add_argument("-ordf", "--rdfileoutput", action="store_false", dest='rxnfileoutput',
+                             help="Output as RDFile. Otherwise RXN file(s) are produced")
+    opt_to_file.add_argument("-orxn",'--rxnfileoutput',action="store_true",
+                             help="Output as RDFile. Otherwise RXN file(s) are produced")
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="RInChI Conversion tools \n{}".format(__doc__))
-
-    parser.add_argument("input_path", help="The path of the file to be converted")
-
-    action = parser.add_argument_group('Main Arguments',
-                                       'Choose an argument from those below.').add_mutually_exclusive_group(
-        required=True)
-    action.add_argument("-rxn", "--rxn2rinchi", action="store_true", help="RXN to RInChI conversion")
-    action.add_argument("-rdf", "--rdf2rinchi", action="store_true", help="RDF-to-RInChI conversion")
-    action.add_argument("-ri", "--rinchi2file", action="store_true",
-                        help="RInChI-to-File conversion. Accepts any file containing a rinchi and optionally rauxinfo. "
-                             "Only if the rauxinfo is directly after a rinchi is it paired for the conversion process.")
-    action.add_argument("-k", "--rinchi2key", action="store_true", help="RInChi-to-Key conversion")
-
-    optional = parser.add_argument_group("Optional Arguments", "n.b. Some arguments only apply to certain operations.")
-    optional.add_argument("-e", "--equilibrium", action="store_true", help="Force output to be an equilibrium reaction")
-    optional.add_argument("-ra", "--rauxinfo", action="store_true", help="Generate and return RAuxInfo")
-    optional.add_argument("-l", "--longkey", action="store_true",
-                          help="Generate and return the Long-RInChIKey along with the RInChI")
-    optional.add_argument("-s", "--shortkey", action="store_true",
-                          help="Generate and return the Short-RInChIKey along with the RInChI")
-    optional.add_argument("-w", "--webkey", action="store_true",
-                          help="Generate and return the Web-RInChIKey along with the RInChI")
-    optional.add_argument("-f", "--fileout", action="store_true", help="Save the output to disk")
-    optional.add_argument("-i", "--include_rinchi", action="store_true", help="Include original RInChI in the output")
-    optional.add_argument("-ordf", "--rdfileoutput", action="store_true", help="Output as RDFile")
-    optional.add_argument("-orxn", "--rxnoutput", action="store_true", help="Output as RXN file(s)")
+    role = "RInChI Conversion tools"
+    parser = argparse.ArgumentParser(description=role)
+    add_convert(parser)
     args = parser.parse_args()
+    convert_ops(args,parser)
 
-    if args.rxn2rinchi:
-        __rxn2rinchi(args.input_path, args.rauxinfo, args.longkey, args.shortkey, args.webkey, args.equilibrium,
-                     args.fileout)
-    elif args.rdf2rinchi:
-        __rdf2rinchi(args.input_path, args.rauxinfo, args.longkey, args.shortkey, args.webkey, args.equilibrium,
-                     args.fileout)
-    elif args.rinchi2file:
-        __rinchi2file(args.input_path, args.rxnoutput, args.rdfileoutput, args.fileout)
-    elif args.rinchi2key:
-        __rinchi2key(args.input_path, args.longkey, args.shortkey, args.webkey, args.include_rinchi, args.fileout)
-    else:
-        parser.print_help()

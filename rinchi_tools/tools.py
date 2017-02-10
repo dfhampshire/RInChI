@@ -9,7 +9,7 @@ also interfaces with the RInChI v0.03 software as provided by the InChI trust.
 
 """
 
-from rinchi_tools import _inchi_tools, utils
+from rinchi_tools import _external, _inchi_tools, utils
 from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
 
 
@@ -116,7 +116,7 @@ def build_rinchi(l2_inchis=None, l3_inchis=None, l4_inchis=None, direction='', u
 
     # Construct the RInChI.
     rinchi = 'RInChI=%s.%s/%s<>%s%s%s%s' % (
-        RINCHI_VERSION, inchi_version, rinchi_layer2, rinchi_layer3, rinchi_layer4, dir_layer, ns_flag)
+        _external.RINCHI_VERSION, inchi_version, rinchi_layer2, rinchi_layer3, rinchi_layer4, dir_layer, ns_flag)
     return rinchi
 
 
@@ -176,7 +176,7 @@ def build_rinchi_rauxinfo(l2_input=None, l3_input=None, l4_input=None, direction
     # Check that the input layers have the same version info.
     try:
         inchi_version = utils.consolidate(l2_versions + l3_versions + l4_versions)
-    except Error:
+    except ValueError:
         raise VersionError("RInChI can only be made from same-version InChIs.")
 
     # Decide in which order the RInChI layers should be displayed.  Amend no structure flag accordingly.
@@ -229,11 +229,11 @@ def build_rinchi_rauxinfo(l2_input=None, l3_input=None, l4_input=None, direction
 
     # Construct the RInChI.
     rinchi = 'RInChI=%s.%s/%s<>%s%s%s%s' % (
-        RINCHI_VERSION, inchi_version, rinchi_layer2, rinchi_layer3, rinchi_layer4, dir_layer, ns_flag)
+        _external.RINCHI_VERSION, inchi_version, rinchi_layer2, rinchi_layer3, rinchi_layer4, dir_layer, ns_flag)
 
     # Construct RAuxInfo
-    rauxinfo = 'RAuxInfo=%s.%s/%s<>%s%s' % (RINCHI_VERSION, inchi_version, raux_l2, raux_l3, raux_l4)
-    if rauxinfo == "RAuxInfo={}.{}/<>".format(RINCHI_VERSION, inchi_version):
+    rauxinfo = 'RAuxInfo=%s.%s/%s<>%s%s' % (_external.RINCHI_VERSION, inchi_version, raux_l2, raux_l3, raux_l4)
+    if rauxinfo == "RAuxInfo={}.{}/<>".format(_external.RINCHI_VERSION, inchi_version):
         rauxinfo = ""
     return rinchi.strip(), rauxinfo.strip()
 
@@ -260,13 +260,13 @@ def build_rauxinfo(l2_auxinfo, l3_auxinfo, l4_auxinfo):
     # Check that all the auxinfo layers have the same version info.
     try:
         auxinfo_version = utils.consolidate(l2_auxinfo_versions + l3_auxinfo_versions + l4_auxinfo_versions)
-    except Error:
+    except ValueError:
         raise VersionError("RAuxInfo can only be made from same-version AuxInfos")
 
     # Construct and return the RAuxInfo
     if auxinfo_l4:
         auxinfo_l4 = '<>' + auxinfo_l4
-    rauxinfo = 'RAuxInfo=%s.%s/%s<>%s%s' % (RINCHI_VERSION, auxinfo_version, auxinfo_l2, auxinfo_l3, auxinfo_l4)
+    rauxinfo = 'RAuxInfo=%s.%s/%s<>%s%s' % (_external.RINCHI_VERSION, auxinfo_version, auxinfo_l2, auxinfo_l3, auxinfo_l4)
     return rauxinfo
 
 
@@ -285,7 +285,7 @@ def split_rinchi_inc_auxinfo(rinchi, rinchi_auxinfo):
         direction: returns the direction character
         no_structs: returns a list of the numbers of unknown structures in each layer
     """
-    inchi_components = RInChI_Handle.inchis_from_rinchi(rinchi, rinchi_auxinfo)
+    inchi_components = RInChI_Handle().inchis_from_rinchi(rinchi, rinchi_auxinfo)
     direction = inchi_components['Direction']
     reactants = inchi_components['Reactants']
     products = inchi_components['Products']
@@ -308,7 +308,7 @@ def split_rinchi(rinchi):
         direction: returns the direction character
         no_structs: returns a list of the numbers of unknown structures in each layer
     """
-    inchi_components = RInChI_Handle.inchis_from_rinchi(rinchi, "")
+    inchi_components = RInChI_Handle().inchis_from_rinchi(rinchi, "")
     direction = inchi_components['Direction']
     reactants = inchi_components['Reactants']
     products = inchi_components['Products']
@@ -333,7 +333,7 @@ def split_rinchi_only_auxinfo(rinchi, rinchi_auxinfo):
         pdt_inchis_auxinfo: List of product AuxInfos
         agt_inchis_auxinfo: List of agent AuxInfos
     """
-    inchi_components = RInChI_Handle.inchis_from_rinchi(rinchi, rinchi_auxinfo)
+    inchi_components = RInChI_Handle().inchis_from_rinchi(rinchi, rinchi_auxinfo)
     reactants = inchi_components['Reactants']
     products = inchi_components['Products']
     agents = inchi_components['Agents']

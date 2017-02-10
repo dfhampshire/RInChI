@@ -13,57 +13,61 @@ import threading
 import time
 
 
-def output(text, output_name, filetype, print_out=False):
+def output(text, output_path=False, default_extension=False):
     """
     Simple output wrapper to print or write outputs.
 
     Args:
          text: text input
-         output_name: Specifies the filename for the output file
-         filetype: specifies the file extension
+         output_path: Specifies the filename for the output file
+         default_extension: specifies the file extension if none in the outputname
          print_out: print the text to the screen.
 
     """
 
-    # If specified, print the output.
-    if print_out:
-        print(text)
+    # If specified, save to a file.
 
-    # Otherwise, save to a file.
-    else:
+    if output_path:
         # Ensure an output directory exists.
-        output_file = create_output_file(output_name,filetype)
+        output_file = create_output_file(output_path, default_extension)
         output_file.write(text)
         output_file.close()
         os.chdir(os.pardir)
-    return
+    # Otherwise, print the output.
+    else:
+        print(text)
 
 
-def create_output_file(output_name, filetype):
+def create_output_file(output_path, default_extension):
     """
 
     Args:
-        output_name:
-        filetype:
+        output_path:
+        default_extension:
 
     Returns:
 
     """
+    # Assign extension from output name if provided
+    output_path_no_ext, extension = os.path.splitext(output_path)[1]
+    if not extension:
+        extension = default_extension
+
     # Ensure an output directory exists.
     if not os.path.exists('output'):
         os.mkdir('output')
     os.chdir('output')
 
     # Prevent overwriting.
-    if os.path.exists('%s.%s' % (output_name, filetype)):
+    if os.path.exists(str(output_path_no_ext) + str(extension)):
         index = 1
-        while os.path.exists('%s_%d.%s' % (output_name, index, filetype)):
+        while os.path.exists('{}_{}{}'.format(output_path_no_ext, index, extension)):
             index += 1
-        output_name = '%s_%d.%s' % (output_name, index, filetype)
+            output_path = '{}_{}{}'.format(output_path_no_ext, index, extension)
     else:
-        output_name = '%s.%s' % (output_name, filetype)
-    output_file = open(output_name, 'w')
-    return output_file, output_name
+        output_path = '{}{}'.format(output_path_no_ext, extension)
+    output_file = open(output_path, 'w')
+    return output_file
 
 
 def call_command(args):
@@ -159,9 +163,7 @@ def read_input_file(input_path, filetype_check=False, return_file_object=False):
     """
 
     # Set file name variables and read file
-    input_name_inc_ext = input_path.split('/')[-1].split('.')
-    input_name = input_name_inc_ext[0]
-    file_extension = input_name_inc_ext[1]
+    input_name, file_extension = os.path
     if return_file_object:
         data = open(input_path)
     else:
@@ -188,9 +190,9 @@ def construct_output_text(data, header_order=False):
 
     # Set default order for the output sting
     if not header_order or isinstance(header_order, bool):
-        header_order = ['rinchi','rauxinfo','longkey','shortkey','webkey','rxn_data','rxndata','as_reactant','as_product','as_agent']
+        header_order = ['rinchi','rauxinfo', 'longkey', 'shortkey','webkey','rxn_data','rxndata','as_reactant','as_product','as_agent']
 
-    assert isinstance(header_order,list)
+    assert isinstance(header_order, list)
 
     def deconstruct_dict(current_data, the_dict, key_order):
         """
@@ -229,6 +231,8 @@ def construct_output_text(data, header_order=False):
         data_string += deconstruct_dict(data_string,data,header_order)
     elif isinstance(data,list) or isinstance(data,tuple):
         data_string += deconstruct_list(data_string,data,header_order)
+    else:
+        data_string = data
 
     return data_string
 

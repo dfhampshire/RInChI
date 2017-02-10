@@ -19,7 +19,7 @@ from heapq import nsmallest
 
 from scipy.spatial import distance
 
-from rinchi_tools import v02_tools
+from rinchi_tools import conversion, v02_tools
 from rinchi_tools.reaction import Reaction
 from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
 
@@ -380,7 +380,7 @@ def rdf_to_sql(rdfile, db_filename, table_name, columns=None):
     _pragma_sql_env(cursor)
 
     # Open the rdfile and convert its contents to a dict of rinchis and rinchi data
-    rdf_data = rinchi_tools.conversion.convert_rdf_to_dict(rdfile, columns)
+    rdf_data = conversion.rdf_to_rinchis(rdfile,columns=columns)
 
     # Transform in place the dicts storing rxn info to their string representations
     for i in rdf_data.keys():

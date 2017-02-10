@@ -13,7 +13,7 @@ from collections import Counter
 from numpy import all, array
 from scipy.sparse import csr_matrix
 
-from rinchi_tools import tools, utils
+from rinchi_tools import _inchi_tools, tools, utils
 from rinchi_tools.molecule import Molecule
 from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
 
@@ -166,7 +166,7 @@ class Reaction:
             print(i_err)
             out.append(i_out)
 
-        for i in range(len(out)):
+        for i, item in enumerate(out):
             with open(outname + str(i) + ".svg", "w") as text:
                 text.write(out[i])
 
@@ -322,3 +322,76 @@ class Reaction:
                 return False
 
         return True
+
+    def stereo_change(self, wd=False, sp2=True, sp3=True):
+        """
+        Determine whether a reaction creates or destroys stereochemistry. Old Methold
+
+        Args:
+            wd: Whether only well-defined stereocentres count.
+            sp2: Whether to count sp2 stereocentres.
+            sp3: Whether to count sp3 stereocentres.
+
+        Returns:
+            The number of stereocentres created by a reaction stored as a value in a dictionary
+        """
+
+        # Count the stereocentres in layer 2.
+        reactant_stereocentres = 0
+        reactant_stereo_mols = 0
+        product_stereocentres = 0
+        product_stereo_mols = 0
+
+        for inchi in self.reactant_inchis:
+            sc_change, sm_change = _inchi_tools.count_centres(inchi, wd, sp2, sp3)
+            reactant_stereocentres += sc_change
+            reactant_stereo_mols += sm_change
+        for inchi in self.product_inchis:
+            sc_change, sm_change = _inchi_tools.count_centres(inchi, wd, sp2, sp3)
+            product_stereocentres += sc_change
+            product_stereo_mols += sm_change
+
+        # Calculate the change.
+        stereo_changes = {'stereo': product_stereocentres - reactant_stereocentres}
+        if self.direction == '=' or self.direction == '':
+            stereo_changes['stereo'] = abs(stereo_changes['stereo'])
+        return Counter(stereo_changes)
+
+    def ring_change(self):
+        """
+        Determine how the number of rings changes in a reaction. Old method
+
+        Returns:
+            ring_change: The number of rings created by the reaction.  If rings are destroyed, this will be negative.
+                If the reaction is an equilibrium or direction is unspecified, the value of ring change will be the
+                absolute (i.e.  positive) value.
+            cyclic_mol_change
+        """
+        def layer_ring_counter(layer):
+            """
+            Counts the rings in each of the layers
+
+            Args:
+                layer: A list of InChIs in a layer
+
+            Returns:
+                dictionary containing the changes in cyclic ring and molecule populations
+            """
+            layer_rings = 0
+            cyclic_mols = 0
+            for inchi in layer:
+                inchi_rings = _inchi_tools.count_rings(inchi)
+                layer_rings += inchi_rings
+                if inchi_rings:
+                    cyclic_mols += 1
+            return layer_rings, cyclic_mols
+
+        reactant_rings, reactant_cyclics = layer_ring_counter(self.reactant_inchis)
+        product_rings, product_cyclics = layer_ring_counter(self.product_inchis)
+        changes = {}
+        changes['rings'] = product_rings - reactant_rings
+        changes['molecules'] = product_cyclics - reactant_cyclics
+        if self.direction == '=' or self.direction == '':
+            changes['molecules'] = abs(changes['molecules'])
+            changes['rings'] = abs(changes['rings'])
+        return Counter(changes)

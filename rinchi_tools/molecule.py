@@ -9,11 +9,10 @@ This module contains the Molecule class and associated functions
 
 import copy
 import re
-from collections import deque
+from collections import Counter, deque
 from itertools import zip_longest
 
 from numpy.linalg import matrix_rank
-from utils import Counter
 
 from rinchi_tools import _inchi_tools
 from rinchi_tools.atom import Atom
