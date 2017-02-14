@@ -7,6 +7,7 @@ This module contains the Reaction class and associated functions
     D. Hampshire 2017 - Significant restructuring of the class to gain more consistent and less verbose code.
 """
 
+import itertools
 import tempfile
 from collections import Counter
 
@@ -180,7 +181,7 @@ class Reaction:
         Counter object
 
         Args:
-            func: The class function to calculate the parameter
+            func: The class function to calculate the parameter, which returns a Counter object
             args: Args if required for the function
             loop: Whether or not the property to count is a loop i.e. ABCD = BCDA = DCBA
 
@@ -204,22 +205,6 @@ class Reaction:
                 count_products = count_products + func(mol)
 
         count_products.subtract(count_reactants)
-
-        # Whether or not the property to count is a loop i.e. ABCD = BCDA = DCBA
-        if loop:
-            count_products_condensed = Counter()
-            for i in count_products:
-                for j in count_products_condensed:
-                    if len(i) == len(j):
-                        # Checking whether a is in 2 * b is equivalent to checking whether a and b are cyclic
-                        # permutations of each other: ABC is contained within 2 * BCA == BCABCA whereas no non-cyclic
-                        # permutations are contained. Reverse cycle is also possible
-                        if i in 2 * j or i[::-1] in 2 * j:
-                            count_products_condensed[j] += count_products[j]
-                            break
-                else:
-                    count_products_condensed[j] = count_products[j]
-            count_products = count_products_condensed
 
         return count_products
 
@@ -281,7 +266,21 @@ class Reaction:
         """
         return set(self.change_across_reaction(Molecule.get_formula).values()) == {0}
 
-    def detect_reaction(self, hyb_i=None, val_i=None, rings_i=None, formula_i=None):
+    def has_ring(self,ring):
+        for m in itertools.chain(self.reactants,self.products):
+            assert isinstance(m, Molecule)
+            m.calculate_rings_by_atoms()
+            for name, variations in m.ring_permutations.items():
+                if ring.upper() in variations:
+                    return True
+        return False
+
+    def has_isotopic_inchi(self):
+        for m in itertools.chain(self.reactants,self.products):
+            assert isinstance(m, Molecule)
+            return m.has_isotopic_layer()
+
+    def detect_reaction(self, hyb_i=None, val_i=None, rings_i=None, formula_i=None, isotopic=False, ring_present=None):
         """
         Detect if a reaction satisfies certain conditions.  Allows searching for reactions based on ring changes,
         valence changes, formula changes, hybridisation of C atom changes.
@@ -292,6 +291,8 @@ class Reaction:
             val_i: The valence change(s) desired
             rings_i: The ring change(s) desired
             formula_i: The formula change(s) desired
+            isotopic: Whether to look for reactions involving an isotopic InChI
+            ring_present: Look for a ring in the reaction
 
         Returns:
             True if the given reaction satisfies all the conditions, otherwise False.
@@ -320,6 +321,12 @@ class Reaction:
         if rings_i:
             rings = self.change_across_reaction(Molecule.get_ring_count)
             if not all([entry in rings.items() for entry in rings_i.items()]):
+                return False
+        if ring_present is not None:
+            if not self.has_ring(ring_present):
+                return False
+        if isotopic:
+            if not self.has_isotopic_inchi():
                 return False
 
         return True

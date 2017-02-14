@@ -27,3 +27,5 @@ LIB_RINCHI_PATH = path + "{}rinchi-lib-1".format(sep) + lib_file
 
 # Set RInChI Version
 RINCHI_VERSION = '0.03'
+
+RINCHI_DATABASE = os.path.abspath(os.path.join(__file__,"../..")) + '{}rinchi.db'.format(sep)

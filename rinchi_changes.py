@@ -59,7 +59,7 @@ def changes_ops(args, parser):
         elif args.hybrid:
             print(r.change_across_reaction(Molecule.get_hybrid_count))
         elif args.ringcountelements:
-            print(r.change_across_reaction(Molecule.get_ring_count_inc_elements, loop=True))
+            print(r.change_across_reaction(Molecule.get_ring_count_inc_elements))
         elif args.ringcountold:
             print(r.ring_change())
         elif args.stereoold:
@@ -81,47 +81,46 @@ def changes_ops(args, parser):
                     ringcount = r.change_across_reaction(Molecule.get_ring_count)
                     if ringcount and args.list:
                         print(ringcount)
-                    elif ringcount:
+                    if ringcount:
                         master_counter['ringcount'].update(Hashable(ringcount))
                 elif args.ringcountelements:
                     # Count the change in rings returning the change in elemental structure of the rings e.g.  (
                     # CCCCCN : 1) would indicate the reaction forms a pyridine ring
-                    ringcountelements = r.change_across_reaction(Molecule.get_ring_count_inc_elements, args.args2,
-                                                                 loop=True)
+                    ringcountelements = r.change_across_reaction(Molecule.get_ring_count_inc_elements)
                     if ringcountelements and args.list:
                         print(ringcountelements)
-                    elif ringcountelements:
+                    if ringcountelements:
                         master_counter['ringcountelements'].update(Hashable(ringcountelements))
                 elif args.formula:
                     formula = r.change_across_reaction(Molecule.get_formula)
                     if formula and args.list:
                         print(formula)
-                    elif formula:
+                    if formula:
                         master_counter['ringcount'].update(Hashable(formula))
                 elif args.valence:
                     valence = r.change_across_reaction(Molecule.get_valence_count)
                     if valence and args.list:
                         print(valence)
-                    elif valence:
+                    if valence:
                         master_counter['ringcount'].update(Hashable(valence))
                 elif args.hybrid:
                     hybrid = r.change_across_reaction(Molecule.get_hybrid_count)
                     if hybrid and args.list:
                         print(hybrid)
-                    elif hybrid:
+                    if hybrid:
                         master_counter['ringcount'].update(Hashable(hybrid))
                 elif args.ringcountold:
                     ringcountold = r.ring_change()
                     if ringcountold and args.list:
                         print(ringcountold)
-                    elif ringcountold:
+                    if ringcountold:
                         master_counter['ringcount'].update(Hashable(ringcountold))
                 elif args.stereoold:
                     stereoold = r.stereo_change(args.stereoold.get('wd', None), args.stereoold.get('sp2', None),
                                                 args.stereoold.get('sp3', None))
                     if stereoold and args.list:
                         print(stereoold)
-                    elif stereoold:
+                    if stereoold:
                         master_counter['ringcount'].update(Hashable(stereoold))
                 else:
                     parser.print_help()

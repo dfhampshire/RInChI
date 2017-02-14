@@ -160,7 +160,7 @@ def _sql_search(cursor, table_name, columns=None, lookup_value=None, field=None,
         comparator = "="
 
     # impose limit if required
-    if limit is not None:
+    if limit is not None and limit != 0:
         limiter = " LIMIT {}".format(limit)
     else:
         limiter = ""
@@ -233,12 +233,33 @@ def _flat_file_to_search_db(path, delim="$"):
     return cursor
 
 
+def _string_finder(string, cursor, table_name, limit, field='rinchi'):
+    """
+    Search for a string in a database field
+
+    Args:
+        string:
+        cursor:
+        table_name:
+        limit:
+
+    Returns:
+        A generator object of rinchis
+    """
+
+    # Remove header part of inchi
+    if string.startswith("InChI="):
+        string = string.split("/", 1)[1]
+    query = "%" + string + "%"
+    cursor = _sql_search(cursor, table_name, ["rinchi"], query, field, True, limit)
+
+    return (i[0] for i in cursor.fetchall())
+
 # Searching SQL databases
 #########################
 
-# TODO sort out searching algorithm
 
-def sql_key_to_rinchi(key, db_filename, table_name, keytype="L"):
+def sql_key_to_rinchi(key, db_filename, table_name, keytype="L", column=None):
     """
     Returns the RInChI matching the given Long RInChI key for a given database
 
@@ -247,6 +268,7 @@ def sql_key_to_rinchi(key, db_filename, table_name, keytype="L"):
         db_filename: The database in which to search
         table_name: The table in which to search for the key
         keytype: The key type to seach for.  Defaults to the long key
+        column: Optional column to look for the key in.
 
     Raises:
         ValueError: The keytype argument must be one of "L" , "S" or "W"
@@ -259,46 +281,31 @@ def sql_key_to_rinchi(key, db_filename, table_name, keytype="L"):
     cursor = db.cursor()
 
     if keytype == "L":
-        field = "key"
+        field = "longkey"
     elif keytype == "S":
         field = "shortkey"
     elif keytype == "W":
         field = "webkey"
+    elif column is not None:
+        field = column
     else:
-        raise ValueError('The keytype argument must be one of "L" , "S" or "W"')
-    cursor = _sql_search(cursor, table_name, ["rinchi"], key, field, )
+        raise ValueError('The keytype argument must be one of "L" , "S" or "W" or the column parameter must be given')
+    cursor = _sql_search(cursor, table_name, ["rinchi"], key, field)
     rinchi = cursor.fetchone()[0]
     db.close()
     return rinchi
 
 
-def inchi_finder(inchi, cursor, table_name, limit):
-    """
-    Searches for an inchi within a rinchi database.
-    Approx.  20x faster than the version in rinchi_tools.analyse
-
-    Args:
-        cursor:
-        limit:
-        inchi: The InChI to search for
-        table_name: the database to search in
-    """
-    query = "%" + "/".join(inchi.split("/")[1:]) + "%"
-    cursor = _sql_search(cursor, table_name, ["rinchi"], query, "rinchi", True, limit)
-
-    return (i[0] for i in cursor.fetchall())
-
-
-def search_master(inchi, database=None, table_name=None, is_sql_db=False, hyb=None, val=None, rings=None, formula=None,
-                  reactant=False, product=False, agent=False, limit=1000):
+def search_rinchis(search_term, db=None, table_name=None, is_sql_db=False, hyb=None, val=None, rings=None, formula=None,
+                   ringelements=None, isotopic=None, reactant=False, product=False, agent=False, number=1000):
     """
     Search for an Inchi within a RInChi database. Includes all options
 
     Args:
-        database:
+        db:
         is_sql_db:
-        limit:
-        inchi: The InChI to search for
+        number:
+        search_term: The term to search for
         table_name: the table to search in
 
         All args following are dicts of the format {property:count,property2:count2,...}
@@ -309,6 +316,8 @@ def search_master(inchi, database=None, table_name=None, is_sql_db=False, hyb=No
         reactant: Search for InChIs in the products
         product: Search for InChIs in the reactants
         agent: Search for InChIs in the agents
+        ringelements:
+        isotopic:
 
     Returns:
         A dictionary of lists where an inchi was found
@@ -321,7 +330,9 @@ def search_master(inchi, database=None, table_name=None, is_sql_db=False, hyb=No
         rings = {}
     if formula is None:
         formula = {}
-    if not any((hyb, rings, val, formula)):
+    if not any((hyb, rings, val, formula, True if isotopic is not None else False,
+                True if ringelements is not None else False)):
+        # Skip detection if not required
         skip = True
     else:
         skip = False
@@ -333,42 +344,95 @@ def search_master(inchi, database=None, table_name=None, is_sql_db=False, hyb=No
         product = True
         agent = True
 
-    if is_sql_db:  # Search existing database
-        db = sqlite3.connect(database)
+    if is_sql_db:
+        # Search existing db
+        db = sqlite3.connect(db)
         cursor = db.cursor()
-        results = inchi_finder(inchi, cursor, table_name, limit)
-    else:  # Create a temporary database from a flat file
-        cursor = _flat_file_to_search_db(database)
-        results = inchi_finder(inchi, cursor, table_name, limit)
+        results = _string_finder(search_term, cursor, table_name, number)
+    else:
+        # Create a temporary db from a flat file
+        cursor = _flat_file_to_search_db(db)
+        results = _string_finder(search_term, cursor, table_name, number)
 
     result_dict = {'as_reactant': [], 'as_product': [], 'as_agent': []}
 
     for rinchi in results:
         r = Reaction(rinchi)
-        if r.detect_reaction(hyb_i=hyb, val_i=val, rings_i=rings, formula_i=formula) or skip:
+        if r.detect_reaction(hyb_i=hyb, val_i=val, rings_i=rings, formula_i=formula, isotopic=isotopic,
+                             ring_present=ringelements) or skip:
             if reactant:
-                if inchi in r.reactant_inchis:
+                if any(search_term in s for s in r.reactant_inchis):
                     result_dict['as_reactant'].append(rinchi)
             if product:
-                if inchi in r.product_inchis:
+                if any(search_term in s for s in r.product_inchis):
                     result_dict['as_product'].append(rinchi)
             if agent:
-                if inchi in r.agent_inchis:
+                if any(search_term in s for s in r.agent_inchis):
                     result_dict['as_agent'].append(rinchi)
 
     return result_dict
 
 
+def search_master(search_term, db=None, table_name=None, is_sql_db=False, hyb=None, val=None, rings=None, formula=None,
+                  reactant=False, product=False, agent=False, number=1000, keytype=None, ringtype=None, isotopic=None):
+    """
+    Search for an string within a RInChi database. Includes all options.
+
+    Args:
+        db:
+        is_sql_db:
+        number: Maximum number of initial results
+        search_term: The term to search for
+        table_name: the table to search in
+        reactant: Search for InChIs in the products
+        product: Search for InChIs in the reactants
+        agent: Search for InChIs in the agents
+        keytype: The type of key to look for. If not found, then the function will check if the search term is a key,
+        and try to parse the Key regardless. Otherwise, it assumes to look in the RInChIs
+
+        All args following are dicts of the format {property:count,property2:count2,...}
+        hyb: The hybridisation changes(s) desired
+        val: The valence change(s) desired
+        rings: The ring change(s) desired
+        formula: The formula change(s) desired
+
+    Returns:
+        A dictionary of lists where an inchi was found
+    """
+    search_term = str(search_term)
+    if keytype is None:
+        if search_term.startswith(('Short-RInChIKey','Long-RInChIKey','Web-RInChIKey')):
+            keytype = search_term[0]
+    if keytype is not None:
+        result_dict = {'rinchi': [sql_key_to_rinchi(search_term, db, table_name, keytype)]}
+    else:
+        result_dict = search_rinchis(search_term,
+                                     db=db,
+                                     table_name=table_name,
+                                     isotopic=isotopic,
+                                     is_sql_db=is_sql_db,
+                                     hyb=hyb,
+                                     val=val,
+                                     rings=rings,
+                                     ringelements=ringtype,
+                                     formula=formula,
+                                     reactant=reactant,
+                                     product=product,
+                                     agent=agent,
+                                     number=number)
+    return result_dict
+
 # Converting to SQL databases
 #############################
 
+
 def rdf_to_sql(rdfile, db_filename, table_name, columns=None):
     """
-    Creates or adds to an SQLite database the contents of a given RDFile.
+    Creates or adds to an SQLite db the contents of a given RDFile.
 
     Args:
-        rdfile: The RD file to add to the database
-        db_filename: The file name of the SQLite database
+        rdfile: The RD file to add to the db
+        db_filename: The file name of the SQLite db
         table_name: The name of the table to create or append
         columns: The columns to add.  If None, the default is [rinchi,rauxinfo,longkey,shortkey,webkey]
     """
@@ -402,11 +466,11 @@ def rdf_to_sql(rdfile, db_filename, table_name, columns=None):
 
 def csv_to_sql(csv_name, db_filename, table_name):
     """
-    Creates or appends an SQL database with values from a CSV file
+    Creates or appends an SQL db with values from a CSV file
 
     Args:
         csv_name: The CSV filename
-        db_filename: The SQLite3 database
+        db_filename: The SQLite3 db
         table_name: The name of the table to create or append
     """
     db = sqlite3.connect(db_filename)
@@ -427,15 +491,15 @@ def csv_to_sql(csv_name, db_filename, table_name):
 def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=False, v03_rinchi=False, v03_rauxinfo=False,
                     v03_longkey=False, v03_shortkey=False, v03_webkey=False):
     """
-    Converts a database of v02 rinchis into a database of v03 rinchis and associated information.  N.B keys for v02
-    are not required as new keys must be generated for the database.  Because of the nature of this problem,
-    this is achieved by creating a new database for the processed data and then transferring back to the original
+    Converts a db of v02 rinchis into a db of v03 rinchis and associated information.  N.B keys for v02
+    are not required as new keys must be generated for the db.  Because of the nature of this problem,
+    this is achieved by creating a new db for the processed data and then transferring back to the original
 
     Args:
-         db_filename: The database filename to which the changes should be made.  The new database is added as a table.
+         db_filename: The db filename to which the changes should be made.  The new db is added as a table.
          table_name: the name for the new v03 rinchi table.
-         v02_rinchi: The name of the v02 rinchi column.  Defaults to False (No rinchi in database).
-         v02_rauxinfo: The name of the v02 rauxinfo column.  Defaults to False (No rauxinfos in database).
+         v02_rinchi: The name of the v02 rinchi column.  Defaults to False (No rinchi in db).
+         v02_rauxinfo: The name of the v02 rauxinfo column.  Defaults to False (No rauxinfos in db).
          v03_rinchi: The name of the v03 new rinchi column.  Defaults to False (No rinchi column will be created).
          v03_rauxinfo: The name of the v03 new rinchi column.  Defaults to False (No rauxinfo column will be created).
          v03_longkey: The name of the v03 new rinchi column.  Defaults to False (No longkey column will be created).
@@ -444,7 +508,7 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
 
     """
 
-    # Create database connections including for a temporary database and setup logging
+    # Create db connections including for a temporary db and setup logging
     os.remove("conv0203.log")
     logging.basicConfig(filename='conv0203.log', level=logging.DEBUG)
     logging.info("\n========\nStarting Conversion Process\n========")
@@ -496,14 +560,14 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
     depop_args = [_depopulate_queue, [columns, table_name]]
     _run_queue(1000, pop_args, depop_args)
 
-    # Transfer table from temporary database to new database
+    # Transfer table from temporary db to new db
     _transfer_table("rinchi_temp.db", db_filename, table_name)
     logging.info("Finished conversion in {} seconds".format(time.time() - start_time))
 
 
 def gen_rauxinfo(db_filename, table_name):
     """
-    Updates a table in a database to give rauxinfos where the column is null
+    Updates a table in a db to give rauxinfos where the column is null
 
     Args:
         db_filename: Database filename
@@ -533,11 +597,11 @@ def gen_rauxinfo(db_filename, table_name):
 
 def compare_fingerprints(search_term, db_filename, table_name):
     """
-    Search database for top 10 closest matches to a RInChI by fingerprinting method.  Sent to stdout.
+    Search db for top 10 closest matches to a RInChI by fingerprinting method.  Sent to stdout.
 
     Args:
         search_term: A RInChi or Long-RInChIKey to search with
-        db_filename: the database containing the fingerprints
+        db_filename: the db containing the fingerprints
         table_name: The table containing the RInChI fingerprints
 
     """
@@ -573,15 +637,15 @@ def compare_fingerprints(search_term, db_filename, table_name):
 
 def recall_fingerprints(lkey, db_filename, table_name):
     """
-    Recall a fingerprint from the database
+    Recall a fingerprint from the db
 
     Args:
         lkey: The long key to search for
-        db_filename: The database filename
+        db_filename: The db filename
         table_name: The table name which stores the fingerprints
 
     Returns:
-        A numpy array the reaction fingerprint as stored in the reaction database
+        A numpy array the reaction fingerprint as stored in the reaction db
     """
     db = sqlite3.connect(db_filename)
     cursor = db.cursor()
@@ -599,16 +663,16 @@ def update_fingerprints(db_filename, table_name, fingerprint_table_name):
     NOT CURRENTLY WORKING.  NEEDS UPDATING TO USE MULTITHREADING FOR USABLE PERFORMANCE
 
     Calculates the reaction fingerprint as defined in the reaction Reaction class, and stores it in the given
-    database in a compressed form
+    db in a compressed form
 
     Args:
-        db_filename: the database filename to update
+        db_filename: the db filename to update
         table_name: The table containing the RInChIs
         fingerprint_table_name: The table to contain the fingerprint
     """
     db = sqlite3.connect(db_filename)
 
-    # Poor method.  A database cannot have two cursors pointing at it.
+    # Poor method.  A db cannot have two cursors pointing at it.
     cursor = db.cursor()
     cursor2 = db.cursor()
 
@@ -644,12 +708,12 @@ def update_fingerprints(db_filename, table_name, fingerprint_table_name):
 
 def _populate_queue(q, db_filename, table_name, source_columns, processing_function=None, processing_args=None):
     """
-    Populates a queue with items processed from a database using a processing function provided.  If no processing
+    Populates a queue with items processed from a db using a processing function provided.  If no processing
     function is provided then each row is simply placed into the queue.
 
     Args:
         q: A queue object instance
-        db_filename: The filename of the database from which to populate the queue
+        db_filename: The filename of the db from which to populate the queue
         table_name: The name of the table from which to populate the queue
         source_columns: A list of columns to select from the table
         processing_function: A function which takes a row and outputs a row for the new table

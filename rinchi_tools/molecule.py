@@ -32,9 +32,11 @@ class Molecule:
         self.formula_dict = {}
         self.rings = []
         self.ring_count = None
+        self.ring_count_by_atoms = None
         self.molecular_graph = None
         self.fingerprint = None
         self.edge_list = None
+        self.ring_permutations = None  # Stores the ring permutations for easy ring searching
 
         # Flag for whether a ring search has taken place, avoids unnecessary computation
         self.has_searched_rings = False
@@ -57,7 +59,7 @@ class Molecule:
         Splits an inchi with multiple disconnected components into a list of connected inchis
 
         Args:
-            inchi: A inchi (usually composite)
+            inchi: A inchi (usually composite
 
         Returns:
             A list of simple inchis within the composite inchi argument
@@ -692,7 +694,17 @@ class Molecule:
         else:
             self.ring_count = Counter()
 
-    def contains_ring_by_atoms(self, atoms):
+    def _generate_permutation_sets(self, ring):
+        ring_perms = []
+        ring_d = deque(ring)
+        for _ in range(2):
+            for _ in range(len(ring)):
+                ring_perms.append("".join(ring_d))
+                ring_d.rotate()
+            ring_d.reverse()
+        return ring_perms[0], set(ring_perms)
+
+    def calculate_rings_by_atoms(self):
         """
         Count the rings by atom list eg.  "CCCCCN" will return the number of pyridine fragments in the molecule.
 
@@ -710,28 +722,30 @@ class Molecule:
 
         count = Counter()
 
-        # Collections.deque is used to store the atom lists - supports fast cyclic permutation
-        atom_list = deque(atoms.rstrip())
-
+        all_perms_sets = {}
         # For each ring in the molecule
-        for ring in self.rings:
 
-            # For each cyclic permutation of the input string
-            ring_deque = deque([self.atoms[j].element for j in ring])
-            for i in range(len(atom_list)):
-                if ring_deque == atom_list:
-                    count[atoms] += 1
-                    break
-                atom_list.rotate(1)
-            else:
-                # If no match found, check again with the input string reversed
-                atom_list.reverse()
-                for i in range(len(atom_list)):
-                    if ring_deque == atom_list:
-                        count[atoms] += 1
+        rings = []
+        for ring in self.rings:
+            rings.append("".join([self.atoms[a].element for a in ring]))
+
+        for ring in rings:
+            if all_perms_sets:
+                for ring_set, values in all_perms_sets.items():
+                    if ring in values:
+                        count[ring_set] += 1
                         break
-                    atom_list.rotate(1)
-        return count
+                else:
+                    name, data = self._generate_permutation_sets(ring)
+                    count[name] += 1
+                    all_perms_sets.update({name: data})
+            else:
+                name, data = self._generate_permutation_sets(ring)
+                count[name] += 1
+                all_perms_sets.update({name: data})
+
+        self.ring_permutations = all_perms_sets
+        self.ring_count_by_atoms = count
 
     def get_ring_count(self):
         """
@@ -793,16 +807,8 @@ class Molecule:
         Returns:
             a Counter containing the number of rings of each size and the elements contained by a ring
         """
-        if self.atoms:
-            self.calculate_rings()
-            self.set_atomic_elements()
-            rings = []
-            for ring in self.rings:
-                rings.append("".join([self.atoms[a].element for a in ring]))
-
-            return Counter(rings)
-        else:
-            return Counter()
+        self.calculate_rings_by_atoms()
+        return self.ring_count_by_atoms
 
     def get_formula(self):
         """
