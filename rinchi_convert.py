@@ -83,8 +83,7 @@ def add_convert(subparser):
     subparser.add_argument("input", help="The path of the file or folder to be converted, or the input string")
 
     # Add options for the type of conversion desired
-    action = subparser.add_argument_group('Conversion Type',
-                                          'Choose a type of conversion').add_mutually_exclusive_group(required=True)
+    action = subparser.add_argument_group('Conversion Type').add_mutually_exclusive_group(required=True)
     action.add_argument("--rxn2rinchi", action="store_true", help="RXN to RInChI conversion")
     action.add_argument("--rdf2rinchi", action="store_true", help="RDF to RInChI conversion")
     action.add_argument("--rinchi2file", action="store_true",
