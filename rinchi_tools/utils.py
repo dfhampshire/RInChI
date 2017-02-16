@@ -171,7 +171,7 @@ def read_input_file(input_path, filetype_check=False, return_file_object=False):
         data = open(input_path).read()
     if filetype_check:
         if not file_extension == filetype_check:
-            if not file_extension in filetype_check:
+            if file_extension not in filetype_check:
                 raise IOError("File type is incorrect (wrong extension)")
 
     return data, input_name, file_extension

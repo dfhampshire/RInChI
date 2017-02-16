@@ -1,1 +1,0 @@
-Ensure that the default path variable in the rinchi_lib.py interfacing file is set to the location of the librinchi.so.1.0.0 library file.

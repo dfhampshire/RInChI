@@ -694,10 +694,11 @@ class Molecule:
         else:
             self.ring_count = Counter()
 
-    def _generate_permutation_sets(self, ring):
+    @staticmethod
+    def _generate_permutation_sets(ring):
         ring_perms = []
         ring_d = deque(ring)
-        for _ in range(2):
+        for __ in range(2):
             for _ in range(len(ring)):
                 ring_perms.append("".join(ring_d))
                 ring_d.rotate()
@@ -707,9 +708,6 @@ class Molecule:
     def calculate_rings_by_atoms(self):
         """
         Count the rings by atom list eg.  "CCCCCN" will return the number of pyridine fragments in the molecule.
-
-        Args:
-            atoms: The atoms in the ring.
 
         Returns:
             number of rings

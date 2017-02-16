@@ -559,6 +559,7 @@ def rdf_to_csv_append(rdf, csv_file):
                           return_webkeys=return_webkey, return_rxndata=return_rxninfo)
 
     # Convert both lists of rinchis into sets - unique, does not preserve order
+    assert all(isinstance(i, dict) for i in data)
     old_rinchis = set(old_rinchis)
     new_rinchis = set(entry['rinchi'] for entry in data)
 
@@ -592,6 +593,7 @@ def create_csv_from_directory(root_dir, outname, return_rauxinfo=False, return_l
 
     # Flag for whether the database should be created or appended
     database_has_started = False
+    db_name = ''
 
     # Iterate over all files in the roo directory
     for root, folders, files in os.walk(root_dir):

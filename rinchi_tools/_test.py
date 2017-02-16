@@ -7,7 +7,10 @@ This module tests the module functions.  Not very user friendly...
 
 """
 
-from rinchi_tools import _inchi_tools, _old_analysis, conversion, rinchi_lib, tools
+# TODO write better testing script
+
+from rinchi_tools import _inchi_tools, conversion, rinchi_lib, tools
+from rinchi_tools.archive import _old_analysis
 
 rinchi_interface = rinchi_lib.RInChI()
 

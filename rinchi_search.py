@@ -10,7 +10,7 @@ Searches an SQL database for InChIs.
 import argparse
 import json
 
-from rinchi_tools import database, utils
+from rinchi_tools import _external, database, utils
 
 
 def add_search(subparser):
@@ -23,18 +23,18 @@ def add_search(subparser):
 
     # Add main search arguments
     subparser.add_argument("search_term", help="The search_term to find")
-    subparser.add_argument("file", default="../rinchi.db", help="The database or flat file to search")
+    subparser.add_argument("file", default=_external.RINCHI_DATABASE, help="The database or flat file to search")
     subparser.add_argument("table_name", nargs="?", default=False,
                            help="The table name for the search to be performed on. Providing this argument asserts "
                                 "that the input file is an SQL database")
 
     # Add query options
     query = subparser.add_argument_group("Action").add_mutually_exclusive_group(required=True)
-    query.add_argument('-k', '--key', nargs='?',const='L',choices=['L','S','W'],
+    query.add_argument('-k', '--key', nargs='?', const='L', choices=['L', 'S', 'W'],
                        help='Returns the RInChI corresponding to a given key. Optionally accepts an argument denoting '
                             'the type of key to lookup ')
     query.add_argument('-i', '--inchi', action='store_true',
-                        help='Returns all RInChIs containing the given InChI with filters')
+                       help='Returns all RInChIs containing the given InChI with filters')
     query.add_argument('-l', '--layer', action='store_true', help='Search for a component of an InChI in a database')
 
     # Add data input/output options
@@ -58,30 +58,30 @@ def add_search(subparser):
     filters.add_argument('-rt', '--ringelements', type=json.loads,
                          help="Search for reactions containing a certain ring type")
     filters.add_argument('-iso', "--isotopic", type=json.loads,
-                        help="Search for reactions containing defined isotopic layers")
+                         help="Search for reactions containing defined isotopic layers")
 
     # Where to search for the InChI
     filters.add_argument("-rct", "--reactant", action="store_true", help="Search for the InChI in the reactants")
     filters.add_argument("-pdt", "--product", action="store_true", help="Search for the InChI in the products")
     filters.add_argument("-agt", "--agent", action="store_true", help="Search for the InChI in the agents")
-    filters.add_argument("-n", "--number", default=1000,type=int, help="Limit the number of initial search results. A value of 0 means no limit")
+    filters.add_argument("-n", "--number", default=1000, type=int,
+                         help="Limit the number of initial search results. A value of 0 means no limit")
 
 
-def search_ops(args, parser):
+def search_ops(args):
     """
 
     Args:
         args:
-        parser:
 
     Returns:
 
     """
     if args.table_name:
         args.is_database = True
-    results = database.search_master(args.search_term, args.file, args.table_name, args.is_database, args.hybridisation, args.valence,
-                                     args.rings, args.formula, args.reactant, args.product, args.agent, args.number, args.key,
-                                     args.ringelements, args.isotopic)
+    results = database.search_master(args.search_term, args.file, args.table_name, args.is_database, args.hybridisation,
+                                     args.valence, args.rings, args.formula, args.reactant, args.product, args.agent,
+                                     args.number, args.key, args.ringelements, args.isotopic)
     if args.output_format == "list":
         print(utils.construct_output_text(results))
     if args.output_format == "file":
@@ -99,4 +99,4 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=role)
     add_search(parser)
     args = parser.parse_args()
-    search_ops(args, parser)
+    search_ops(args)

@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
     # Direct to the appropriate parser command
     if args.command == 'search':
-        rinchi_search.search_ops(args, search_parser)
+        rinchi_search.search_ops(args)
     elif args.command == 'convert':
         rinchi_convert.convert_ops(args, convert_parser)
     elif args.command == 'db':

@@ -19,7 +19,7 @@ from heapq import nsmallest
 
 from scipy.spatial import distance
 
-from rinchi_tools import conversion, v02_tools
+from rinchi_tools import _external, conversion, v02_tools
 from rinchi_tools.reaction import Reaction
 from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
 
@@ -255,6 +255,7 @@ def _string_finder(string, cursor, table_name, limit, field='rinchi'):
 
     return (i[0] for i in cursor.fetchall())
 
+
 # Searching SQL databases
 #########################
 
@@ -374,11 +375,13 @@ def search_rinchis(search_term, db=None, table_name=None, is_sql_db=False, hyb=N
 
 
 def search_master(search_term, db=None, table_name=None, is_sql_db=False, hyb=None, val=None, rings=None, formula=None,
-                  reactant=False, product=False, agent=False, number=1000, keytype=None, ringtype=None, isotopic=None):
+                  reactant=False, product=False, agent=False, number=1000, keytype=None, ring_type=None, isotopic=None):
     """
     Search for an string within a RInChi database. Includes all options.
 
     Args:
+        ring_type:
+        isotopic:
         db:
         is_sql_db:
         number: Maximum number of initial results
@@ -401,26 +404,16 @@ def search_master(search_term, db=None, table_name=None, is_sql_db=False, hyb=No
     """
     search_term = str(search_term)
     if keytype is None:
-        if search_term.startswith(('Short-RInChIKey','Long-RInChIKey','Web-RInChIKey')):
+        if search_term.startswith(('Short-RInChIKey', 'Long-RInChIKey', 'Web-RInChIKey')):
             keytype = search_term[0]
     if keytype is not None:
         result_dict = {'rinchi': [sql_key_to_rinchi(search_term, db, table_name, keytype)]}
     else:
-        result_dict = search_rinchis(search_term,
-                                     db=db,
-                                     table_name=table_name,
-                                     isotopic=isotopic,
-                                     is_sql_db=is_sql_db,
-                                     hyb=hyb,
-                                     val=val,
-                                     rings=rings,
-                                     ringelements=ringtype,
-                                     formula=formula,
-                                     reactant=reactant,
-                                     product=product,
-                                     agent=agent,
-                                     number=number)
+        result_dict = search_rinchis(search_term, db=db, table_name=table_name, isotopic=isotopic, is_sql_db=is_sql_db,
+                                     hyb=hyb, val=val, rings=rings, ringelements=ring_type, formula=formula,
+                                     reactant=reactant, product=product, agent=agent, number=number)
     return result_dict
+
 
 # Converting to SQL databases
 #############################
@@ -509,7 +502,7 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
     """
 
     # Create db connections including for a temporary db and setup logging
-    os.remove("conv0203.log")
+    os.remove("convert0203.log")
     logging.basicConfig(filename='conv0203.log', level=logging.DEBUG)
     logging.info("\n========\nStarting Conversion Process\n========")
     start_time = time.time()
@@ -561,7 +554,7 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
     _run_queue(1000, pop_args, depop_args)
 
     # Transfer table from temporary db to new db
-    _transfer_table("rinchi_temp.db", db_filename, table_name)
+    _transfer_table(_external.RINCHI_TEMP_DATABASE, db_filename, table_name)
     logging.info("Finished conversion in {} seconds".format(time.time() - start_time))
 
 
@@ -744,7 +737,7 @@ def _depopulate_queue(q, columns, table_name):
         columns: the columns to create in the output table
         table_name: the name of the table to create
     """
-    db = sqlite3.connect("rinchi_temp.db")
+    db = sqlite3.connect(_external.RINCHI_TEMP_DATABASE)
     cursor = db.cursor()
     _create_sql_table(cursor, table_name, columns)
     logging.info("depopulating")

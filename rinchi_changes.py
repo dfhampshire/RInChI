@@ -11,7 +11,7 @@ import argparse
 import json
 from collections import Counter
 
-from rinchi_tools import database
+from rinchi_tools import _external, database
 from rinchi_tools.molecule import Molecule
 from rinchi_tools.reaction import Reaction
 from rinchi_tools.utils import Hashable
@@ -31,7 +31,7 @@ def changes_ops(args, parser):
     if args.key:
         try:
             if args.input.startswith("Long-RInChIKey"):
-                args.input = database.sql_key_to_rinchi(args.input, "rinchi.db", args.arg2)
+                args.input = database.sql_key_to_rinchi(args.input, _external.RINCHI_DATABASE, args.arg2)
                 args.rinchi = True
             else:
                 raise ValueError

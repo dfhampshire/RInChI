@@ -12,7 +12,7 @@ Converts, creates, and removes from SQL databases
 import argparse
 
 import rinchi_tools.conversion
-from rinchi_tools import database
+from rinchi_tools import _external, database
 from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
 
 
@@ -25,21 +25,19 @@ def add_db(subparser):
     assert isinstance(subparser, argparse.ArgumentParser)
 
     # Add main input arguments
-    subparser.add_argument("database", nargs="?", default="../rinchi.db",
+    subparser.add_argument("database", nargs="?", default=_external.RINCHI_DATABASE,
                            help="The existing database to manipulate, or the name of database to be created")
     subparser.add_argument("input", nargs="?", default="rinchis03", help="The name of the input data file or table")
     subparser.add_argument('-o', "--output", nargs="?", help="The output table name or something else to output")
 
-    action = subparser.add_argument_group("Operation").add_mutually_exclusive_group(required=True)
-
     # Add data insertion options
-    adding = action.add_argument_group("Adding Data to a database")
+    adding = subparser.add_argument_group("Adding Data to a database")
     adding.add_argument('--rdf2db', action='store_true', help='Convert and add an rdfile to an SQL database')
     adding.add_argument('--csv2db', action='store_true',
                         help='Add the contents of a rinchi .csv file to an SQL database')
 
     # Add fingerprint related operations
-    fpts = action.add_argument_group("Fingerprints")
+    fpts = subparser.add_argument_group("Fingerprints")
     fpts.add_argument('--ufingerprints', action='store_true',
                       help='Adds new entries to the fpts table containing fingerprint data')
     fpts.add_argument('--rfingerprints', action='store_true', help='Returns the fingerprint of a given key')
@@ -47,7 +45,7 @@ def add_db(subparser):
                       help='Returns all RInChIs containing the given InChI to STDOUT')
 
     # Add converting data operations
-    convert = action.add_argument_group("Converting databases")
+    convert = subparser.add_argument_group("Converting databases")
     convert.add_argument('--convert2_to_3', action='store_true',
                          help='Creates a new table of v.03 rinchis from a table of v.02 rinchis')
     convert.add_argument('--generate_rauxinfo', action='store_true',

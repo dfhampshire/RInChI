@@ -620,10 +620,8 @@ def rinchi_to_dict_list(data):
             rinchi_last = False
 
     # Close the file if indeed it as a file object
-    try:
+    if hasattr(data, 'close'):
         data.close()
-    except AttributeError:
-        pass
 
     # Add last data entry
     rinchi_data.append(entry)

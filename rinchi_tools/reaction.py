@@ -37,7 +37,8 @@ class Reaction:
         self.lkey = None
         self.skey = None
         self.wkey = None
-        self.reactant_inchis, self.product_inchis, self.agent_inchis, self.direction, self.no_struct = tools.split_rinchi(rinchi)
+        (self.reactant_inchis, self.product_inchis,
+         self.agent_inchis, self.direction, self.no_struct) = tools.split_rinchi(rinchi)
 
         # Create Molecule objects for each inchi, breaking down InChIs representing composite species into individual
         # molecule objects
@@ -175,7 +176,7 @@ class Reaction:
     # Calculating changes across reactions
     ###########################################
 
-    def change_across_reaction(self, func, args=None, loop=False):
+    def change_across_reaction(self, func, args=None):
         """
         Calculates the total change in a parameter across a molecule, Molecule class function and returns a Python
         Counter object
@@ -266,8 +267,8 @@ class Reaction:
         """
         return set(self.change_across_reaction(Molecule.get_formula).values()) == {0}
 
-    def has_ring(self,ring):
-        for m in itertools.chain(self.reactants,self.products):
+    def has_ring(self, ring):
+        for m in itertools.chain(self.reactants, self.products):
             assert isinstance(m, Molecule)
             m.calculate_rings_by_atoms()
             for name, variations in m.ring_permutations.items():
@@ -276,7 +277,7 @@ class Reaction:
         return False
 
     def has_isotopic_inchi(self):
-        for m in itertools.chain(self.reactants,self.products):
+        for m in itertools.chain(self.reactants, self.products):
             assert isinstance(m, Molecule)
             return m.has_isotopic_layer()
 
