@@ -27,13 +27,12 @@ class Molecule:
 
     def __init__(self, inchi):
         self.inchi = inchi.rstrip()
-        self.atoms = {}
+        self.atoms = {} # dictionary of atom objects
         self.formula = None
         self.formula_dict = {}
         self.rings = []
         self.ring_count = None
         self.ring_count_by_atoms = None
-        self.molecular_graph = None
         self.fingerprint = None
         self.edge_list = None
         self.ring_permutations = None  # Stores the ring permutations for easy ring searching
@@ -52,6 +51,7 @@ class Molecule:
             self.number_of_rings = 0
 
         self.generate_atoms()
+        self.set_atomic_elements()
 
     @staticmethod
     def composite_inchi_to_simple(inchi):
@@ -287,14 +287,14 @@ class Molecule:
             pairs = re.findall(r"(?=\b(\d+)\([\d\-!]+,(\d+))", conlayer_comma)
 
             for p in pairs:
-                edges.append(list(map(int, p)))
+                edges.append(tuple(sorted(map(int, p))))
             conlayer_comma = re.sub(r"\b(\d+\([\d\-!]+),\d+", r"\1", conlayer_comma)
             conlayer_comma = re.sub(r"\([\d\-!]+\)", "!", conlayer_comma)
 
         # All pairs of numbers separated by - or ( are edges of the molecular graph
         pairs = re.findall(r"(?=(\b\d+[\-(]\d+\b))", conlayer_mut)
         for p in pairs:
-            edges.append(list(map(int, re.findall(r"\d+", p))))
+            edges.append(tuple(sorted(map(int, re.findall(r"\d+", p)))))
 
         # While there is still a layer of parenthesis remaining, eliminate the lowest layer, and join together the
         # atoms on either side of the parenthesis group
@@ -306,7 +306,7 @@ class Molecule:
             conlayer_mut = re.sub(r"\([\d\-!,]+\)", "!", conlayer_mut)
             pairs = re.findall(r"(?=(\b\d+!\d+\b))", conlayer_mut)
             for p in pairs:
-                new_edge = list(map(int, re.findall(r"\d+", p)))
+                new_edge = tuple(sorted(map(int, re.findall(r"\d+", p))))
                 if new_edge not in edges:
                     edges.append(new_edge)
         return edges
@@ -327,7 +327,7 @@ class Molecule:
             if not ls:
                 return None
 
-        llist = {atom: Atom() for edge in ls for atom in edge}
+        llist = {atom: Atom(atom) for edge in ls for atom in edge}
 
         # Store the molecular graph in node-edge format
         for edge in ls:
@@ -817,3 +817,21 @@ class Molecule:
         """
         self.chemical_formula_to_dict()
         return Counter(self.formula_dict)
+
+    def match(s):
+          """
+          Args:
+              s: an intermediate state s; the initial state s0 has M(s0)=0
+
+          Returns:
+            the mappings between the two graphs
+          """
+          if M(s): # covers all the nodes of master:
+              return M(s)
+          else:
+              Compute_Set() # the set P(s) of the pairs candidate for inclusion in M(s)
+              for n, m in P(s):
+                  if F(s, n, m):
+                      Compute() # the state s2 obtained by adding (n, m) to M(s)
+                      match(s2)
+              Restore_data_structures()

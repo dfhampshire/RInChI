@@ -48,3 +48,7 @@ class Atom:
                     return "sp2"
                 elif self.valence() == 2:
                     return "sp"
+
+    def get_attached_edges(self):
+        attached_edges = [tuple(sorted((self.index, bond))) for bond in self.bonds]
+        return attached_edges
