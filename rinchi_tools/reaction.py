@@ -167,6 +167,7 @@ class Reaction:
                 ["obabel", "-iinchi", inchi_tempfile.name, "-osvg", "-xd", "-xC", "-xj", "-xr 1"])
             print(i_err)
             out.append(i_out)
+            print(i_out)
 
         for i, item in enumerate(out):
             with open(outname + str(i) + ".svg", "w") as text:
