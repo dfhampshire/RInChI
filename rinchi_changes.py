@@ -171,5 +171,5 @@ if __name__ == "__main__":
     role = "RInChI Analysis and Manipulation"
     parser = argparse.ArgumentParser(description=role)
     add_changes(parser)
-    args = parser.parse_args(['egegege', '-k'])
+    args = parser.parse_args()
     changes_ops(args, parser)
