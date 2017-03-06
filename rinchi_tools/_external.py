@@ -18,8 +18,6 @@ test_dir = ('test-resources',)
 cmd_dir = ('',)
 module_dir = ('rinchi_tools',)
 
-path = os.path.dirname(os.path.abspath(__file__))
-
 # Set files and separators
 SEPARATOR = os.sep
 if SEPARATOR == "\\":
@@ -28,21 +26,22 @@ else:
     lib_file = "librinchi.so.1.0.0"
 
 # Path to IUPAC's InChI executable.
-INCHI_PATH = ROOT + path + '{0}libs{0}inchi-1'.format(SEPARATOR)
+EXEC_PATH = ROOT + '{0}rinchi_tools{0}libs'.format(SEPARATOR)
+INCHI_PATH = EXEC_PATH + '{0}inchi-1'.format(SEPARATOR)
 
 # Path to the v0.03 RInChI C library
-LIB_RINCHI_PATH = path + "{0}libs{0}".format(SEPARATOR) + lib_file
+LIB_RINCHI_PATH = EXEC_PATH + SEPARATOR + lib_file
 
 # Set RInChI Version
 RINCHI_VERSION = '0.03'
 
 # Set RInChI database variables
-RINCHI_DATABASE = os.path.abspath(os.path.join(__file__, "../..")) + '{0}database{0}rinchi.db'.format(SEPARATOR)
-RINCHI_DATABASE_PATH = path = os.path.dirname(RINCHI_DATABASE)
+RINCHI_DATABASE = ROOT + '{0}database{0}rinchi.db'.format(SEPARATOR)
+RINCHI_DATABASE_PATH = os.path.dirname(RINCHI_DATABASE)
 RINCHI_TEMP_DATABASE = RINCHI_DATABASE_PATH + SEPARATOR + "rinchi_temp.db"
 
 # Set test folder
-TEST_PATH = os.path.abspath(os.path.join(__file__, "../.."))
+TEST_PATH = ROOT + "{0}test-resources".format(SEPARATOR)
 
 if __name__ == "__main__":
     # Print the variables defined here

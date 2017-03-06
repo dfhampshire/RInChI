@@ -42,7 +42,7 @@ def addition_ops(args, parser):
 
     """
     try:
-        input_rinchis = (line.strip for line in open(args.input_path))  # Use a generator
+        input_rinchis = (line.strip() for line in open(args.input_path))  # Use a generator
         overall_rinchi = tools.add(input_rinchis)
         utils.output(overall_rinchi, args.output, "rinchi")
     except ValueError:
