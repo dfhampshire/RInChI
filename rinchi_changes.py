@@ -82,7 +82,7 @@ def changes_ops(args, parser):
                     if ringcount and args.list:
                         print(ringcount)
                     if ringcount:
-                        master_counter['ringcount'].update(Hashable(ringcount))
+                        master_counter['ringcount'][Hashable(ringcount)] += 1
                 elif args.ringcountelements:
                     # Count the change in rings returning the change in elemental structure of the rings e.g.  (
                     # CCCCCN : 1) would indicate the reaction forms a pyridine ring
@@ -90,38 +90,38 @@ def changes_ops(args, parser):
                     if ringcountelements and args.list:
                         print(ringcountelements)
                     if ringcountelements:
-                        master_counter['ringcountelements'].update(Hashable(ringcountelements))
+                        master_counter['ringcountelements'][Hashable(ringcountelements)] += 1
                 elif args.formula:
                     formula = r.change_across_reaction(Molecule.get_formula)
                     if formula and args.list:
                         print(formula)
                     if formula:
-                        master_counter['ringcount'].update(Hashable(formula))
+                        master_counter['ringcount'][Hashable(formula)] += 1
                 elif args.valence:
                     valence = r.change_across_reaction(Molecule.get_valence_count)
                     if valence and args.list:
                         print(valence)
                     if valence:
-                        master_counter['ringcount'].update(Hashable(valence))
+                        master_counter['ringcount'][Hashable(valence)] += 1
                 elif args.hybrid:
                     hybrid = r.change_across_reaction(Molecule.get_hybrid_count)
                     if hybrid and args.list:
                         print(hybrid)
                     if hybrid:
-                        master_counter['ringcount'].update(Hashable(hybrid))
+                        master_counter['ringcount'][Hashable(hybrid)] += 1
                 elif args.ringcountold:
                     ringcountold = r.ring_change()
                     if ringcountold and args.list:
                         print(ringcountold)
                     if ringcountold:
-                        master_counter['ringcount'].update(Hashable(ringcountold))
+                        master_counter['ringcount'][Hashable(ringcountold)] += 1
                 elif args.stereoold:
                     stereoold = r.stereo_change(args.stereoold.get('wd', None), args.stereoold.get('sp2', None),
                                                 args.stereoold.get('sp3', None))
                     if stereoold and args.list:
                         print(stereoold)
                     if stereoold:
-                        master_counter['ringcount'].update(Hashable(stereoold))
+                        master_counter['ringcount'][Hashable(stereoold)] += 1
                 else:
                     parser.print_help()
         for key, value in master_counter.items():
@@ -152,7 +152,7 @@ def add_changes(subparser):
     file_opt.add_argument("--filein", action="store_true", help="Assert that the input is a file")
 
     # Add operation arguments
-    operation = subparser.add_argument_group("Operation").add_mutually_exclusive_group(required=True)
+    operation = subparser.add_argument_group("Operation")
     operation.add_argument("--ringcount", action="store_true", help="Calculate the change in ring populations by size")
     operation.add_argument("--formula", action="store_true", help="Calculate the change in formula across a reaction")
     operation.add_argument("--valence", action="store_true", help="Change in valence across reaction")
