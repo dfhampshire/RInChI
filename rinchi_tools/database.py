@@ -173,7 +173,10 @@ def _sql_search(cursor, table_name, columns=None, lookup_value=None, field=None,
     else:
         command = part1 + part2 + limiter
 
-    cursor.execute(command, (lookup_value,))
+    if lookup_value is not None:
+        cursor.execute(command, (lookup_value,))
+    else:
+        cursor.execute(command)
     return cursor
 
 
@@ -357,6 +360,7 @@ def search_rinchis(search_term, db=None, table_name=None, is_sql_db=False, hyb=N
 
     result_dict = {'as_reactant': [], 'as_product': [], 'as_agent': []}
 
+    # Linear
     for rinchi in results:
         r = Reaction(rinchi)
         if r.detect_reaction(hyb_i=hyb, val_i=val, rings_i=rings, formula_i=formula, isotopic=isotopic,
@@ -413,6 +417,18 @@ def search_master(search_term, db=None, table_name=None, is_sql_db=False, hyb=No
                                      hyb=hyb, val=val, rings=rings, ringelements=ring_type, formula=formula,
                                      reactant=reactant, product=product, agent=agent, number=number)
     return result_dict
+
+
+def search_reaction_type(rct_mols,pdt_mols):
+    """
+    Looks for reaction types in a database
+
+    Args:
+        rct_mols:
+        pdt_mols:
+    Returns:
+
+    """
 
 
 # Converting to SQL databases

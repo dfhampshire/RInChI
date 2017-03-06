@@ -8,7 +8,7 @@ class Matcher(object):
     """
     Implementation of VF2 algorithm for matching as a subgraph of another.
 
-    made using
+    made using the reference.
     http://lalg.fri.uni-lj.si/pub/amalfi/papers/vf-algorithm.pdf
 
     Uses the python set implementation widely for best performance.
@@ -188,6 +188,14 @@ class Matcher(object):
         if passed:
             self.term_sets = (sub_term, master_term)
         return passed
+
+    def is_sub(self):
+        """Returns True if a subgraph of G1 is isomorphic to G2."""
+        try:
+            next(self.match())
+            return True
+        except StopIteration:
+            return False
 
 
 class Backup(object):

@@ -261,6 +261,18 @@ def inchi_2_auxinfo(inchi):
     auxinfo = raw_inchi_out.splitlines()[2]
     return auxinfo
 
+def smiles_2_inchi(smiles):
+    """
+    Converts SMILES text to an InChI
+
+    Args:
+        smiles:
+
+    Returns:
+
+    """
+
+
 
 def inchi_2_sdf(inchi, auxinfo=""):
     """

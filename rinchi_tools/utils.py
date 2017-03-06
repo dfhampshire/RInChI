@@ -48,7 +48,7 @@ def create_output_file(output_path, default_extension):
 
     """
     # Assign extension from output name if provided
-    output_path_no_ext, extension = os.path.splitext(output_path)[1]
+    output_path_no_ext, extension = os.path.splitext(output_path)
     if not extension:
         extension = default_extension
 

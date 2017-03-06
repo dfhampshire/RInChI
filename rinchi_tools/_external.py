@@ -1,7 +1,6 @@
 """
 RInChI external software location module.
 
-    C.H.G. Allen Copyright 2012
     D. Hampshire 2016
 
 This module defines variables that specify the paths to external software and files
@@ -38,7 +37,7 @@ LIB_RINCHI_PATH = path + "{0}libs{0}".format(SEPARATOR) + lib_file
 RINCHI_VERSION = '0.03'
 
 # Set RInChI database variables
-RINCHI_DATABASE = os.path.abspath(os.path.join(__file__, "../..")) + '{}rinchi.db'.format(SEPARATOR)
+RINCHI_DATABASE = os.path.abspath(os.path.join(__file__, "../..")) + '{0}database{0}rinchi.db'.format(SEPARATOR)
 RINCHI_DATABASE_PATH = path = os.path.dirname(RINCHI_DATABASE)
 RINCHI_TEMP_DATABASE = RINCHI_DATABASE_PATH + SEPARATOR + "rinchi_temp.db"
 
