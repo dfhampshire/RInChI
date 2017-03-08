@@ -11,9 +11,7 @@ Converts, creates, and removes from SQL databases
 
 import argparse
 
-import rinchi_tools.conversion
 from rinchi_tools import _external, database
-from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
 
 
 def add_db(subparser):
@@ -45,12 +43,14 @@ def add_db(subparser):
                       help='Returns all RInChIs containing the given InChI to STDOUT')
 
     # Add converting data operations
-    convert = subparser.add_argument_group("Converting databases")
+    convert = subparser.add_argument_group("Converting operations")
     convert.add_argument('--convert2_to_3', action='store_true',
                          help='Creates a new table of v.03 rinchis from a table of v.02 rinchis')
     convert.add_argument('--generate_rauxinfo', action='store_true',
                          help='Generate RAuxInfos from rinchis within a SQL database')
-
+    convert.add_argument('-k', '--key', nargs='?', const='L', choices=['L', 'S', 'W'],
+                         help='Returns the RInChI corresponding to a given key. Optionally accepts an argument '
+                              'denoting the type of key to lookup ')
 
 def db_ops(args, parser):
     """
@@ -59,40 +59,25 @@ def db_ops(args, parser):
         args:
         parser:
     """
-    if args.lkey2rxninfo and args.input.startswith("RInChI"):
-        try:
-            args.input = RInChI_Handle().rinchikey_from_rinchi(args.input, "L")
-        except ValueError:
-            print("Could not convert RInChI to Long-RInChI-key")
-            pass
-
-    if args.rdf2csv:
-        rinchi_tools.conversion.rdf_to_csv(args.input, return_longkey=True, return_rxninfo=True)
-    if args.rdfappend:
-        rinchi_tools.conversion.rdf_to_csv_append(args.input, args.database)
-    if args.dir2csv:
-        rinchi_tools.conversion.create_csv_from_directory(args.input, args.database, return_longkey=True,
-                                                          return_rxninfo=True)
-    if args.rdf2sql:
+    if args.rdf2db:
         database.rdf_to_sql(args.input, args.database, args.tablename)
-    if args.csv2sql:
+    if args.csv2db:
         database.csv_to_sql(args.input, args.database, args.tablename)
-
     if args.ufingerprints:
         database.update_fingerprints(args.input, args.database, args.tablename)
     if args.rfingerprints:
         print(list(database.recall_fingerprints(args.input, args.database, args.tablename)))
     if args.cfingerprints:
         database.compare_fingerprints(args.input, args.database, args.tablename)
-    if args.lkey2rinchi:
-        print(database.sql_key_to_rinchi(args.input, args.database, args.tablename))
-    if args.conv0203:
+    if args.key:
+        print(database.sql_key_to_rinchi(args.input, args.database, args.tablename,args.key))
+    if args.convert2_to_3:
         # Names hardcoded because significant modification of the arparse system would be needed and would be complex
         v02_column_names = ["rinchi", "rauxinfo"]
         v03_column_names = ["rinchi", "rauxinfo", "longkey", "shortkey", "webkey"]
         column_names = v02_column_names + v03_column_names
         database.convert_v02_v03(args.database, args.input, *column_names)
-    if args.genrauxinfo:
+    if args.generate_rauxinfo:
         database.gen_rauxinfo(args.database, args.input)
     else:
         parser.print_help()

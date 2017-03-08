@@ -817,21 +817,3 @@ class Molecule:
         """
         self.chemical_formula_to_dict()
         return Counter(self.formula_dict)
-
-    def match(s):
-          """
-          Args:
-              s: an intermediate state s; the initial state s0 has M(s0)=0
-
-          Returns:
-            the mappings between the two graphs
-          """
-          if M(s): # covers all the nodes of master:
-              return M(s)
-          else:
-              Compute_Set() # the set P(s) of the pairs candidate for inclusion in M(s)
-              for n, m in P(s):
-                  if F(s, n, m):
-                      Compute() # the state s2 obtained by adding (n, m) to M(s)
-                      match(s2)
-              Restore_data_structures()

@@ -14,7 +14,7 @@ from collections import Counter
 from numpy import all, array
 from scipy.sparse import csr_matrix
 
-from rinchi_tools import _inchi_tools, tools, utils
+from rinchi_tools import _inchi_tools, matcher, tools, utils
 from rinchi_tools.molecule import Molecule
 from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
 
@@ -404,3 +404,53 @@ class Reaction:
             changes['molecules'] = abs(changes['molecules'])
             changes['rings'] = abs(changes['rings'])
         return Counter(changes)
+
+    def has_substructures(self,reactant_subs=None, product_subs=None, agent_subs=None):
+        """
+        Detects if the reaction is a substructure
+
+        Args:
+            reactant_subs:
+            product_subs:
+            agent_subs:
+
+        Returns:
+
+        """
+        if reactant_subs is None:
+            reactant_subs = ()
+        if product_subs is None:
+            product_subs = ()
+        if agent_subs is None:
+            agent_subs = ()
+
+        reactants = self.reactants
+        products = self.products
+        agents = self.reaction_agents
+
+        def matcher_worker(sub, master):
+            ret =  matcher.Matcher(sub, master).is_sub()
+            return ret
+
+        def find_in_layer(sub, layer):
+            for i in layer:
+                if matcher_worker(sub, i):
+                    return True
+            return False
+
+        def find_subs(subs, layer):
+            for sub in subs:
+                if not find_in_layer(sub, layer):
+                    return False
+            return True
+
+        if not find_subs(reactant_subs, reactants):
+            return False
+        if not find_subs(product_subs, products):
+            return False
+        if not find_subs(agent_subs, agents):
+            return False
+        return True
+
+
+

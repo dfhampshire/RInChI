@@ -8,7 +8,7 @@ class Matcher(object):
     """
     Implementation of VF2 algorithm for matching as a subgraph of another.
 
-    made using the reference.
+    made using
     http://lalg.fri.uni-lj.si/pub/amalfi/papers/vf-algorithm.pdf
 
     Uses the python set implementation widely for best performance.

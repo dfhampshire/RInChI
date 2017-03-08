@@ -42,7 +42,7 @@ def convert_ops(args, parser):
     elif args.rinchi2file:
         data = conversion.rinchi_to_file(args.input, args.rxnfileoutput)
         text = utils.construct_output_text(data)
-        utils.output(text, args.fileout, '.rxn' if args.rxnfileoutput else 'rdf')
+        utils.output(text, args.fileout, '.rxn' if args.rxnfileoutput else '.rdf')
     elif args.rinchi2key:
         data = conversion.rinchis_to_keys(args.input, longkey=args.longkey, shortkey=args.shortkey, webkey=args.webkey,
                                           inc_rinchi=args.include_rinchi)
@@ -94,15 +94,13 @@ def add_convert(subparser):
     action.add_argument('--dir2csv', action='store_true', help='Convert a directory of rdfiles to a single csv file')
     action.add_argument("--svg", action="store_true", help="Convert a RInChI to a collection of .svg files")
 
-    optional = subparser.add_argument_group("Optional Arguments")
-
     # Add options for all commands
-    opt_all = optional.add_argument_group("All operations")
+    opt_all = subparser.add_argument_group("All operations")
     opt_all.add_argument("-o", "--fileout", nargs='?', const='output', default=False, help="Save the output to disk. ")
     opt_all.add_argument('-i', '--filein', action='store_true', help='Assert that the input is a file')
 
     # Add options for converting to RInChI filetype
-    opt_to_rinchi = optional.add_argument_group("Conversion to RInChI file")
+    opt_to_rinchi = subparser.add_argument_group("Conversion to RInChI file")
     opt_to_rinchi.add_argument("-e", "--equilibrium", action="store_true",
                                help="Force output to be an equilibrium reaction")
     opt_to_rinchi.add_argument("-ra", "--rauxinfo", action="store_true", help="Generate and return RAuxInfo")
@@ -114,15 +112,15 @@ def add_convert(subparser):
                                help="Generate and return the Web-RInChIKey along with the RInChI")
 
     # Add options for converting to Keys
-    opt_to_key = optional.add_argument_group("Converting RInChIs to Keys")
+    opt_to_key = subparser.add_argument_group("Converting RInChIs to Keys")
     opt_to_key.add_argument("-r", "--include_rinchi", action="store_true", help="Include original RInChI in the output")
 
     # Add options for converting to RXN/RDF. n.b the order of the 2nd and 3rd statements IS important
-    opt_to_file = optional.add_argument_group("Converting to a RXN/RDF")
+    opt_to_file = subparser.add_argument_group("Converting to a RXN/RDF")
     opt_to_file.add_argument("-ordf", "--rdfileoutput", action="store_false", dest='rxnfileoutput',
                              help="Output as RDFile. Otherwise RXN file(s) are produced")
     opt_to_file.add_argument("-orxn", '--rxnfileoutput', action="store_true",
-                             help="Output as RDFile. Otherwise RXN file(s) are produced")
+                             help="Output as RXNFile")
 
 
 if __name__ == "__main__":

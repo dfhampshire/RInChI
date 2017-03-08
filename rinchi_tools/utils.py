@@ -65,7 +65,7 @@ def create_output_file(output_path, default_extension):
             output_path = '{}_{}{}'.format(output_path_no_ext, index, extension)
     else:
         output_path = '{}{}'.format(output_path_no_ext, extension)
-    output_file = open(output_path, 'w')
+    output_file = open(output_path, 'r+')
     return output_file
 
 
@@ -164,7 +164,7 @@ def read_input_file(input_path, filetype_check=False, return_file_object=False):
     """
 
     # Set file name variables and read file
-    input_name, file_extension = os.path
+    input_name, file_extension = os.path.splitext(input_path)
     if return_file_object:
         data = open(input_path)
     else:

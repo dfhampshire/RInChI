@@ -419,16 +419,9 @@ def search_master(search_term, db=None, table_name=None, is_sql_db=False, hyb=No
     return result_dict
 
 
-def search_reaction_type(rct_mols,pdt_mols):
-    """
-    Looks for reaction types in a database
 
-    Args:
-        rct_mols:
-        pdt_mols:
-    Returns:
 
-    """
+
 
 
 # Converting to SQL databases
