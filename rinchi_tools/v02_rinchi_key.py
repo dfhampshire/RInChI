@@ -13,7 +13,7 @@ a free python library for the manipulation of chemical formats, now stored perma
 
 import hashlib
 
-from rinchi_tools import _v02_inchi_key, tools, utils
+from . import _v02_inchi_key, tools, utils
 
 # The following variable defines the version number of the RInChIKeys created
 # by this module.

@@ -4,7 +4,7 @@ RInChI Database Module
 Provides tools for converting, creating, and removing from SQL databases
 
     Ben Hammond 2014
-    D. Hampshire 2017 - Python 3 restructuring and new function addition.
+    D. Hampshire 2017 - Python 3 restructuring and new function addition. Significantly modularised the exisiting code
 """
 import csv
 import logging
@@ -19,9 +19,9 @@ from heapq import nsmallest
 
 from scipy.spatial import distance
 
-from rinchi_tools import _external, conversion, v02_tools
-from rinchi_tools.reaction import Reaction
-from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
+from . import _external, conversion, v02_tools
+from .reaction import Reaction
+from .rinchi_lib import RInChI
 
 
 ###########
@@ -45,7 +45,7 @@ def _pragma_sql_env(cursor):
     cursor.execute(''' PRAGMA main.cache_size=5000''')
 
 
-def _create_sql_table(cursor, table_name, columns):
+def _create_sql_table(cursor, table_name, columns,unique=None):
     """
     Create an SQL table
 
@@ -53,7 +53,12 @@ def _create_sql_table(cursor, table_name, columns):
         cursor: The SQLite database cursor object
         table_name: The name of the table to create
         columns: A list of column names to create
+        unique: the unique id column
     """
+    ut = ""
+    if unique is not None:
+        ut = ", UNIQUE({}) ON CONFLICT REPLACE".format(unique)
+
     column_string = " TEXT, ".join(columns)
     cursor.execute('CREATE TABLE IF NOT EXISTS {} ({})'.format(table_name, column_string))
 
@@ -419,11 +424,6 @@ def search_master(search_term, db=None, table_name=None, is_sql_db=False, hyb=No
     return result_dict
 
 
-
-
-
-
-
 # Converting to SQL databases
 #############################
 
@@ -444,7 +444,8 @@ def rdf_to_sql(rdfile, db_filename, table_name, columns=None):
     db = sqlite3.connect(db_filename)
     cursor = db.cursor()
 
-    _create_sql_table(cursor, table_name, columns)
+    if not _check_table_exists(table_name,cursor):
+        _create_sql_table(cursor, table_name, columns,'longkey')
 
     # Repopulate columns variable.  Useful for pre-existing table
     columns = _get_sql_columns(cursor, table_name)
@@ -482,7 +483,8 @@ def csv_to_sql(csv_name, db_filename, table_name):
     with open(csv_name, 'rb') as csvfile:
         reader = csv.reader(csvfile, delimiter="$")
         columns = reader.next()
-        _create_sql_table(cursor, table_name, columns)
+        if not _check_table_exists(table_name,cursor):
+            _create_sql_table(cursor, table_name, columns,'longkey')
         for row in reader:
             _sql_insert(cursor, table_name, row)
 
@@ -543,11 +545,11 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
         if args[1]:
             data_to_add.append(v02_tools.convert_rauxinfo(row[1]))
         if args[2]:
-            data_to_add.append(RInChI_Handle().rinchikey_from_rinchi(the_rinchi, "L"))
+            data_to_add.append(RInChI().rinchikey_from_rinchi(the_rinchi, "L"))
         if args[3]:
-            data_to_add.append(RInChI_Handle().rinchikey_from_rinchi(the_rinchi, "S"))
+            data_to_add.append(RInChI().rinchikey_from_rinchi(the_rinchi, "S"))
         if args[4]:
-            data_to_add.append(RInChI_Handle().rinchikey_from_rinchi(the_rinchi, "W"))
+            data_to_add.append(RInChI().rinchikey_from_rinchi(the_rinchi, "W"))
         return tuple(data_to_add)
 
     # Check for existence of new table
@@ -748,7 +750,7 @@ def _depopulate_queue(q, columns, table_name):
     """
     db = sqlite3.connect(_external.RINCHI_TEMP_DATABASE)
     cursor = db.cursor()
-    _create_sql_table(cursor, table_name, columns)
+    _create_sql_table(cursor, table_name, columns,'longkey')
     logging.info("depopulating")
     while True:
         try:

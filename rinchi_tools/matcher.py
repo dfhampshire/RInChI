@@ -1,7 +1,7 @@
 import collections
 from itertools import product
 
-from rinchi_tools.molecule import Molecule
+from .molecule import Molecule
 
 
 class Matcher(object):
@@ -13,6 +13,7 @@ class Matcher(object):
 
     Uses the python set implementation widely for best performance.
     """
+
     def __init__(self, sub, master):
 
         # Set invariant objects
@@ -26,9 +27,9 @@ class Matcher(object):
         self.yes = False
 
         # These are changed by the backup class. However, only self.last_mapped is actually stored.
-        self.atom_mapping = set() # Partial mapping solution M (s)
-        self.sub_atoms_mapped = set() # M_master (s)
-        self.master_atoms_mapped = set() # M_master (s)
+        self.atom_mapping = set()  # Partial mapping solution M (s)
+        self.sub_atoms_mapped = set()  # M_master (s)
+        self.master_atoms_mapped = set()  # M_master (s)
         self.last_mapped = ()
 
         # These are used in place and do not need to be backed up
@@ -38,13 +39,14 @@ class Matcher(object):
         """Checks if all the atoms are mapped from the sublist in the lists"""
         return all(atom_index in self.sub_atoms_mapped for atom_index in (self.sub.atoms.keys()))
 
-    def new_state(self,mapping):
+    def new_state(self, mapping):
         self.atom_mapping.add(mapping)
         self.sub_atoms_mapped.add(mapping[0])
         self.master_atoms_mapped.add(mapping[1])
         self.last_mapped = mapping
 
-    def get_terminal_atoms(self, atoms_mapped_set, molecule):
+    @staticmethod
+    def get_terminal_atoms(atoms_mapped_set, molecule):
         """
         Gets the set of atoms in a moleculethat are not in the current mapping but are branches of the current mapping
         """
@@ -80,7 +82,7 @@ class Matcher(object):
             return None
         else:
             # This definition of P(s) ensures states not visited twice
-            return set(product((min(sub_terminal),),master_terminal))
+            return set(product((min(sub_terminal),), master_terminal))
 
     def gen_possible_mappings(self):
         """
@@ -89,7 +91,7 @@ class Matcher(object):
         mappings = self.get_terminal_mappings()
         if mappings is None:
             mappings = self.get_backup_mappings()
-        assert isinstance(mappings,collections.Iterable)
+        assert isinstance(mappings, collections.Iterable)
         return mappings
 
     def match(self):
@@ -124,18 +126,16 @@ class Matcher(object):
         """
         # Add checks here for comparing whether the master atom matches the sub atom
         # insert boolean functions or other test criteria
-        criteria = []
+        criteria = [self.bonds_compatible(mapping), self.count_compatable(mapping),
+                    self.master.atoms[mapping[1]].element == self.sub.atoms[mapping[0]].element]
 
         # General criteria
-        criteria.append(self.bonds_compatible(mapping))
-        criteria.append(self.count_compatable(mapping))
 
         # Application specific criteria e.g. element
-        criteria.append(self.master.atoms[mapping[1]].element == self.sub.atoms[mapping[0]].element)
         # Return True if all criteria filled
         return all(criteria)
 
-    def bonds_compatible(self,mapping):
+    def bonds_compatible(self, mapping):
         """
         Checks if the bonds to the atoms in the mapping are compatible
         """
@@ -147,7 +147,7 @@ class Matcher(object):
 
         return master_atom_bonds == master_atom_bonds_from_sub
 
-    def sub_to_master(self,index):
+    def sub_to_master(self, index):
         """
         Converts a sub graph index to the master index
         """
@@ -155,7 +155,7 @@ class Matcher(object):
             if index == mapping[0]:
                 return mapping[1]
 
-    def master_to_sub(self,index):
+    def master_to_sub(self, index):
         """
         Converts a sub graph index to the master index
         """
@@ -163,7 +163,7 @@ class Matcher(object):
             if index == mapping[1]:
                 return mapping[0]
 
-    def gen_test_state(self,mapping):
+    def gen_test_state(self, mapping):
         """
         Generates a test state for testing criteria.
         """
@@ -173,18 +173,18 @@ class Matcher(object):
         atom_mapping.add(mapping)
         sub_atoms_mapped.add(mapping[0])
         master_atoms_mapped.add(mapping[1])
-        return atom_mapping,sub_atoms_mapped,master_atoms_mapped
+        return atom_mapping, sub_atoms_mapped, master_atoms_mapped
 
-    def count_compatable(self,mapping):
+    def count_compatable(self, mapping):
         self.term_sets = ()
         new_state = self.gen_test_state(mapping)
-        master_term = self.get_terminal_atoms(new_state[2],self.master) # Calculate Tin_master
-        sub_term = self.get_terminal_atoms(new_state[1],self.sub) # Calculate Tin_sub
+        master_term = self.get_terminal_atoms(new_state[2], self.master)  # Calculate Tin_master
+        sub_term = self.get_terminal_atoms(new_state[1], self.sub)  # Calculate Tin_sub
         term_test = len(master_term) >= len(sub_term)
         other_sub = self.sub_atoms - new_state[1] - sub_term
         other_master = self.master_atoms - new_state[2] - master_term
         other_nodes = len(other_master) >= len(other_sub)
-        passed = all((term_test,other_nodes))
+        passed = all((term_test, other_nodes))
         if passed:
             self.term_sets = (sub_term, master_term)
         return passed
@@ -199,7 +199,6 @@ class Matcher(object):
 
 
 class Backup(object):
-
     def __init__(self, matcher_object):
         self.mapping_stack = []
         assert isinstance(matcher_object, Matcher)
@@ -235,6 +234,3 @@ class Backup(object):
     def depth(self):
         depth = len(self.mapping_stack)
         return depth
-
-
-

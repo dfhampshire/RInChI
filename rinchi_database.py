@@ -52,6 +52,7 @@ def add_db(subparser):
                          help='Returns the RInChI corresponding to a given key. Optionally accepts an argument '
                               'denoting the type of key to lookup ')
 
+
 def db_ops(args, parser):
     """
 
@@ -70,7 +71,7 @@ def db_ops(args, parser):
     if args.cfingerprints:
         database.compare_fingerprints(args.input, args.database, args.tablename)
     if args.key:
-        print(database.sql_key_to_rinchi(args.input, args.database, args.tablename,args.key))
+        print(database.sql_key_to_rinchi(args.input, args.database, args.tablename, args.key))
     if args.convert2_to_3:
         # Names hardcoded because significant modification of the arparse system would be needed and would be complex
         v02_column_names = ["rinchi", "rauxinfo"]

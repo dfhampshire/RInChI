@@ -15,6 +15,7 @@ import rinchi_changes
 import rinchi_convert
 import rinchi_database
 import rinchi_search
+import rinchi_stats
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="RInChI Module Command Line Tools")
@@ -47,6 +48,11 @@ if __name__ == "__main__":
     addition_parser = main_functions.add_parser('addition', description=addition_role, help=addition_role)
     rinchi_add.add_addition(addition_parser)
 
+    #Add statistical analysis functionality
+    stats_role = "RInChI Statistical analysis"
+    stats_parser = main_functions.add_parser('stats', description=stats_role,help=stats_role)
+    rinchi_stats.add_stats(stats_parser)
+
     args = parser.parse_args()
 
     # Direct to the appropriate parser command
@@ -59,6 +65,8 @@ if __name__ == "__main__":
     elif args.command == 'changes':
         rinchi_changes.changes_ops(args, changes_parser)
     elif args.command == 'addition':
-        rinchi_add.addition_ops(args, parser)
+        rinchi_add.addition_ops(args, addition_parser)
+    elif args.command == 'stats':
+        rinchi_stats.stats_ops(args)
     else:
         parser.print_help()

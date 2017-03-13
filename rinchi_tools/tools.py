@@ -8,9 +8,12 @@ also interfaces with the RInChI v0.03 software as provided by the InChI trust.
     D.F. Hampshire 2016
 
 """
+import os
+import tempfile
+from collections import Counter
 
-from rinchi_tools import _external, _inchi_tools, utils
-from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
+from . import _external, utils
+from .rinchi_lib import RInChI
 
 
 class VersionError(ValueError):
@@ -287,7 +290,7 @@ def split_rinchi_inc_auxinfo(rinchi, rinchi_auxinfo):
         direction: returns the direction character
         no_structs: returns a list of the numbers of unknown structures in each layer
     """
-    inchi_components = RInChI_Handle().inchis_from_rinchi(rinchi, rinchi_auxinfo)
+    inchi_components = RInChI().inchis_from_rinchi(rinchi, rinchi_auxinfo)
     direction = inchi_components['Direction']
     reactants = inchi_components['Reactants']
     products = inchi_components['Products']
@@ -310,7 +313,7 @@ def split_rinchi(rinchi):
         direction: returns the direction character
         no_structs: returns a list of the numbers of unknown structures in each layer
     """
-    inchi_components = RInChI_Handle().inchis_from_rinchi(rinchi, "")
+    inchi_components = RInChI().inchis_from_rinchi(rinchi, "")
     direction = inchi_components['Direction']
     reactants = inchi_components['Reactants']
     products = inchi_components['Products']
@@ -335,7 +338,7 @@ def split_rinchi_only_auxinfo(rinchi, rinchi_auxinfo):
         pdt_inchis_auxinfo: List of product AuxInfos
         agt_inchis_auxinfo: List of agent AuxInfos
     """
-    inchi_components = RInChI_Handle().inchis_from_rinchi(rinchi, rinchi_auxinfo)
+    inchi_components = RInChI().inchis_from_rinchi(rinchi, rinchi_auxinfo)
     reactants = inchi_components['Reactants']
     products = inchi_components['Products']
     agents = inchi_components['Agents']
@@ -411,7 +414,7 @@ def generate_rauxinfo(rinchi):
     def auxinfo_convert(inchis):
         auxinfos = []
         for inchi in inchis:
-            auxinfo = _inchi_tools.inchi_2_auxinfo(inchi)
+            auxinfo = inchi_2_auxinfo(inchi)
             auxinfos.append(auxinfo)
         return auxinfos
 
@@ -448,11 +451,13 @@ def _process_layer(items, rauxinfodict=None, sort_layer=True):
             version = split_inchi[0]
             versions.append(version)
             body = split_inchi[1]
-        bodies.append(body)
+            bodies.append(body)
 
-        # Rename key in the dict to just body text
-        if rauxinfodict is not None:
-            rauxinfodict[body] = rauxinfodict.pop(item).split('=')[1].split('/', 1)[1]
+            # Rename key in the dict to just body text
+            if rauxinfodict is not None:
+                if body not in rauxinfodict:
+                    rauxinfodict[body] = rauxinfodict.pop(item).split('=')[1].split('/', 1)[1]
+
     if sort_layer:
         sort_bod = sorted(bodies)
 
@@ -612,7 +617,8 @@ def rinchi_to_dict_list(data):
     for line in data.readlines():
         if line.startswith('RInChI'):
             # Add previous data entry to data list
-            rinchi_data.append(entry)
+            if entry:
+                rinchi_data.append(entry)
             entry = {'rinchi': line.strip()}
             rinchi_last = True
         elif line.startswith('RAux') and rinchi_last:
@@ -624,5 +630,77 @@ def rinchi_to_dict_list(data):
         data.close()
 
     # Add last data entry
-    rinchi_data.append(entry)
+    if entry:
+        rinchi_data.append(entry)
     return rinchi_data
+
+
+def inchi_2_auxinfo(inchi):
+    """
+    Run the InChI software on an InChI to generate AuxInfo.
+
+    The function saves the InChI to a temporary file, and runs the inchi-1 program on this tempfile as a subprocess.
+    The AuxInfo will not include 2D coordinates, but an AuxInfo of some kind is required for the InChI software to
+    convert an InChI to an SDFile.
+
+    Args:
+        inchi: An InChI from which to generate AuxInfo.
+
+    Returns:
+        auxinfo: The InChI's AuxInfo (will not contain 2D coordinates).
+    """
+    # Save the InChI to a temporary file.
+    inchi_tempfile = tempfile.NamedTemporaryFile(delete=False)
+    inchi_tempfile.write(bytes(inchi, 'UTF-8'))
+
+    # A newline is required at the end of the file or the InChI program fails
+    # to generate any output (this may be a bug).
+    inchi_tempfile.write(bytes('\n', 'UTF-8'))
+    inchi_tempfile.close()
+
+    # Run the inchi-1 program, and extract the AuxInfo
+    args = [_external.INCHI_PATH, inchi_tempfile.name, '-stdio', '-InChI2Struct']
+    raw_inchi_out, inchi_err = utils.call_command(args)
+    os.unlink(inchi_tempfile.name)
+    auxinfo = raw_inchi_out.splitlines()[2]
+    return auxinfo
+
+
+def process_stats(rinchis, mostcommon=None):
+    """
+    Takes an iterable
+
+    Args:
+        rinchis: An iterable of RInChIs
+        *args: The operations to perform on each rinchi
+
+    Returns:
+        Dictionary of counters containing the information.
+
+    """
+    data = {'reactants': Counter(), 'products': Counter(), 'agents': Counter(), 'directions' : Counter(),
+            'unknownstructs': Counter(), 'components': Counter()}
+
+    for rinchi in rinchis:
+        rct_inchis, pdt_inchis, agt_inchis, direction, no_structs = split_rinchi(rinchi)
+        data['reactants'].update(rct_inchis)
+        data['products'].update(pdt_inchis)
+        data['agents'].update(agt_inchis)
+        if direction == "+" or direction == "-":
+            data['directions']['directed'] += 1
+        elif direction == "=":
+            data['directions']['equilibrium'] += 1
+        elif direction == "":
+            data['directions']['none'] += 1
+        else:
+            print('Warning - reaction has invalid direction flag')
+        data['u_structs']['reactants'] += no_structs[0]
+        data['u_structs']['products'] += no_structs[1]
+        data['u_structs']['agents'] += no_structs[2]
+        components = len(rct_inchis) + len(pdt_inchis) + len(agt_inchis)
+        data['components'][components] += 1
+
+    data['pops'] = data['reactants'] + data['products'] + data['agents']
+    if mostcommon is not None:
+        data = dict((k, v.most_common(mostcommon)) for k, v in data.items())
+    return data

@@ -8,9 +8,7 @@ This module tests the module functions.  Not very user friendly...
 """
 
 # TODO write better testing script
-
-from rinchi_tools import _inchi_tools, conversion, rinchi_lib, tools
-from rinchi_tools.archive import _old_analysis
+from . import conversion, rinchi_lib, tools
 
 rinchi_interface = rinchi_lib.RInChI()
 
@@ -38,21 +36,21 @@ test_list_rinchi = [test_rinchi, test_rinchi]
 sp2_centre_inchi = "InChI=1S/C4H8/c1-3-4-2/h3-4H,1-2H3/b4-3+"
 sp2_centre_rinchi = ("RInChI=0.03.1S/C4H8/c1-3-4-2/h3-4H,1-2H3/b4-3+!C2H6O/c1-2-3/h3H,2H2,1H3<>C4H8O2/c1-3-6-4(2)5/h3H2"
                      ",1-2H3!H2O/h1H2<>H2O4S/c1-5(2,3)4/h(H2,1,2,3,4)/d=")
-print(_inchi_tools.get_conlayer(test_inchi))
-print(_inchi_tools.count_rings(test_inchi))
+print(rinchi_tools.molecule.get_conlayer(test_inchi))
+print(rinchi_tools.molecule.count_rings(test_inchi))
 print(_old_analysis.rxn_ring_change(test_rinchi, (False, False), False))
 print(_old_analysis.rxn_ring_change(test_rinchi, (False, False), True))
 print(_old_analysis.rxn_ring_change(test_rinchi, (True, False), False))
 print(_old_analysis.rxn_ring_change(test_rinchi, (True, True), False))
 print(_old_analysis.rxns_ring_changes(test_list_rinchi))
-print(_inchi_tools.count_sp2(sp2_centre_inchi))
-print(_inchi_tools.count_sp3(test_inchi))
+print(rinchi_tools.molecule.count_sp2(sp2_centre_inchi))
+print(rinchi_tools.reaction.count_sp3(test_inchi))
 print(_old_analysis.rxn_stereochem_change(test_rinchi))
 print(_old_analysis.rxns_stereochem_changes(test_list_rinchi))
 print("================")
 
 # Test Conversion.py
-print(_inchi_tools.inchi_2_auxinfo(test_inchi))
+print(rinchi_tools.tools.inchi_2_auxinfo(test_inchi))
 with open('../test-resources/rxn_t1.rxn', 'r') as myfile:
     rxn = myfile.read()
 molfs = conversion._rxn_to_molfs(rxn)

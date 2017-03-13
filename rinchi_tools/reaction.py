@@ -14,9 +14,10 @@ from collections import Counter
 from numpy import all, array
 from scipy.sparse import csr_matrix
 
-from rinchi_tools import _inchi_tools, matcher, tools, utils
-from rinchi_tools.molecule import Molecule
-from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
+from . import tools, utils
+from .matcher import Matcher
+from .molecule import Molecule
+from .rinchi_lib import RInChI
 
 
 class Reaction:
@@ -37,8 +38,8 @@ class Reaction:
         self.lkey = None
         self.skey = None
         self.wkey = None
-        (self.reactant_inchis, self.product_inchis,
-         self.agent_inchis, self.direction, self.no_struct) = tools.split_rinchi(rinchi)
+        (self.reactant_inchis, self.product_inchis, self.agent_inchis, self.direction,
+         self.no_struct) = tools.split_rinchi(rinchi)
 
         # Create Molecule objects for each inchi, breaking down InChIs representing composite species into individual
         # molecule objects
@@ -68,7 +69,7 @@ class Reaction:
         Set longkey if not already set, then return longkey
         """
         if not self.lkey:
-            self.lkey = RInChI_Handle().rinchikey_from_rinchi(self.rinchi, "L")
+            self.lkey = RInChI().rinchikey_from_rinchi(self.rinchi, "L")
         return self.lkey
 
     def shortkey(self):
@@ -76,7 +77,7 @@ class Reaction:
         Set shortkey if not already set, then return shortkey
         """
         if not self.skey:
-            self.skey = RInChI_Handle().rinchikey_from_rinchi(self.rinchi, "S")
+            self.skey = RInChI().rinchikey_from_rinchi(self.rinchi, "S")
         return self.skey
 
     def webkey(self):
@@ -84,7 +85,7 @@ class Reaction:
         Set webkey if not already set, then return webkey
         """
         if not self.wkey:
-            self.wkey = RInChI_Handle().rinchikey_from_rinchi(self.rinchi, "W")
+            self.wkey = RInChI().rinchikey_from_rinchi(self.rinchi, "W")
         return self.wkey
 
     def calculate_reaction_fingerprint(self, fingerprint_size=1024):
@@ -177,7 +178,7 @@ class Reaction:
     # Calculating changes across reactions
     ###########################################
 
-    def change_across_reaction(self, func, args=None):
+    def change_across_reaction(self, func, *args):
         """
         Calculates the total change in a parameter across a molecule, Molecule class function and returns a Python
         Counter object
@@ -185,7 +186,6 @@ class Reaction:
         Args:
             func: The class function to calculate the parameter, which returns a Counter object
             args: Args if required for the function
-            loop: Whether or not the property to count is a loop i.e. ABCD = BCDA = DCBA
 
         Returns:
             the change in the parameter
@@ -196,17 +196,31 @@ class Reaction:
 
         for mol in self.reactants:
             if args:
-                count_reactants = count_reactants + func(mol, args)
+                count_reactants = count_reactants + func(mol, *args)
             else:
                 count_reactants = count_reactants + func(mol)
 
         for mol in self.products:
             if args:
-                count_products = count_products + func(mol, args)
+                count_products = count_products + func(mol, *args)
             else:
                 count_products = count_products + func(mol)
 
         count_products.subtract(count_reactants)
+
+        # Amazingly, research suggest the following is the fastest option!
+        to_remove = set()
+        to_abs = set()
+        for key, value in count_products.items():
+            if value == 0:
+                to_remove.add(key)
+            elif (self.direction == '=' or self.direction == '') and value < 0:
+                to_abs.add(key)
+
+        for key in to_remove:
+            del count_products[key]
+        for key in to_abs:
+            count_products[key] = abs(count_products[key])
 
         return count_products
 
@@ -247,7 +261,7 @@ class Reaction:
                 return True
         return False
 
-    def catalytic_in_inchi(self, inchi):
+    def is_agent(self, inchi):
         """
         Determine whether the reaction is catalytic in a particular chemical
 
@@ -345,27 +359,8 @@ class Reaction:
         Returns:
             The number of stereocentres created by a reaction stored as a value in a dictionary
         """
-
-        # Count the stereocentres in layer 2.
-        reactant_stereocentres = 0
-        reactant_stereo_mols = 0
-        product_stereocentres = 0
-        product_stereo_mols = 0
-
-        for inchi in self.reactant_inchis:
-            sc_change, sm_change = _inchi_tools.count_centres(inchi, wd, sp2, sp3)
-            reactant_stereocentres += sc_change
-            reactant_stereo_mols += sm_change
-        for inchi in self.product_inchis:
-            sc_change, sm_change = _inchi_tools.count_centres(inchi, wd, sp2, sp3)
-            product_stereocentres += sc_change
-            product_stereo_mols += sm_change
-
-        # Calculate the change.
-        stereo_changes = {'stereo': product_stereocentres - reactant_stereocentres}
-        if self.direction == '=' or self.direction == '':
-            stereo_changes['stereo'] = abs(stereo_changes['stereo'])
-        return Counter(stereo_changes)
+        changes = self.change_across_reaction(Molecule.count_centres, wd, sp2, sp3)
+        return changes
 
     def ring_change(self):
         """
@@ -377,35 +372,14 @@ class Reaction:
                 absolute (i.e.  positive) value.
             cyclic_mol_change
         """
+        changes = self.change_across_reaction(Molecule.count_rings)
 
-        def layer_ring_counter(layer):
-            """
-            Counts the rings in each of the layers
-
-            Args:
-                layer: A list of InChIs in a layer
-
-            Returns:
-                dictionary containing the changes in cyclic ring and molecule populations
-            """
-            layer_rings = 0
-            cyclic_mols = 0
-            for inchi in layer:
-                inchi_rings = _inchi_tools.count_rings(inchi)
-                layer_rings += inchi_rings
-                if inchi_rings:
-                    cyclic_mols += 1
-            return layer_rings, cyclic_mols
-
-        reactant_rings, reactant_cyclics = layer_ring_counter(self.reactant_inchis)
-        product_rings, product_cyclics = layer_ring_counter(self.product_inchis)
-        changes = {'rings': product_rings - reactant_rings, 'molecules': product_cyclics - reactant_cyclics}
         if self.direction == '=' or self.direction == '':
             changes['molecules'] = abs(changes['molecules'])
             changes['rings'] = abs(changes['rings'])
         return Counter(changes)
 
-    def has_substructures(self,reactant_subs=None, product_subs=None, agent_subs=None):
+    def has_substructures(self, reactant_subs=None, product_subs=None, agent_subs=None):
         """
         Detects if the reaction is a substructure
 
@@ -429,7 +403,7 @@ class Reaction:
         agents = self.reaction_agents
 
         def matcher_worker(sub, master):
-            ret =  matcher.Matcher(sub, master).is_sub()
+            ret = Matcher(sub, master).is_sub()
             return ret
 
         def find_in_layer(sub, layer):
@@ -451,6 +425,5 @@ class Reaction:
         if not find_subs(agent_subs, agents):
             return False
         return True
-
 
 

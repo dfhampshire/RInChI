@@ -11,9 +11,7 @@ import argparse
 import json
 from collections import Counter
 
-from rinchi_tools import _external, database
-from rinchi_tools.molecule import Molecule
-from rinchi_tools.reaction import Reaction
+from rinchi_tools import Molecule, Reaction, _external, database
 from rinchi_tools.utils import Hashable
 
 
@@ -70,12 +68,14 @@ def changes_ops(args, parser):
 
     elif args.batch:
         master_counter = {'ringcount': Counter(), 'formula': Counter(), 'ringcountelements': Counter(),
-                          'valence': Counter(), 'hybrid': Counter()}
+                          'valence': Counter(), 'hybrid': Counter(), 'ringcount_old': Counter(),
+                          'stereo_old': Counter()}
         with open(args.input) as data:
             for rinchi in data:
                 r = Reaction(rinchi)
                 if args.list:
-                    print(rinchi)
+                    print('\n-------')
+                    print(rinchi.strip())
                 if args.ringcount:
                     # Count the change in ring populations across the reactions
                     ringcount = r.change_across_reaction(Molecule.get_ring_count)
@@ -96,34 +96,37 @@ def changes_ops(args, parser):
                     if formula and args.list:
                         print("Formula Change : ", formula)
                     if formula:
-                        master_counter['ringcount'][Hashable(formula)] += 1
+                        master_counter['formula'][Hashable(formula)] += 1
                 if args.valence:
                     valence = r.change_across_reaction(Molecule.get_valence_count)
                     if valence and args.list:
                         print("Valence Change : ", valence)
                     if valence:
-                        master_counter['ringcount'][Hashable(valence)] += 1
+                        master_counter['valence'][Hashable(valence)] += 1
                 if args.hybrid:
                     hybrid = r.change_across_reaction(Molecule.get_hybrid_count)
                     if hybrid and args.list:
                         print("Hybridisation Change Count : ", hybrid)
                     if hybrid:
-                        master_counter['ringcount'][Hashable(hybrid)] += 1
+                        master_counter['hybrid'][Hashable(hybrid)] += 1
                 if args.ringcountold:
                     ringcountold = r.ring_change()
                     if ringcountold and args.list:
-                        print(ringcountold)
+                        print("Ring Count (Old Method) : ", ringcountold)
                     if ringcountold:
-                        master_counter['ringcount'][Hashable(ringcountold)] += 1
-                if args.stereoold:
+                        master_counter['ringcount_old'][Hashable(ringcountold)] += 1
+                if args.stereoold:  # TODO fix this
+
                     stereoold = r.stereo_change(args.stereoold.get('wd', None), args.stereoold.get('sp2', None),
                                                 args.stereoold.get('sp3', None))
                     if stereoold and args.list:
-                        print(stereoold)
+                        print('Stereo Change Count (Old Method) : ', stereoold)
                     if stereoold:
-                        master_counter['ringcount'][Hashable(stereoold)] += 1
+                        master_counter['stereo_old'][Hashable(stereoold)] += 1
+        print('\nStats\n-----')
         for key, value in master_counter.items():
-            print(key, "  ", value)
+            if value:
+                print(key, "  ", value)
     else:
         parser.print_help()
 
@@ -151,16 +154,15 @@ def add_changes(subparser):
 
     # Add operation arguments
     operation = subparser.add_argument_group("Operation")
-    operation.add_argument("--ringcount", action="store_true", help="Calculate the change in ring populations by size")
-    operation.add_argument("--formula", action="store_true", help="Calculate the change in formula across a reaction")
+    operation.add_argument("--ringcount", action="store_true", help="Change in ring populations by size")
+    operation.add_argument("--formula", action="store_true", help="Change in formula across a reaction")
     operation.add_argument("--valence", action="store_true", help="Change in valence across reaction")
     operation.add_argument("--hybrid", action="store_true", help="Change in hybridisation of C atoms across reaction")
     operation.add_argument("--ringcountelements", action="store_true",
-                           help="Calculate the change in ring populations by ring elements")
-    operation.add_argument("--ringcountold", action="store_true",
-                           help="Calculate the change in ring populations. Old method")
+                           help="Change in ring populations by ring elements")
+    operation.add_argument("--ringcountold", action="store_true", help="Change in ring populations. Old method")
     operation.add_argument("--stereoold", nargs='?', type=json.loads,
-                           help="Calculate the change stereocentres. Old method. Takes an argument as a dictionary "
+                           help="Change stereocentres. Old method. Takes an argument as a dictionary "
                                 "such as {'sp2':True,'sp3':False,'wd':True} for options to "
                                 "1. Count sp2 centres 2. Count sp3 centre 3. Well defined stereocentres only")
 

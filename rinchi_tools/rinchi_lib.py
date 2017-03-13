@@ -10,17 +10,20 @@ Python 3 compatibility.  Documentation was adapted from the official v0.03 relea
     D. Hampshire 2017
 """
 
-from ctypes import *
+import ctypes as ct
 
-from rinchi_tools import _external
+from . import _external
 
 
-class Asciifier(object):
+class StringHandler(object):
     """ Enables seamless use with Python 3 by converting to ascii within the argument objects
-"""
+    """
 
     @classmethod
     def from_param(cls, value):
+        """
+        Performs the conversion
+        """
         if isinstance(value, bytes):
             return value
         else:
@@ -34,30 +37,33 @@ class RInChI:
 
     def __init__(self, lib_path=_external.LIB_RINCHI_PATH):
 
-        self.lib_handle = cdll.LoadLibrary(lib_path)
+        self.lib_handle = ct.cdll.LoadLibrary(lib_path)
 
         self.lib_latest_error_message = self.lib_handle.rinchilib_latest_err_msg
-        self.lib_latest_error_message.restype = c_char_p
+        self.lib_latest_error_message.restype = ct.c_char_p
 
         self.lib_rinchi_from_file_text = self.lib_handle.rinchilib_rinchi_from_file_text
-        self.lib_rinchi_from_file_text.argtypes = [Asciifier, Asciifier, c_bool, POINTER(c_char_p), POINTER(c_char_p)]
-        self.lib_rinchi_from_file_text.restype = c_long
+        self.lib_rinchi_from_file_text.argtypes = [StringHandler, StringHandler, ct.c_bool, ct.POINTER(ct.c_char_p),
+                                                   ct.POINTER(ct.c_char_p)]
+        self.lib_rinchi_from_file_text.restype = ct.c_long
 
         self.lib_rinchikey_from_file_text = self.lib_handle.rinchilib_rinchikey_from_file_text
-        self.lib_rinchikey_from_file_text.argtypes = [Asciifier, Asciifier, Asciifier, c_bool, POINTER(c_char_p)]
-        self.lib_rinchikey_from_file_text.restype = c_long
+        self.lib_rinchikey_from_file_text.argtypes = [StringHandler, StringHandler, StringHandler,
+                                                      ct.c_bool, ct.POINTER(ct.c_char_p)]
+        self.lib_rinchikey_from_file_text.restype = ct.c_long
 
         self.lib_file_text_from_rinchi = self.lib_handle.rinchilib_file_text_from_rinchi
-        self.lib_file_text_from_rinchi.argtypes = [Asciifier, Asciifier, Asciifier, POINTER(c_char_p)]
-        self.lib_file_text_from_rinchi.restype = c_long
+        self.lib_file_text_from_rinchi.argtypes = [StringHandler, StringHandler, StringHandler,
+                                                   ct.POINTER(ct.c_char_p)]
+        self.lib_file_text_from_rinchi.restype = ct.c_long
 
         self.lib_inchis_from_rinchi = self.lib_handle.rinchilib_inchis_from_rinchi
-        self.lib_inchis_from_rinchi.argtypes = [Asciifier, Asciifier, POINTER(c_char_p)]
-        self.lib_inchis_from_rinchi.restype = c_long
+        self.lib_inchis_from_rinchi.argtypes = [StringHandler, StringHandler, ct.POINTER(ct.c_char_p)]
+        self.lib_inchis_from_rinchi.restype = ct.c_long
 
         self.lib_rinchikey_from_rinchi = self.lib_handle.rinchilib_rinchikey_from_rinchi
-        self.lib_rinchikey_from_rinchi.argtypes = [Asciifier, Asciifier, POINTER(c_char_p)]
-        self.lib_rinchikey_from_rinchi.restype = c_long
+        self.lib_rinchikey_from_rinchi.argtypes = [StringHandler, StringHandler, ct.POINTER(ct.c_char_p)]
+        self.lib_rinchikey_from_rinchi.restype = ct.c_long
 
     def rinchi_errorcheck(self, return_code):
         """
@@ -85,11 +91,12 @@ class RInChI:
             tuple pair of the RInChI and RAuxInfo generated
 
         """
-        result_rinchi_string = c_char_p()
-        result_rinchi_auxinfo = c_char_p()
+        result_rinchi_string = ct.c_char_p()
+        result_rinchi_auxinfo = ct.c_char_p()
         self.rinchi_errorcheck(
-            self.lib_rinchi_from_file_text(input_format, rxnfile_data, force_equilibrium, byref(result_rinchi_string),
-                                           byref(result_rinchi_auxinfo)))
+            self.lib_rinchi_from_file_text(input_format, rxnfile_data, force_equilibrium,
+                                           ct.byref(result_rinchi_string),
+                                           ct.byref(result_rinchi_auxinfo)))
         res_rinchi = str(result_rinchi_string.value, 'utf-8')
         res_auxinfo = str(result_rinchi_auxinfo.value, 'utf-8')
         return res_rinchi, res_auxinfo
@@ -110,9 +117,9 @@ class RInChI:
 
         """
 
-        result = c_char_p()
+        result = ct.c_char_p()
         self.rinchi_errorcheck(
-            self.lib_rinchikey_from_file_text(input_format, file_text, key_type, force_equilibrium, byref(result)))
+            self.lib_rinchikey_from_file_text(input_format, file_text, key_type, force_equilibrium, ct.byref(result)))
         result_uc = str(result.value, 'utf-8')
         return result_uc
 
@@ -128,9 +135,9 @@ class RInChI:
         Returns:
             The text block for the file
         """
-        result = c_char_p()
+        result = ct.c_char_p()
         self.rinchi_errorcheck(
-            self.lib_file_text_from_rinchi(rinchi_string, rinchi_auxinfo, output_format, byref(result)))
+            self.lib_file_text_from_rinchi(rinchi_string, rinchi_auxinfo, output_format, ct.byref(result)))
         result_uc = str(result.value, 'utf-8')
         return result_uc
 
@@ -150,8 +157,8 @@ class RInChI:
                 Product, and Agent list contains a set of (InChI, AuxInfo) tuples.  The No-Structures list contains
                 No-Structure counts for Reactants, Products, and Agents.
         """
-        inchis = c_char_p()
-        self.rinchi_errorcheck(self.lib_inchis_from_rinchi(rinchi_string, rinchi_auxinfo, byref(inchis)))
+        inchis = ct.c_char_p()
+        self.rinchi_errorcheck(self.lib_inchis_from_rinchi(rinchi_string, rinchi_auxinfo, ct.byref(inchis)))
         inchis_unicode = str(inchis.value, 'utf-8')
         lines = inchis_unicode.split("\n")
 
@@ -218,7 +225,7 @@ class RInChI:
         Returns:
             the RInChiKey
         """
-        result = c_char_p()
-        self.rinchi_errorcheck(self.lib_rinchikey_from_rinchi(rinchi_string, key_type, byref(result)))
+        result = ct.c_char_p()
+        self.rinchi_errorcheck(self.lib_rinchikey_from_rinchi(rinchi_string, key_type, ct.byref(result)))
         result_uc = str(result.value, 'utf-8')
         return result_uc

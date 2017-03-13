@@ -24,3 +24,10 @@ tools and programs to manipulate RInChIs, a concise machine readable reaction id
 
 ---------------------------------------------------------------------------------------------------------------------
 """
+# Create alias names for the main class objects
+from .atom import Atom
+from .matcher import Matcher
+from .molecule import Molecule
+from .reaction import Reaction
+from .rinchi_lib import RInChI
+

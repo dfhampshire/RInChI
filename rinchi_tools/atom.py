@@ -50,5 +50,10 @@ class Atom:
                     return "sp"
 
     def get_attached_edges(self):
+        """
+
+        Returns:
+
+        """
         attached_edges = [tuple(sorted((self.index, bond))) for bond in self.bonds]
         return attached_edges

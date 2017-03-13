@@ -1,8 +1,14 @@
+"""
+Patch for the v0.03 C++ release which produces erroneous results on inputting RXN and RD files.
+
+    D. Hampshire 2017
+"""
+
 import os
 import re
 import tempfile
 
-from rinchi_tools import _external, tools, utils
+from . import _external, tools, utils
 
 
 def rxn_to_molfs(rxn):
@@ -123,7 +129,7 @@ def _rdf_rxn_2_molfs(rxn_entry):
 
     output_rxnts = list(set(rstriplist(reactants)))
     output_prods = list(set(rstriplist(products)))
-    reactions.append((output_rxnts,output_prods,list(set(rstriplist(agents)))))
+    reactions.append((output_rxnts, output_prods, list(set(rstriplist(agents)))))
     for agents_set in agents_by_variation:
         output_agents = list(set(agents_set + agents))
         reactions.append((output_rxnts, output_prods, output_agents))
@@ -137,7 +143,6 @@ def _agent_harvester(data):
 
     Args:
         data: The leftover data at the end of the RD file
-        num_variations: The number of variation in the leftover data section
 
     Returns:
         A complete list of agent variation stored as a list of lists
@@ -169,7 +174,6 @@ def molf_2_inchi(molf):
 
     Args:
         molf: The contents of a molfile as a string.
-        return_auxinfo: If true, will generate AuxInfo for the InChI.
 
     Returns:
         inchi: The InChI.
@@ -179,7 +183,7 @@ def molf_2_inchi(molf):
     """
     # Saves the molfile to a temporary file.
     molf_tempfile = tempfile.NamedTemporaryFile(delete=False)
-    molf_tempfile.write(bytes(molf,'utf-8'))
+    molf_tempfile.write(bytes(molf, 'utf-8'))
     molf_tempfile.close()
     # Runs inchi-1 program on this molfile, and stores the output.
     inchi_args = [_external.INCHI_PATH, molf_tempfile.name, '-STDIO', '-NoLabels']
@@ -204,7 +208,11 @@ def molfiles_2_rinchi(reactants, products, agents, direction='+', nstructs=''):
     Convert an RXN file to a RInChI.
 
     Args:
-        molfiles: Molefile list group in 3 lists by products, agents, reactants
+        reactants:
+        products:
+        agents:
+        direction:
+        nstructs:
 
     Returns:
         A tuple containing (rinchi, rauxinfo)
@@ -219,7 +227,8 @@ def molfiles_2_rinchi(reactants, products, agents, direction='+', nstructs=''):
     products_i = list(collect_inchidata(products))
     agents_i = list(collect_inchidata(agents))
     # Build the RInChI for output.
-    rinchi, rauxinfo = tools.build_rinchi_rauxinfo(reactants_i, products_i, agents_i, direction=direction,u_struct=nstructs)
+    rinchi, rauxinfo = tools.build_rinchi_rauxinfo(reactants_i, products_i, agents_i, direction=direction,
+                                                   u_struct=nstructs)
 
     # Return everything requested
     return rinchi, rauxinfo
@@ -236,14 +245,12 @@ def rxn_to_rinchi(rxn_entry, force_equilibrium=False):
 
 
 def rdf_to_rinchi(rdf_entry, start=0, stop=0, force_equilibrium=False):
-    reactions = rdf_to_molfs(rdf_entry,start,stop)
+    reactions = rdf_to_molfs(rdf_entry, start, stop)
     if force_equilibrium:
         direction = '='
     else:
         direction = '+'
     for reaction in reactions:
-        reactant, products, agents = reaction
-        yield molfiles_2_rinchi(reactant, products, agents, direction)
-
-
-
+        reactants, products, agents = reaction
+        out = molfiles_2_rinchi(reactants, products, agents, direction)
+        yield out

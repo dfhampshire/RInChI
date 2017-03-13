@@ -1,3 +1,6 @@
+from time import strftime
+
+
 def _molfs_to_rxn(rxnt_molfs=None, prod_molfs=None, agnt_molfs=None, name=''):
     """
     Convert a list of reactant and product Molfiles into a RXN file.

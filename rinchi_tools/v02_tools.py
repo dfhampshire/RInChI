@@ -3,8 +3,7 @@ RInChI v0.02 to 0.03 conversion scripts.
 
     D.F. Hampshire 2016
 """
-
-from rinchi_tools import _inchi_tools, tools, utils
+from . import tools, utils
 
 
 class VersionError(Exception):
@@ -51,7 +50,7 @@ def generate_rauxinfo(rinchi):
     def auxinfo_convert(inchis):
         auxinfos = []
         for inchi in inchis:
-            auxinfo = _inchi_tools.inchi_2_auxinfo(inchi)
+            auxinfo = tools.inchi_2_auxinfo(inchi)
             auxinfos.append(auxinfo)
         return auxinfos
 

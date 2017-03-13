@@ -19,13 +19,14 @@ This module provides a variety of functions for the interconversion of RInChIS, 
 import csv
 import os
 
-from rinchi_tools import _rxn_rdf_patch, tools, utils
-from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
+import pandas
+
+from . import _rxn_rdf_patch, tools, utils
+from .rinchi_lib import RInChI
 
 
 def rdf_to_rinchis(rdf, start=0, stop=0, force_equilibrium=False, return_rauxinfos=False, return_longkeys=False,
-                   return_shortkeys=False, return_webkeys=False, return_rxndata=False, return_rinchis=True,
-                   columns=None):
+                   return_shortkeys=False, return_webkeys=False, return_rinchis=True, columns=None):
     """
     Convert an RDFile to a list of RInChIs.
 
@@ -40,7 +41,6 @@ def rdf_to_rinchis(rdf, start=0, stop=0, force_equilibrium=False, return_rauxinf
         return_longkeys: If True, generates and returns Long-RInChIKeys for each generated RInChI.
         return_shortkeys: If True, generates and returns Short-RInChIKeys for each generated RInChI.
         return_webkeys: If True, generates and returns Web-RInChIKeys for each generated RInChI.
-        return_rxndata: If True, returns a list of the &DTYPE/$DATUM data stored in the rxnfiles
         return_rinchis: Return the rinchi. Defaults to True
         columns: the data to return may be given as list of headers instead.
 
@@ -65,8 +65,10 @@ def rdf_to_rinchis(rdf, start=0, stop=0, force_equilibrium=False, return_rauxinf
     data_list = []
     rinchis = []
     rauxinfos = []
-    for rinchi, rauxinfo in _rxn_rdf_patch.rdf_to_rinchi(rdf,start,stop,force_equilibrium):
-        if rinchi not in rinchis and not (rauxinfo in rauxinfos or return_rauxinfos):  # Force unique entries
+
+    for pair in _rxn_rdf_patch.rdf_to_rinchi(rdf, start, stop, force_equilibrium):
+        rinchi, rauxinfo = pair
+        if rinchi not in rinchis:  # Force unique entries
             data = {}
             if return_rinchis:
                 data['rinchi'] = rinchi
@@ -75,13 +77,13 @@ def rdf_to_rinchis(rdf, start=0, stop=0, force_equilibrium=False, return_rauxinf
                 data['rauxinfo'] = rauxinfo
                 rauxinfos.append(rauxinfo)
             if return_longkeys:
-                longkey = RInChI_Handle().rinchikey_from_rinchi(rinchi, "L")
+                longkey = RInChI().rinchikey_from_rinchi(rinchi, "L")
                 data['longkey'] = longkey
             if return_shortkeys:
-                shortkey = RInChI_Handle().rinchikey_from_rinchi(rinchi, "S")
+                shortkey = RInChI().rinchikey_from_rinchi(rinchi, "S")
                 data['shortkey'] = shortkey
             if return_webkeys:
-                webkey = RInChI_Handle().rinchikey_from_rinchi(rinchi, "W")
+                webkey = RInChI().rinchikey_from_rinchi(rinchi, "W")
                 data['webkey'] = webkey
             data_list.append(data)
     return data_list
@@ -109,11 +111,11 @@ def rxn_to_rinchi(rxn_text, ret_rauxinfo=False, longkey=False, shortkey=False, w
     if ret_rauxinfo:
         data['rauxinfo'] = rauxinfo
     if longkey:
-        data['longkey'] = RInChI_Handle().rinchikey_from_rinchi(rinchi, "L") + '\n'
+        data['longkey'] = RInChI().rinchikey_from_rinchi(rinchi, "L")
     if shortkey:
-        data['shortkey'] = RInChI_Handle().rinchikey_from_rinchi(rinchi, "S") + '\n'
+        data['shortkey'] = RInChI().rinchikey_from_rinchi(rinchi, "S")
     if webkey:
-        data['webkey'] = RInChI_Handle().rinchikey_from_rinchi(rinchi, "W") + '\n'
+        data['webkey'] = RInChI().rinchikey_from_rinchi(rinchi, "W")
     return data
 
 
@@ -130,25 +132,27 @@ def rinchi_to_file(data, rxnout=True):
 
     """
     rinchi_data = tools.rinchi_to_dict_list(data)
+    print(rinchi_data)
 
     # Generate RXN file.
     list_files = []
     for entry in rinchi_data:
         assert isinstance(entry, dict)
         if rxnout:
-            file_text = RInChI_Handle().file_text_from_rinchi(entry['rinchi'], entry.get('rauxinfo', ''), "RXN")
+            file_text = RInChI().file_text_from_rinchi(entry['rinchi'], entry.get('rauxinfo', ''), "RXN")
         else:
-            file_text = RInChI_Handle().file_text_from_rinchi(entry['rinchi'], entry.get('rauxinfo', ''), "RD")
+            file_text = RInChI().file_text_from_rinchi(entry['rinchi'], entry.get('rauxinfo', ''), "RD")
         list_files.append(file_text)
 
     return list_files
 
 
-def rinchis_to_keys(data, longkey=False, shortkey=False, webkey=False, inc_rinchi=False):
+def rinchis_to_keys(data, longkey=False, shortkey=False, webkey=False, inc_rinchi=False, inc_rauxinfo=False):
     """
     Converts a list of rinchis in a flat file into a dictionary of RInChIs and keys
 
     Args:
+        inc_rauxinfo:
         data: The data string or file object to parse
         longkey: Whether to include the longkey
         shortkey: Whether to include the shortkey
@@ -161,15 +165,23 @@ def rinchis_to_keys(data, longkey=False, shortkey=False, webkey=False, inc_rinch
     data_list = tools.rinchi_to_dict_list(data)
     for entry in data_list:
         assert isinstance(entry, dict)
-        del entry['rauxinfo']
+        if 'rauxinfo' not in entry and inc_rauxinfo:
+            # Generate rauxinfo
+            tools.generate_rauxinfo(entry['rinchi'])
+        if not inc_rauxinfo:
+            try:
+                del entry['rauxinfo']
+            except KeyError:
+                pass
         # Calculate keys
         if longkey:
-            entry['longkey'] = RInChI_Handle().rinchikey_from_rinchi(entry['rinchi'], "L") + '\n'
+            entry['longkey'] = RInChI().rinchikey_from_rinchi(entry['rinchi'], "L")
         if shortkey:
-            entry['shortkey'] += RInChI_Handle().rinchikey_from_rinchi(entry['rinchi'], "S") + '\n'
+            entry['shortkey'] = RInChI().rinchikey_from_rinchi(entry['rinchi'], "S")
         if webkey:
-            entry['webkey'] += RInChI_Handle().rinchikey_from_rinchi(entry['rinchi'], "W") + '\n'
-        if not inc_rinchi:  # Remove rinchi if not needed
+            entry['webkey'] = RInChI().rinchikey_from_rinchi(entry['rinchi'], "W")
+        if not inc_rinchi:
+            # Remove rinchi if not needed
             del entry['rinchi']
     return data_list
 
@@ -180,7 +192,7 @@ def rinchis_to_keys(data, longkey=False, shortkey=False, webkey=False, inc_rinch
 
 
 def rdf_to_csv(rdf, outfile="rinchi", return_rauxinfo=False, return_longkey=False, return_shortkey=False,
-               return_webkey=False, return_rxninfo=False):
+               return_webkey=False):
     """
     Convert an RD file to a CSV file containing RInChIs and other optional parameters
 
@@ -191,36 +203,32 @@ def rdf_to_csv(rdf, outfile="rinchi", return_rauxinfo=False, return_longkey=Fals
         return_longkey: Include Long key in the result
         return_shortkey: Include the Short key in the result
         return_webkey: Include the Web key in the result
-        return_rxninfo: Include RXN info in the result
 
     Returns:
         The name of the CSV file created with the requested fields
     """
 
     # Generate header line
-    header = ["RInChI"]
+    header = ["rinchi"]
     if return_rauxinfo:
-        header.append("RAuxInfo")
+        header.append("rauxinfo")
     if return_longkey:
-        header.append("LongKey")
+        header.append("longkey")
     if return_shortkey:
-        header.append("ShortKey")
+        header.append("shortkey")
     if return_webkey:
-        header.append("WebKey")
-    if return_rxninfo:
-        header.append("RXNInfo")
+        header.append("webkey")
 
     data = rdf_to_rinchis(rdf, force_equilibrium=False, return_rauxinfos=return_rauxinfo,
                           return_longkeys=return_longkey, return_shortkeys=return_shortkey,
-                          return_webkeys=return_webkey, return_rxndata=return_rxninfo)
+                          return_webkeys=return_webkey)
 
-    print(data)
     # Write new database file as .csv
-    f = utils.create_output_file(outfile, csv)
-    writer = csv.writer(f, delimiter='$')
-    writer.writerow(header)
+    f, path = utils.create_output_file(outfile, '.csv')
+    writer = csv.DictWriter(f, header, delimiter='$')
+    writer.writeheader()
     writer.writerows(data)
-    return f.name
+    return os.path.abspath(path)
 
 
 def rdf_to_csv_append(rdf, csv_file):
@@ -232,47 +240,40 @@ def rdf_to_csv_append(rdf, csv_file):
         csv_file: the CSV file path
     """
 
-    # Initialise a list that will contain all the RInChIs currently in the csv_file
-    old_rinchis = []
-
     # Open the existing csv_file and read the header defining which fields are present
-    with open(csv_file) as db:
-        reader = csv.reader(db, delimiter="$")
+    df = pandas.read_csv(csv_file, sep="$", header=0)
+    old_rinchis = set(df['rinchi'])
+    header = list(df)
 
-        # Add all rinchis in the existing csv_file to a list
-        header = reader.next()
-        for row in reader:
-            old_rinchis.append(row[0])
-
-    return_rauxinfo = "RAuxInfo" in header
-    return_longkey = "LongKey" in header
-    return_shortkey = "ShortKey" in header
-    return_webkey = "WebKey" in header
-    return_rxninfo = "RXNInfo" in header
+    return_rauxinfo = "rauxinfo" in header
+    return_longkey = "longkey" in header
+    return_shortkey = "shortkey" in header
+    return_webkey = "webkey" in header
 
     # Construct a dict of RInChIs and RInChI data from the supplied rd file
     data = rdf_to_rinchis(rdf, force_equilibrium=False, return_rauxinfos=return_rauxinfo,
                           return_longkeys=return_longkey, return_shortkeys=return_shortkey,
-                          return_webkeys=return_webkey, return_rxndata=return_rxninfo)
+                          return_webkeys=return_webkey)
 
-    print(data)
     # Convert both lists of rinchis into sets - unique, does not preserve order
-    assert all(isinstance(i, dict) for i in data)
-    old_rinchis = set(old_rinchis)
-    new_rinchis = set(entry['rinchi'] for entry in data)
+    rinchis = set((entry['rinchi'] for entry in data))
 
     # The rinchis that need to be added to the csv_file are the complement of the new rinchis in the old
-    rinchis_to_add = list(new_rinchis - old_rinchis)
+    rinchis.difference_update(old_rinchis)
 
     # Add all new, unique rinchis to the csv_file
     with open(csv_file, "a") as db:
-        writer = csv.writer(db, delimiter='$')
+        writer = csv.DictWriter(db, header, delimiter='$')
         # Add rows determined
-        writer.writerows(entry if entry['rinchi'] in rinchis_to_add else None for entry in data)
+        try:
+            rows = [entry for entry in data if entry['rinchi'] in rinchis]
+            writer.writerows(rows)
+        except csv.Error:
+            pass
 
 
 def create_csv_from_directory(root_dir, outname, return_rauxinfo=False, return_longkey=False, return_shortkey=False,
-                              return_webkey=False, return_rxninfo=False):
+                              return_webkey=False):
     """
     Iterate recursively over all rdf files in the given folder and combine them into a single .csv database.
 
@@ -283,7 +284,6 @@ def create_csv_from_directory(root_dir, outname, return_rauxinfo=False, return_l
         return_longkey: Include Long key in the result
         return_shortkey: Include the Short key in the result
         return_webkey: Include the Web key in the result
-        return_rxninfo: Include RXN info in the result
 
     Raises:
         IndexError: File failed to be recognised for importing
@@ -291,22 +291,25 @@ def create_csv_from_directory(root_dir, outname, return_rauxinfo=False, return_l
 
     # Flag for whether the database should be created or appended
     database_has_started = False
-    db_name = ''
+    db_path = ''
 
-    # Iterate over all files in the roo directory
-    for root, folders, files in os.walk(root_dir):
-        for file in files:
-            filename = os.path.join(root, file)
+    # Iterate over all files in the root directory
+    for root, folders, filenames in os.walk(root_dir):
+        file_number = len(filenames)
+        for number, filename in enumerate(filenames):
+            print('processing {} of {}'.format((number + 1), file_number))
+            filepath = os.path.join(root, filename)
+            data = open(filepath).read()
             try:
                 # Only try to process files with an .rdf extension
-                if file.split(".")[-1] == "rdf":
+                if os.path.splitext(filename)[1] == ".rdf":
                     if database_has_started:
-                        rdf_to_csv_append(filename, db_name)
+                        rdf_to_csv_append(data, db_path)
                     else:
-                        db_name = rdf_to_csv(filename, outname, return_rauxinfo, return_longkey, return_shortkey,
-                                             return_webkey, return_rxninfo)
+                        db_path = rdf_to_csv(data, outname, return_rauxinfo, return_longkey, return_shortkey,
+                                             return_webkey)
                         database_has_started = True
-            except IndexError:
-
+            except IndexError as e:
                 # Send the names of any files that failed to be recognised to STDOUT
-                print(("Failed to recognise {}".format(filename)))
+                print(e, ("Failed to recognise {}".format(filename)))
+    return db_path

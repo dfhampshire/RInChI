@@ -12,14 +12,15 @@ import argparse
 import os
 import sqlite3
 
-from rinchi_tools import _external, database
-from rinchi_tools.rinchi_lib import RInChI as RInChI_Handle
+from rinchi_tools import RInChI, _external, database
 
 
-def create_index_page(directory,end="",start=""):
+def create_index_page(directory, end="", start=""):
     """
     Creates an index page for all file in a directory
     Args:
+        end:
+        start:
         directory:
 
     Returns:
@@ -41,55 +42,58 @@ def create_index_page(directory,end="",start=""):
     with open(filename, mode='w+') as f:
         f.write(file)
 
+
 def get_rinchis_rauxinfos(db, table_name, number=1000):
     """
     Gets a list of rinchi - rauxinfo tuples
     """
     db = sqlite3.connect(db)
     cursor = db.cursor()
-    results = database._sql_search(cursor, table_name, columns=("rinchi","rauxinfo"), limit=number)
+    results = database._sql_search(cursor, table_name, columns=("rinchi", "rauxinfo"), limit=number)
     return results
 
-def tuple_to_html_page(tuple, inc_rinchi=True, inc_rauxinfo=True, inc_longkey=True, inc_shortkey=True,
-                       inc_webkey=True,custom=None):
+
+def tuple_to_html_page(data_tuple, inc_rinchi=True, inc_rauxinfo=True, inc_longkey=True, inc_shortkey=True, inc_webkey=True,
+                       custom=None):
     """
-    Create HTML page text from a tuple
+    Create HTML page text from a data_tuple
     """
     if custom is None:
         tag = "p"
     else:
         tag = custom
-    wrappings = ("<{}>".format(tag),"</{}>".format(tag))
+    wrappings = ("<{}>".format(tag), "</{}>".format(tag))
     head = '<?php $title = "{}"; include "/var/www/template/header.php"; ?>'.format("RInChI Example")
     foot = '<?php include "/var/www/template/footer.php"; ?>'
     main_text = head
-    web = RInChI_Handle().rinchikey_from_rinchi(tuple[0], "W").join(wrappings)
+    web = RInChI().rinchikey_from_rinchi(data_tuple[0], "W").join(wrappings)
     if inc_rinchi:
-        main_text += tuple[0].join(wrappings)
+        main_text += data_tuple[0].join(wrappings)
     if inc_rauxinfo:
-        main_text += tuple[1].join(wrappings)
+        main_text += data_tuple[1].join(wrappings)
     if inc_longkey:
-        main_text += RInChI_Handle().rinchikey_from_rinchi(tuple[0], "L").join(wrappings)
+        main_text += RInChI().rinchikey_from_rinchi(data_tuple[0], "L").join(wrappings)
     if inc_shortkey:
-        main_text += RInChI_Handle().rinchikey_from_rinchi(tuple[0], "S").join(wrappings)
+        main_text += RInChI().rinchikey_from_rinchi(data_tuple[0], "S").join(wrappings)
     if inc_webkey:
         main_text += web
     main_text += foot
     return main_text
 
 
-def run(db,table_name,destination, prefix, inc_rinchi=True, inc_rauxinfo=True, inc_longkey=True, inc_shortkey=True,
-                       inc_webkey=True,custom=None,number=1000):
-    results = get_rinchis_rauxinfos(db,table_name,number)
+def run(db, table_name, destination, prefix, inc_rinchi=True, inc_rauxinfo=True, inc_longkey=True, inc_shortkey=True,
+        inc_webkey=True, custom=None, number=1000):
+    results = get_rinchis_rauxinfos(db, table_name, number)
     indexer = 1
     for result in results:
-        page = tuple_to_html_page(result,inc_rinchi,inc_rauxinfo,inc_longkey,inc_shortkey,inc_webkey,custom)
-        filename = "{}{}{}-{}.php".format(destination,_external.SEPARATOR,prefix,indexer)
+        page = tuple_to_html_page(result, inc_rinchi, inc_rauxinfo, inc_longkey, inc_shortkey, inc_webkey, custom)
+        filename = "{}{}{}-{}.php".format(destination, _external.SEPARATOR, prefix, indexer)
         os.makedirs(os.path.dirname(filename), exist_ok=True)
-        with open(filename,mode='w+') as f:
+        with open(filename, mode='w+') as f:
             f.write(page)
         indexer += 1
-    create_index_page(destination,start=prefix)
+    create_index_page(destination, start=prefix)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -108,5 +112,5 @@ if __name__ == "__main__":
 
     print(_external.RINCHI_DATABASE)
     args = parser.parse_args()
-    run(args.d,args.table,args.destination,args.file_prefix,args.rinchi,args.rauxinfo,args.longkey,args.shortkey,args.webkey,args.custom,args.number)
-
+    run(args.d, args.table, args.destination, args.file_prefix, args.rinchi, args.rauxinfo, args.longkey, args.shortkey,
+        args.webkey, args.custom, args.number)

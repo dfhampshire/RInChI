@@ -14,8 +14,7 @@ from itertools import zip_longest
 
 from numpy.linalg import matrix_rank
 
-from rinchi_tools import _inchi_tools
-from rinchi_tools.atom import Atom
+from .atom import Atom
 
 
 class Molecule:
@@ -27,7 +26,7 @@ class Molecule:
 
     def __init__(self, inchi):
         self.inchi = inchi.rstrip()
-        self.atoms = {} # dictionary of atom objects
+        self.atoms = {}  # dictionary of atom objects
         self.formula = None
         self.formula_dict = {}
         self.rings = []
@@ -46,7 +45,7 @@ class Molecule:
 
         # For all molecules, construct molecular graph
         if self.has_conlayer:
-            self.number_of_rings = _inchi_tools.count_rings(inchi)
+            self.number_of_rings = self.count_rings()['rings']
         else:
             self.number_of_rings = 0
 
@@ -595,10 +594,9 @@ class Molecule:
             if matrix_rank(matrix) == len(minimum_cycle_basis) + 1:
                 minimum_cycle_basis.append(cycle)
                 # elif cycle == [sum(i) % 2 for i in zip(*minimum_cycle_basis)]:
-                # print(cycle, minimum_cycle_basis
+                # print(cycle, minimum_cycle_basis)
 
         s = [self.edge_list_to_atoms(self.vector_to_edge_list(x)) for x in minimum_cycle_basis]
-
         self.rings = s
         return None
 
@@ -679,7 +677,6 @@ class Molecule:
         Sets the ring count property which contains the ring sizes in the format { ring size : number of rings
         present, ...}
         """
-
         c = self.inchi_to_layer("c")
         if not c or ";" in self.inchi_to_layer("c"):
             self.ring_count = Counter()
@@ -715,8 +712,8 @@ class Molecule:
 
         if not self.has_searched_rings:
             self.calculate_rings()
-        if not self.has_set_elements:
-            self.set_atomic_elements()
+
+        self.set_atomic_elements()
 
         count = Counter()
 
@@ -817,3 +814,194 @@ class Molecule:
         """
         self.chemical_formula_to_dict()
         return Counter(self.formula_dict)
+
+    def count_sp3(self, wd=False, enantio=False):
+        """
+        Count the number of sp3 stereocentres in a molecule.
+
+        Args:
+            wd: Whether or not the stereocentre must be well-defined to be counted.
+            enantio: Whether or not the structure must be enantiopure to be counted.
+
+        Returns:
+            The number of sp3 stereocentres in the structure.
+        """
+        sp3_centre_count = 0
+
+        # Split the inchi into layers
+        inchi_layers = self.inchi.split('/')
+
+        # Collate all the sp3 stereochemistry layers
+        sp3_layers = []
+        for index, layer in enumerate(inchi_layers):
+            if layer.startswith('t'):
+                stereolayer = [layer]
+                try:
+                    if inchi_layers[index + 1].startswith('m'):
+                        stereolayer.append(inchi_layers[index + 1])
+                        try:
+                            if inchi_layers[index + 2].startswith('s'):
+                                stereolayer.append(inchi_layers[index + 2])
+                        except IndexError:
+                            pass
+                except IndexError:
+                    pass
+                try:
+                    if inchi_layers[index + 1].startswith('s'):
+                        stereolayer.append(inchi_layers[index + 1])
+                except IndexError:
+                    pass
+                sp3_layers.append(stereolayer)
+
+        # If there are no sp3_layers at all, then there is no sp3 stereochemistry.
+        if not sp3_layers:
+            return sp3_centre_count
+
+        # If enantio is specified, check for '/s2' (relative stereochemistry) or '/s3' (racemic) flags are present.  If
+        # either are, the sp3 stereochemistry is not enantiomeric.
+        if enantio:
+            for layer in sp3_layers:
+                for sublayer in layer:
+                    if sublayer.startswith('s2') or sublayer.startswith('s3'):
+                        return sp3_centre_count
+
+        # If enantio is not specified (or if enantio is specified and there is no "/s2" or "/s3" flag), count and return
+        # the stereocentres.
+        for sp3_layer in sp3_layers:
+
+            # Consider only the "/t" layer, and discard the "t" flag.
+            t_layer = sp3_layer[0][1:]
+
+            # Consider multi-component salts.
+            t_layer_by_components = t_layer.split(';')
+            for component in t_layer_by_components:
+
+                # Components without stereochemistry will have empty stereolayers.
+                if component:
+                    sp3_centres = component.split(',')
+
+                    # Consider stoichiometry.
+                    multiplier = 1
+                    if component[1] == '*':
+                        multiplier = int(component[0])
+                    for sp3_centre in sp3_centres:
+
+                        # If wd is specified, only count those stereocentres which
+                        # aren't "u" (undefined) or "?" (omitted).
+                        if wd:
+                            if sp3_centre[-1] not in 'u?':
+                                sp3_centre_count += multiplier
+                        else:
+                            sp3_centre_count += multiplier
+        return sp3_centre_count
+
+    def count_sp2(self, wd=False):
+        """
+        Count the number of sp2 stereocentres.
+
+        Args:
+            wd: Whether or not the stereocentre must be well-defined to be counted.
+
+        Returns:
+            sp2_centre_count: The number of sp2 stereocentres in the structure.
+        """
+        sp2_centre_count = 0
+
+        # Split the inchi into layers.
+
+        inchi_layers = self.inchi.split('/')
+        # Collate the sp2 layers.
+        sp2_layers = []
+        for layer in inchi_layers:
+            if layer.startswith('b'):
+                sp2_layers.append(layer[1:])
+
+        # If there are no sp2 layers, the molecule has no sp2 stereochemistry.
+        if not sp2_layers:
+            return sp2_centre_count
+        for sp2_layer in sp2_layers:
+
+            # Discard the "d" flag.
+            sp2_layer = sp2_layer[1:]
+
+            # Consider multi-component salts.
+            sp2_layer_by_components = sp2_layer.split(';')
+            for component in sp2_layer_by_components:
+
+                # Components without stereochemistry will have empty stereolayers
+                if component:
+                    sp2_centres = component.split(',')
+
+                    # Consider stoichiometry.
+                    multiplier = 1
+                    if component[1] == '*':
+                        multiplier = int(component[0])
+                    for sp2_centre in sp2_centres:
+
+                        # If wd is specified, only count those stereocentres which
+                        # aren't "u" (undefined) or "?" (omitted).
+                        if wd:
+                            if sp2_centre[-1] not in 'u?':
+                                sp2_centre_count += multiplier
+                        else:
+                            sp2_centre_count += multiplier
+        return sp2_centre_count
+
+    def count_rings(self):
+        """
+        Count the number of rings in an InChI.
+
+        Returns:
+            ring_count: The number of rings in the InChI.
+        """
+        count = Counter()
+        full_conlayer = self.inchi_to_layer('c')
+        if full_conlayer is None:
+            return count
+
+        # Split connectivity layer into contributions from different components.
+        conlayers = full_conlayer.split(';')
+
+        # For each component, count the number of rings and add it to the total.
+        ring_count = 0
+        for conlayer in conlayers:
+            # Simple species do not have a connectivity layer.
+            if conlayer:
+
+                # Consider stoichiometry
+                multiplier = 1
+                if conlayer[1] == '*':
+                    multiplier = int(conlayer[0])
+                    conlayer = conlayer[2:]
+                atoms = (conlayer.replace('(', '-').replace(')', '-').replace(',', '-').split('-'))
+                for index, atom in enumerate(atoms):
+                    if atom in atoms[:index]:
+                        ring_count += multiplier
+        count['rings'] = ring_count
+        if count['rings'] != 0:
+            count['molecules'] = 1
+        return count
+
+    def count_centres(self, wd=False, sp2=True, sp3=True):
+        """
+        Counts the centres contained within an inchi
+
+        Args:
+            wd: Whether or not the stereocentre must be well-defined to be counted.
+            sp2: Count sp2 centres
+            sp3: Count sp3 centres
+
+        Returns:
+            stereocentres: The number of stereocentres
+            stereo_mols: The number of molecules with stereocentres
+
+        """
+        count = Counter(molecules=0)
+        if sp2:
+            count['sp2'] = self.count_sp2(wd)
+        if sp3:
+            count['sp3'] = self.count_sp3(wd)
+        count['stereocentres'] = count['sp2'] + count['sp3']
+        if count['stereocentres'] != 0:
+            count['molecules'] = 1
+        return count

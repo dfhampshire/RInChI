@@ -28,10 +28,11 @@ def output(text, output_path=False, default_extension=False):
 
     if output_path:
         # Ensure an output directory exists.
-        output_file = create_output_file(output_path, default_extension)
+        output_file, _ = create_output_file(output_path, default_extension)
         output_file.write(text)
         output_file.close()
         os.chdir(os.pardir)
+        print('File Output: {}'.format(output_path))
     # Otherwise, print the output.
     else:
         print(text)
@@ -48,8 +49,10 @@ def create_output_file(output_path, default_extension):
 
     """
     # Assign extension from output name if provided
+    owd = os.getcwd()
     output_path_no_ext, extension = os.path.splitext(output_path)
-    if not extension:
+    assert isinstance(extension, str)
+    if not extension or extension.isspace():
         extension = default_extension
 
     # Ensure an output directory exists.
@@ -58,15 +61,15 @@ def create_output_file(output_path, default_extension):
     os.chdir('output')
 
     # Prevent overwriting.
-    if os.path.exists(str(output_path_no_ext) + str(extension)):
-        index = 1
-        while os.path.exists('{}_{}{}'.format(output_path_no_ext, index, extension)):
-            index += 1
-            output_path = '{}_{}{}'.format(output_path_no_ext, index, extension)
-    else:
-        output_path = '{}{}'.format(output_path_no_ext, extension)
-    output_file = open(output_path, 'r+')
-    return output_file
+    output_path = output_path_no_ext + extension
+    index = 1
+    while os.path.exists(output_path):
+        output_path = '{}_{}{}'.format(output_path_no_ext, index, extension)
+        index += 1
+    output_file = open(output_path, 'w+')
+    output_path = os.path.abspath(output_path)
+    os.chdir(owd)
+    return output_file, output_path
 
 
 def call_command(args):
@@ -237,6 +240,14 @@ def construct_output_text(data, header_order=False):
         data_string = data
 
     return data_string
+
+
+def counter_to_print_string(counter, name):
+    string = '{}\n{}\n'.format(name,'-'*len(name))
+    for key, value in counter.items():
+        if value:
+            string += '\n' + "{} : {}".format(key,value)
+    return string
 
 
 class Hashable(object):
