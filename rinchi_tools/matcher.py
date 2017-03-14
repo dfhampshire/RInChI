@@ -20,6 +20,8 @@ class Matcher(object):
         self.backup = Backup(self)
         self.sub = sub
         self.master = master
+        sub.set_atomic_elements()
+        master.set_atomic_elements()
         assert isinstance(self.sub, Molecule)
         assert isinstance(self.master, Molecule)
         self.sub_atoms = set(self.sub.atoms.keys())
@@ -126,8 +128,12 @@ class Matcher(object):
         """
         # Add checks here for comparing whether the master atom matches the sub atom
         # insert boolean functions or other test criteria
-        criteria = [self.bonds_compatible(mapping), self.count_compatable(mapping),
-                    self.master.atoms[mapping[1]].element == self.sub.atoms[mapping[0]].element]
+        master_atom = self.master.atoms[mapping[1]]
+        sub_atom = self.sub.atoms[mapping[0]]
+        element_ok = master_atom.element == sub_atom.element
+        hyb_ok = master_atom.get_hybridisation() == sub_atom.get_hybridisation()
+
+        criteria = [self.bonds_compatible(mapping), self.count_compatable(mapping),element_ok, hyb_ok]
 
         # General criteria
 

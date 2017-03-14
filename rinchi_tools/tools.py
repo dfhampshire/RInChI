@@ -694,9 +694,9 @@ def process_stats(rinchis, mostcommon=None):
             data['directions']['none'] += 1
         else:
             print('Warning - reaction has invalid direction flag')
-        data['u_structs']['reactants'] += no_structs[0]
-        data['u_structs']['products'] += no_structs[1]
-        data['u_structs']['agents'] += no_structs[2]
+        data['unknownstructs']['reactants'] += no_structs[0]
+        data['unknownstructs']['products'] += no_structs[1]
+        data['unknownstructs']['agents'] += no_structs[2]
         components = len(rct_inchis) + len(pdt_inchis) + len(agt_inchis)
         data['components'][components] += 1
 

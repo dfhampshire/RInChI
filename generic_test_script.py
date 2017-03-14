@@ -5,33 +5,15 @@ implemented elsewhere.
 
     Duncan Hampshire 2017
 """
-from collections import Counter
 
-from rinchi_tools import conversion
+from rinchi_tools import database
 
 
 def test():
-    d = open('test-resources/testrxn').read()
-    print(conversion.rxn_to_rinchi(d))
-
-
-def test2():
-    for i in range(10000):
-        c = Counter({1: 1, 2: 2, 3: 3, 4: -1, 5: 5, 6: 0})
-        to_remove = set()
-        for key, value in c.items():
-            if value == 0:
-                to_remove.add(key)
-        for key in to_remove:
-            del c[key]
-    print(c)
-
-
-def test3():
-    for i in range(10000):
-        c = Counter({1: 1, 2: 2, 3: 3, 4: -1, 5: 5, 6: 0})
-        c = Counter({k: v for k, v in c.items() if v != 0})
-    print(c)
-
+    e = 'InChI=1S/C2H4O/c1-2-3/h2H,1H3'
+    c = 'InChI=1S/C3H6O2/c4-2-1-3-5/h2,5H,1,3H2'
+    for i in database.search_for_roles('database/rinchi.db','rinchis03',product_subs=(c,),reactant_subs=(e,),limit=20000):
+        print(i)
+    #todo randomize
 
 test()

@@ -34,6 +34,7 @@ class Molecule:
         self.ring_count_by_atoms = None
         self.fingerprint = None
         self.edge_list = None
+        self.is_simple = None
         self.ring_permutations = None  # Stores the ring permutations for easy ring searching
 
         # Flag for whether a ring search has taken place, avoids unnecessary computation
@@ -49,13 +50,25 @@ class Molecule:
         else:
             self.number_of_rings = 0
 
+        self.no_conlayer_gen_atoms()
         self.generate_atoms()
         self.set_atomic_elements()
+        self.set_atomic_hydrogen()
+        self.matched = False
+
+    def __str__(self):
+        return "<Molecule Object 'inchi':{}>".format(self.inchi)
+
+    def __repr__(self):
+        return "Molecule : {}".format(self.inchi)
 
     @staticmethod
     def composite_inchi_to_simple(inchi):
         """
         Splits an inchi with multiple disconnected components into a list of connected inchis
+
+        # Modified 2017 D Hampshire to split formula of multiple identical components
+        # cf. http://www.inchi-trust.org/technical-faq/#5.6
 
         Args:
             inchi: A inchi (usually composite
@@ -69,12 +82,46 @@ class Molecule:
         header = layers[0]
         formula = layers[1].split(".")
         remainder = layers[2:]
+
+        def formula_multiples(formulas):
+            """
+            Generates the multiple formula strings if of the form 2C6H12
+            Args:
+                formulas:
+
+            Returns:
+
+            """
+            multiples = []
+            for index, fm in enumerate(formulas):
+                assert isinstance(fm, str)
+                if fm[0].isdigit():
+                    count, form = re.match('([0-9]+)(.*)',fm).groups()
+                    multiples.append((int(count), form, fm, index))
+            return multiples
+
+        for count, new, orig, index in formula_multiples(formula):
+            formula.remove(orig)
+            formula[index:index] = [new]*count
+
         split_remainder = [formula]
 
         # Formula is split on '.', other layers are split on ';'
+
+        components = 0
+
         for l in remainder:
             prefix = l[0]
-            ls = l.split(";")
+            ls = l[1:].split(";")
+            items = []
+            for index,item in enumerate(ls):
+                if '*' in item:
+                    count, item_new = item.split('*')
+                    items.append((int(count),item,item_new,index))
+            for count, orig, item_new, index in items:
+                ls.remove(orig)
+                ls[index:index] = [item_new]*count
+
             split_remainder.append([ls[0]] + [prefix + x for x in ls[1:]])
 
         # Transposes a list of split lists into a list of split inchis
@@ -84,7 +131,7 @@ class Molecule:
         lst = []
         for i in split_remainder:
             lst.append([j for j in i if len(j) > 1])
-        return [header + "/" + "/".join(x) for x in lst if x]
+        return (header + "/" + "/".join(x) for x in lst if x)
 
     @staticmethod
     def new(inchi):
@@ -128,6 +175,9 @@ class Molecule:
         if not self.formula:
             self.formula = self.inchi_to_chemical_formula()
 
+        if self.formula_dict:
+            return
+
         # Find all elemental formulae followed by numbers and match the element to the count
         multi_elements = re.findall(r"([A-Z][a-z]?\d+)", self.formula)
         for e in multi_elements:
@@ -160,10 +210,9 @@ class Molecule:
         for e in ordering:
             ordered_atoms.extend([e] * self.formula_dict[e])
 
-        self.has_set_elements = True
-
         # Match the canonical InChI labels to their elements
         if self.has_conlayer:
+            self.has_set_elements = True
             for i in range(len(ordered_atoms)):
                 self.atoms[i + 1].element = ordered_atoms[i]
 
@@ -321,9 +370,11 @@ class Molecule:
         if lst:
             ls = lst
         else:
-            self.edge_list = self.generate_edge_list()
+            if self.edge_list is None:
+                self.edge_list = self.generate_edge_list()
             ls = self.edge_list
             if not ls:
+                # set atom for simple molecule
                 return None
 
         llist = {atom: Atom(atom) for edge in ls for atom in edge}
@@ -337,9 +388,62 @@ class Molecule:
         else:
             self.atoms = llist
 
-            #######################################################################
-            # RING FINDING METHODS
-            #######################################################################
+    def no_conlayer_gen_atoms(self):
+        """
+        Sets the self.atoms property for molecules without a connectivity layer when not due to incomplete information,
+        e.g. atom hydrides or elements
+        """
+        if self.is_simple is not None:
+            return self.is_simple
+
+        if not self.formula_dict:
+            self.chemical_formula_to_dict()
+        fd = self.formula_dict.copy()
+        fd.pop('H', None)
+        atoms = tuple(fd.keys())
+        num_elements = sum(fd.values())
+        if self.has_conlayer:
+            retval = False
+        else:
+            if num_elements == 1:
+                self.atoms = {1: Atom(1)}
+                self.atoms[1].element = atoms[0]
+                retval = True
+            elif num_elements == 0:
+                self.atoms = {1: Atom(1)}
+                self.atoms[1].element = 'H'
+                retval = True
+            elif num_elements >= 2:
+                # Could be a non hydrogen single bonded molecule, assume c1-2 if so.
+                #Check single atom of each non hydrogen
+                ordering = []
+                ordered_atoms = []
+
+                # In the canonical InChI labelling scheme, carbon is first, all other elements are arranged alphabetically,
+                # excluding hydrogen
+                if "C" in atoms:
+                    ordering.append("C")
+                heteroatoms = sorted([a for a in atoms if not (a == "C")])
+                ordering += heteroatoms
+
+                for e in ordering:
+                    ordered_atoms.extend([e] * fd[e])
+
+                self.has_set_elements = True
+                if num_elements == 2:
+                    self.edge_list = [(1,2)]
+                for index in range(len(ordered_atoms)):
+                    self.atoms[index + 1] = Atom(index + 1)
+                    self.atoms[index + 1].element = ordered_atoms[index]
+                retval = False
+            else:
+                retval = False
+        self.is_simple = retval
+        return retval
+
+    #######################################################################
+    # RING FINDING METHODS
+    #######################################################################
 
     def depth_first_search(self, start=1):
         """
@@ -777,7 +881,7 @@ class Molecule:
         if self.atoms:
             self.set_atomic_elements()
             self.set_atomic_hydrogen()
-            return Counter([a.hybridisation() for a in self.atoms.values()])
+            return Counter([a.get_hybridisation() for a in self.atoms.values()])
         else:
             return Counter()
 
@@ -791,7 +895,7 @@ class Molecule:
         if self.atoms:
             self.set_atomic_elements()
             self.set_atomic_hydrogen()
-            return Counter([a.valence() for a in self.atoms.values()])
+            return Counter([a.get_valence() for a in self.atoms.values()])
         else:
             return Counter()
 

@@ -60,18 +60,19 @@ def db_ops(args, parser):
         args:
         parser:
     """
+    args.output = args.output
     if args.rdf2db:
-        database.rdf_to_sql(args.input, args.database, args.tablename)
+        database.rdf_to_sql(args.input, args.database, args.output)
     if args.csv2db:
-        database.csv_to_sql(args.input, args.database, args.tablename)
+        database.csv_to_sql(args.input, args.database, args.output)
     if args.ufingerprints:
-        database.update_fingerprints(args.input, args.database, args.tablename)
+        database.update_fingerprints(args.input, args.database, args.output)
     if args.rfingerprints:
-        print(list(database.recall_fingerprints(args.input, args.database, args.tablename)))
+        print(list(database.recall_fingerprints(args.input, args.database, args.output)))
     if args.cfingerprints:
-        database.compare_fingerprints(args.input, args.database, args.tablename)
+        database.compare_fingerprints(args.input, args.database, args.output)
     if args.key:
-        print(database.sql_key_to_rinchi(args.input, args.database, args.tablename, args.key))
+        print(database.sql_key_to_rinchi(args.input, args.database, args.output, args.key))
     if args.convert2_to_3:
         # Names hardcoded because significant modification of the arparse system would be needed and would be complex
         v02_column_names = ["rinchi", "rauxinfo"]
@@ -80,8 +81,6 @@ def db_ops(args, parser):
         database.convert_v02_v03(args.database, args.input, *column_names)
     if args.generate_rauxinfo:
         database.gen_rauxinfo(args.database, args.input)
-    else:
-        parser.print_help()
 
 
 if __name__ == "__main__":

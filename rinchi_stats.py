@@ -32,14 +32,14 @@ def stats_ops(args):
     data = tools.rinchi_to_dict_list(open(args.input),)
     rinchis = (item['rinchi'] for item in data)
     data = tools.process_stats(rinchis, args.mostcommon)
-    p_string = 'Statistics\n---------\n'
-    p_string += '\n' + utils.counter_to_print_string(data['pops'],'Populations')
+    p_string = 'STATS\n-----\n'
+    p_string += utils.counter_to_print_string(data['pops'],'Populations')
     if args.reactants or args.all:
-        p_string = '\n' + utils.counter_to_print_string(data['reactants'], 'Reactants')
+        p_string += '\n' + utils.counter_to_print_string(data['reactants'], 'Reactants')
     if args.products or args.all:
-        p_string = '\n' + utils.counter_to_print_string(data['products'],'Products')
+        p_string += '\n' + utils.counter_to_print_string(data['products'],'Products')
     if args.agents or args.all:
-        p_string = '\n' + utils.counter_to_print_string(data['agents'], 'Agents')
+        p_string += '\n' + utils.counter_to_print_string(data['agents'], 'Agents')
     if args.directions or args.all:
         p_string += '\n' + utils.counter_to_print_string(data['directions'], 'Directions')
     if args.unknownstructs or args.all:
@@ -52,4 +52,4 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=role)
     add_stats(parser)
     args = parser.parse_args()
-    stats_ops(args, parser)
+    stats_ops(args)

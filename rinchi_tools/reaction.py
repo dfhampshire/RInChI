@@ -379,7 +379,7 @@ class Reaction:
             changes['rings'] = abs(changes['rings'])
         return Counter(changes)
 
-    def has_substructures(self, reactant_subs=None, product_subs=None, agent_subs=None):
+    def has_substructures(self, reactant_subs=None, product_subs=None, agent_subs=None, exclusive=True):
         """
         Detects if the reaction is a substructure
 
@@ -387,6 +387,7 @@ class Reaction:
             reactant_subs:
             product_subs:
             agent_subs:
+            exclusive: Match one functionality per molecule of reactant
 
         Returns:
 
@@ -403,12 +404,18 @@ class Reaction:
         agents = self.reaction_agents
 
         def matcher_worker(sub, master):
-            ret = Matcher(sub, master).is_sub()
-            return ret
+            if not master.matched or not exclusive:
+            #  print(sub.inchi, master.inchi)
+                ret = Matcher(sub, master).is_sub()
+                if ret:
+                    master.matched = True
+                return ret
+            else:
+                return False
 
         def find_in_layer(sub, layer):
             for i in layer:
-                if matcher_worker(sub, i):
+                if matcher_worker(sub, i) or not i:
                     return True
             return False
 

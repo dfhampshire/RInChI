@@ -20,6 +20,7 @@ from heapq import nsmallest
 from scipy.spatial import distance
 
 from . import _external, conversion, v02_tools
+from .molecule import Molecule
 from .reaction import Reaction
 from .rinchi_lib import RInChI
 
@@ -91,7 +92,8 @@ def _sql_insert(cursor, table_name, data, columns=None, exec_many=False):
         exec_many: Whether to use cursor.execute() or cursor.executemany()
     """
     if columns is None:
-        _get_sql_columns(cursor, table_name)
+        columns = _get_sql_columns(cursor, table_name)
+
 
     command = (
         "INSERT INTO {}({}) VALUES (".format(table_name, ", ".join(columns)) + ", ".join(["?"] * len(columns)) + ")")
@@ -423,6 +425,39 @@ def search_master(search_term, db=None, table_name=None, is_sql_db=False, hyb=No
                                      reactant=reactant, product=product, agent=agent, number=number)
     return result_dict
 
+def search_for_roles(db,table_name, reactant_subs=None, product_subs=None, agent_subs=None,limit=200):
+    """
+    Searches for reactions in a particular rols
+    Returns:
+
+    """
+
+    db = sqlite3.connect(db)
+    cursor = db.cursor()
+    _sql_search(cursor,table_name,columns=("rinchi",),limit=limit)
+    rinchis = (i[0] for i in cursor.fetchall())
+
+    try:
+        reactant_subs = (Molecule(item) for item in reactant_subs)
+    except TypeError:
+        reactant_subs = None
+
+    try:
+        product_subs = (Molecule(item) for item in product_subs)
+    except TypeError:
+        product_subs = None
+
+    try:
+        agent_subs = (Molecule(item) for item in agent_subs)
+    except TypeError:
+        agent_subs = None
+
+    for rinchi in rinchis:
+        r = Reaction(rinchi)
+        if r.has_substructures(reactant_subs,product_subs,agent_subs):
+            yield rinchi
+
+
 
 # Converting to SQL databases
 #############################
@@ -450,7 +485,6 @@ def rdf_to_sql(rdfile, db_filename, table_name, columns=None):
     # Repopulate columns variable.  Useful for pre-existing table
     columns = _get_sql_columns(cursor, table_name)
 
-    _pragma_sql_env(cursor)
 
     # Open the rdfile and convert its contents to a dict of rinchis and rinchi data
     rdf_data = conversion.rdf_to_rinchis(rdfile, columns=columns)
@@ -478,12 +512,11 @@ def csv_to_sql(csv_name, db_filename, table_name):
     """
     db = sqlite3.connect(db_filename)
     cursor = db.cursor()
-    _pragma_sql_env(cursor)
 
-    with open(csv_name, 'rb') as csvfile:
+    with open(csv_name) as csvfile:
         reader = csv.reader(csvfile, delimiter="$")
-        columns = reader.next()
-        if not _check_table_exists(table_name,cursor):
+        columns = tuple(next(reader))
+        if not _check_table_exists(table_name, cursor):
             _create_sql_table(cursor, table_name, columns,'longkey')
         for row in reader:
             _sql_insert(cursor, table_name, row)

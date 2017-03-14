@@ -19,8 +19,29 @@ class Atom:
         self.mobile_protons = 0
         self.element = None
         self.isotope = None
+        self.hyb = None
+        self.attached_edges = None
+        self.valence = None
 
-    def valence(self):
+    def __str__(self):
+        try:
+            if self.element is not None:
+                return "<Atom Object 'index':{} 'element':{}>".format(self.index,self.element)
+            else:
+                return "<Atom Object 'index':{} 'element':None>".format(self.index)
+        except:
+            return '<Atom Object>'
+
+    def __repr__(self):
+        try:
+            if self.element is not None:
+                return "<Atom Object 'index':{} 'element':{}>".format(self.index,self.element)
+            else:
+                return "<Atom Object 'index':{} 'element':None>".format(self.index)
+        except:
+            return '<Atom Object>'
+
+    def get_valence(self):
         """
         Get the valence as determined by counting the number of bonds.
 
@@ -28,32 +49,35 @@ class Atom:
             Number of bonds
 
         """
-        if self.mobile_protons == 0:
-            return len(self.bonds) + self.protons
-        else:
-            return None
+        if self.valence is None:
+            if self.mobile_protons == 0:
+                self.valence =  len(self.bonds) + self.protons
+        return self.valence
 
-    def hybridisation(self):
+    def get_hybridisation(self):
         """
         Gets the atom hybridisation.  Only defined for C atoms but still useful
 
         Returns:
             None or a string signalling the hybridisation e.g.  "sp2"
         """
-        if self.valence():
-            if self.element == "C":
-                if self.valence() == 4:
-                    return "sp3"
-                elif self.valence() == 3:
-                    return "sp2"
-                elif self.valence() == 2:
-                    return "sp"
+        if self.hyb is None:
+            if self.get_valence():
+                if self.element == "C":
+                    if self.get_valence() == 4:
+                        self.hyb = "sp3"
+                    elif self.get_valence() == 3:
+                        self.hyb = "sp2"
+                    elif self.get_valence() == 2:
+                        self.hyb = "sp"
+        return self.hyb
 
     def get_attached_edges(self):
         """
 
-        Returns:
+        Returns: The edges attached to the molecule.
 
         """
-        attached_edges = [tuple(sorted((self.index, bond))) for bond in self.bonds]
-        return attached_edges
+        if self.attached_edges is None:
+            self.attached_edges = [tuple(sorted((self.index, bond))) for bond in self.bonds]
+        return self.attached_edges

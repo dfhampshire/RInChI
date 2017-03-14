@@ -52,7 +52,7 @@ def changes_ops(args, parser):
             print(r.change_across_reaction(Molecule.get_ring_count))
         elif args.formula:
             print(r.change_across_reaction(Molecule.get_formula))
-        elif args.valence:
+        elif args.get_valence:
             print(r.change_across_reaction(Molecule.get_valence_count))
         elif args.hybrid:
             print(r.change_across_reaction(Molecule.get_hybrid_count))
@@ -97,7 +97,7 @@ def changes_ops(args, parser):
                         print("Formula Change : ", formula)
                     if formula:
                         master_counter['formula'][Hashable(formula)] += 1
-                if args.valence:
+                if args.get_valence:
                     valence = r.change_across_reaction(Molecule.get_valence_count)
                     if valence and args.list:
                         print("Valence Change : ", valence)
