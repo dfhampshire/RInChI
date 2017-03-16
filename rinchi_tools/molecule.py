@@ -80,31 +80,52 @@ class Molecule:
         # Separate the input InChI into the header, formula, and other layers
         layers = inchi.split("/")
         header = layers[0]
-        formula = layers[1].split(".")
+        formula = layers[1]
         remainder = layers[2:]
 
-        def formula_multiples(formulas):
+        def formula_multiples(formula):
             """
             Generates the multiple formula strings if of the form 2C6H12
-            Args:
-                formulas:
-
-            Returns:
-
             """
+            formulas = formula.split(".")
             multiples = []
-            for index, fm in enumerate(formulas):
+            for fm in formulas:
                 assert isinstance(fm, str)
                 if fm[0].isdigit():
-                    count, form = re.match('([0-9]+)(.*)',fm).groups()
-                    multiples.append((int(count), form, fm, index))
-            return multiples
+                    cnt, form = re.match('([0-9]+)(.*)',fm).groups()
+                    multiples.append([[form]*int(cnt),fm])
+            for new_list,fm in multiples:
+                insert_list(formulas, fm, new_list)
+            return formulas
 
-        for count, new, orig, index in formula_multiples(formula):
-            formula.remove(orig)
-            formula[index:index] = [new]*count
+        def layer_splitter(comps,prefix):
+            """
+            Generates multiple formula strings
+            """
+            multiples = []
+            for comp in comps:
+                assert isinstance(comp, str)
+                if '*' in comp:
+                    cnt, comp_new = comp.split('*')
+                    multiples.append([[comp_new]*int(cnt),comp])
 
-        split_remainder = [formula]
+            for new_list,fm in multiples:
+                insert_list(comps, fm, new_list)
+
+            comps = [(prefix + item) if (item != "") else "" for item in comps]
+            return comps
+
+        def insert_list(lst, original, new):
+            """
+            Inserts list items at the position of a single item
+            """
+            lstindex = lst.index(original)
+            lst.remove(original)
+            lst[lstindex:lstindex] = new
+            return lst
+
+        formula = formula_multiples(formula)
+        individuals = [formula]
 
         # Formula is split on '.', other layers are split on ';'
 
@@ -113,25 +134,19 @@ class Molecule:
         for l in remainder:
             prefix = l[0]
             ls = l[1:].split(";")
-            items = []
-            for index,item in enumerate(ls):
-                if '*' in item:
-                    count, item_new = item.split('*')
-                    items.append((int(count),item,item_new,index))
-            for count, orig, item_new, index in items:
-                ls.remove(orig)
-                ls[index:index] = [item_new]*count
+            ls = layer_splitter(ls, prefix)
+            individuals.append(ls)
 
-            split_remainder.append([ls[0]] + [prefix + x for x in ls[1:]])
 
         # Transposes a list of split lists into a list of split inchis
-        split_remainder = list(zip_longest(*split_remainder, fillvalue=""))
+        individuals = list(zip_longest(*individuals, fillvalue=""))
+         # Inchis are reassembled and returned
+        def gen_lists(ind):
+            for i in ind:
+                yield [j for j in i if j]
 
-        # Inchis are reassembled and returned
-        lst = []
-        for i in split_remainder:
-            lst.append([j for j in i if len(j) > 1])
-        return (header + "/" + "/".join(x) for x in lst if x)
+        ret =  (header + "/" + "/".join(x) for x in gen_lists(individuals) if x)
+        return ret
 
     @staticmethod
     def new(inchi):
@@ -145,11 +160,10 @@ class Molecule:
             list of Molecule objects.
 
         """
-        if ";" in inchi:
-            return [Molecule(inch) for inch in Molecule.composite_inchi_to_simple(inchi)]
+        if ";" in inchi or "*" in inchi:
+                return [Molecule(inch) for inch in Molecule.composite_inchi_to_simple(inchi)]
         else:
             return [Molecule(inchi)]
-
     #####################################################################
     # Generate molecular properties, ie.  molecular graph, chemical formula
     #####################################################################
@@ -214,7 +228,7 @@ class Molecule:
         if self.has_conlayer:
             self.has_set_elements = True
             for i in range(len(ordered_atoms)):
-                self.atoms[i + 1].element = ordered_atoms[i]
+                    self.atoms[i + 1].element = ordered_atoms[i]
 
     def inchi_to_layer(self, l):
         """
@@ -278,7 +292,7 @@ class Molecule:
 
             # Give each atom the correct number of protons
             for index in indexes:
-                self.atoms[index].protons = key
+                    self.atoms[index].protons = key
 
         # Mark atoms with mobile protons as such
         for index in mobile_protons:

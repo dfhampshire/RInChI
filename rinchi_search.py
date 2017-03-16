@@ -8,9 +8,9 @@ Searches an SQL database for InChIs.
 """
 
 import argparse
-import json
 
 from rinchi_tools import _external, database, utils
+from rinchi_tools.utils import string_to_dict as sd
 
 
 def add_search(subparser):
@@ -30,7 +30,7 @@ def add_search(subparser):
 
     # Add query options
     query = subparser.add_argument_group("Action").add_mutually_exclusive_group(required=True)
-    query.add_argument('-k', '--key', nargs='?', const='L', choices=['L', 'S', 'W'],
+    query.add_argument('-k', '--key', nargs='?',const='N', choices=['L', 'S', 'W', 'N'],
                        help='Returns the RInChI corresponding to a given key. Optionally accepts an argument denoting '
                             'the type of key to lookup')
     query.add_argument('-i', '--inchi', action='store_true',
@@ -46,17 +46,16 @@ def add_search(subparser):
                             help="The format of the output - must be one of 'list', 'file', 'stats'")
 
     # Filters for a the search
-    filters = subparser.add_argument_group("Filters")
-    filters.add_argument("-hb", "--hybridisation", type=json.loads,
-                         help="The changes in hybridisation sought as a python style dictionary")
-    filters.add_argument("-v", "--valence", type=json.loads,
-                         help="The changes in valence sought as a python style dictionary")
-    filters.add_argument("-r", "--rings", type=json.loads,
-                         help="The changes in ring numbers sought as a python style dictionary")
-    filters.add_argument("-f", "--formula", type=json.loads,
-                         help="The changes in the formula sought as a python style dictionary")
-    filters.add_argument('-rt', '--ringelements', type=json.loads,
-                         help="Search for reactions containing a certain ring type")
+    filters = subparser.add_argument_group("Filters - the changes should be of the form 'sp2=1,sp3=-1,...'")
+    filters.add_argument("-hb", "--hybridisation",
+                         help="The changes in hybridisation sought")
+    filters.add_argument("-v", "--valence",
+                         help="The changes in valence sought")
+    filters.add_argument("-r", "--rings",
+                         help="The changes in ring numbers sought by size")
+    filters.add_argument("-f", "--formula",
+                         help="The changes in the formula sought by element")
+    filters.add_argument('-re', '--ringelement', help="Search for reactions containing a certain ring type")
     filters.add_argument('-iso', "--isotopic", action='store_true',
                          help="Search for reactions containing defined isotopic layers")
 
@@ -79,9 +78,9 @@ def search_ops(args):
     """
     if args.table_name:
         args.is_database = True
-    results = database.search_master(args.search_term, args.file, args.table_name, args.is_database, args.get_hybridisation,
-                                     args.get_valence, args.rings, args.formula, args.reactant, args.product, args.agent,
-                                     args.number, args.key, args.ringelements, args.isotopic)
+    results = database.search_master(args.search_term, args.file, args.table_name, args.is_database, sd(args.hybridisation),
+                                     sd(args.valence), sd(args.rings), sd(args.formula), args.reactant, args.product,
+                                     args.agent, args.number, args.key, args.ringelement, args.isotopic)
     if args.output_format == "list":
         print(utils.construct_output_text(results))
     if args.output_format == "file":

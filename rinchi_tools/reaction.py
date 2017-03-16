@@ -379,17 +379,20 @@ class Reaction:
             changes['rings'] = abs(changes['rings'])
         return Counter(changes)
 
-    def has_substructures(self, reactant_subs=None, product_subs=None, agent_subs=None, exclusive=True):
+    def has_substructures(self, reactant_subs=None, product_subs=None, agent_subs=None, exclusive=True, rct_disappears=False, pdt_appears=True):
         """
         Detects if the reaction is a substructure
 
         Args:
-            reactant_subs:
-            product_subs:
-            agent_subs:
+            reactant_subs: Lists of reactant inchis
+            product_subs: List of product inchis
+            agent_subs: List of agent inchis
             exclusive: Match one functionality per molecule of reactant
+            rct_disappears: Only match if substructures not in products
+            pdt_appears: Only match if substructures not in reactants
 
         Returns:
+            Boolean, whether the substructures are contained
 
         """
         if reactant_subs is None:
@@ -402,6 +405,10 @@ class Reaction:
         reactants = self.reactants
         products = self.products
         agents = self.reaction_agents
+
+        reactant_s = [Molecule(r) for r in reactant_subs]
+        product_s = [Molecule(r) for r in product_subs]
+        agent_s = [Molecule(r) for r in agent_subs]
 
         def matcher_worker(sub, master):
             if not master.matched or not exclusive:
@@ -425,11 +432,17 @@ class Reaction:
                     return False
             return True
 
-        if not find_subs(reactant_subs, reactants):
+        if not find_subs(reactant_s, reactants):
             return False
-        if not find_subs(product_subs, products):
+        elif rct_disappears:
+            if find_subs(reactant_s,product_s):
+                return False
+        if not find_subs(product_s, products):
             return False
-        if not find_subs(agent_subs, agents):
+        elif pdt_appears:
+            if find_subs(product_s, reactants):
+                return False
+        if not find_subs(agent_s, agents):
             return False
         return True
 

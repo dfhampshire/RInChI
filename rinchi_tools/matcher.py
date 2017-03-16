@@ -203,6 +203,9 @@ class Matcher(object):
         except StopIteration:
             return False
 
+    def sub_count(self):
+        return sum(1 for _ in self.match())
+
 
 class Backup(object):
     def __init__(self, matcher_object):

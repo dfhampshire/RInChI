@@ -38,7 +38,7 @@ def output(text, output_path=False, default_extension=False):
         print(text)
 
 
-def create_output_file(output_path, default_extension):
+def create_output_file(output_path, default_extension,create_out_dir=True):
     """
 
     Args:
@@ -56,17 +56,23 @@ def create_output_file(output_path, default_extension):
         extension = default_extension
 
     # Ensure an output directory exists.
-    if not os.path.exists('output'):
-        os.mkdir('output')
-    os.chdir('output')
+    if create_out_dir:
+        if not os.path.exists('output'):
+            os.mkdir('output')
+        os.chdir('output')
 
     # Prevent overwriting.
     output_path = output_path_no_ext + extension
+    outputdir = os.path.dirname(output_path)
+    try:
+        os.makedirs(outputdir)
+    except:
+        pass
     index = 1
     while os.path.exists(output_path):
         output_path = '{}_{}{}'.format(output_path_no_ext, index, extension)
         index += 1
-    output_file = open(output_path, 'w+')
+    output_file = open(output_path, 'a+')
     output_path = os.path.abspath(output_path)
     os.chdir(owd)
     return output_file, output_path
@@ -239,7 +245,7 @@ def construct_output_text(data, header_order=False):
     else:
         data_string = data
 
-    return data_string
+    return data_string.strip()
 
 
 def counter_to_print_string(counter, name):
@@ -267,3 +273,14 @@ class Hashable(object):
 
     def __eq__(self, other):
         return str(self.val) == str(other.val)
+
+def string_to_dict(string):
+    """
+    Converts a string of form 'a=1,b=2,c=3' to a dictionary of form {a:1,b:2,c:3}
+    Returns:
+    """
+    assert isinstance(string,str)
+    items = string.split(',')
+    splititems = (item.split('=') for item in items)
+    retdict = {str(i[0]):int(i[1]) for i in splititems}
+    return retdict
