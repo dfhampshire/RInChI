@@ -11,7 +11,7 @@ import argparse
 import json
 from collections import Counter
 
-from rinchi_tools import Molecule, Reaction, _external, database
+from rinchi_tools import Molecule, Reaction, _external, database, utils
 from rinchi_tools.utils import Hashable
 
 
@@ -42,6 +42,7 @@ def changes_ops(args, parser):
             try:
                 with open(args.input) as f:
                     args.input = f.readline()
+                    print(args.input)
                     if args.list:
                         print(args.input)
             except IOError:
@@ -49,22 +50,27 @@ def changes_ops(args, parser):
 
         r = Reaction(args.input)
         if args.ringcount:
-            print(r.change_across_reaction(Molecule.get_ring_count))
-        elif args.formula:
-            print(r.change_across_reaction(Molecule.get_formula))
-        elif args.get_valence:
-            print(r.change_across_reaction(Molecule.get_valence_count))
-        elif args.hybrid:
-            print(r.change_across_reaction(Molecule.get_hybrid_count))
-        elif args.ringcountelements:
-            print(r.change_across_reaction(Molecule.get_ring_count_inc_elements))
-        elif args.ringcountold:
-            print(r.ring_change())
-        elif args.stereoold:
-            print(r.stereo_change(args.stereoold.get('wd', None), args.stereoold.get('sp2', None),
-                                  args.stereoold.get('sp3', None)))
-        else:
-            parser.print_help()
+            out = r.change_across_reaction(Molecule.get_ring_count)
+            print(utils.counter_to_print_string(out, "Ring Count"))
+        if args.formula:
+            out = r.change_across_reaction(Molecule.get_formula)
+            print(utils.counter_to_print_string(out, "Formula"))
+        if args.valence:
+            out = r.change_across_reaction(Molecule.get_valence_count)
+            print(utils.counter_to_print_string(out, "Valence Count"))
+        if args.hybrid:
+            out = r.change_across_reaction(Molecule.get_hybrid_count)
+            print(utils.counter_to_print_string(out, "Hybridisation Count"))
+        if args.ringcountelements:
+            out = r.change_across_reaction(Molecule.get_ring_count_inc_elements)
+            print(utils.counter_to_print_string(out, "Ring Count Elements"))
+        if args.ringcountold:
+            out = r.ring_change()
+            print(utils.counter_to_print_string(out, "Ring Count (Old Method)"))
+        if args.stereoold:
+            out = r.stereo_change(args.stereoold.get('wd', None), args.stereoold.get('sp2', None),
+                                  args.stereoold.get('sp3', None))
+            print(utils.counter_to_print_string(out, "Stereocentre Count (Old Method)"))
 
     elif args.batch:
         master_counter = {'ringcount': Counter(), 'formula': Counter(), 'ringcountelements': Counter(),
@@ -74,13 +80,13 @@ def changes_ops(args, parser):
             for rinchi in data:
                 r = Reaction(rinchi)
                 if args.list:
-                    print('\n-------')
+                    print('\n__________________\n')
                     print(rinchi.strip())
                 if args.ringcount:
                     # Count the change in ring populations across the reactions
                     ringcount = r.change_across_reaction(Molecule.get_ring_count)
                     if ringcount and args.list:
-                        print("Ring Count : ", ringcount)
+                        print(utils.counter_to_print_string(ringcount,"Ring Count"))
                     if ringcount:
                         master_counter['ringcount'][Hashable(ringcount)] += 1
                 if args.ringcountelements:
@@ -88,31 +94,31 @@ def changes_ops(args, parser):
                     # CCCCCN : 1) would indicate the reaction forms a pyridine ring
                     ringcountelements = r.change_across_reaction(Molecule.get_ring_count_inc_elements)
                     if ringcountelements and args.list:
-                        print("Ring Count Elements : ", ringcountelements)
+                        print(utils.counter_to_print_string(ringcountelements, "Ring Count Elements"))
                     if ringcountelements:
                         master_counter['ringcountelements'][Hashable(ringcountelements)] += 1
                 if args.formula:
                     formula = r.change_across_reaction(Molecule.get_formula)
                     if formula and args.list:
-                        print("Formula Change : ", formula)
+                        print(utils.counter_to_print_string(formula, "Formula Change"))
                     if formula:
                         master_counter['formula'][Hashable(formula)] += 1
-                if args.get_valence:
+                if args.valence:
                     valence = r.change_across_reaction(Molecule.get_valence_count)
                     if valence and args.list:
-                        print("Valence Change : ", valence)
+                        print(utils.counter_to_print_string(valence, "Valence Count"))
                     if valence:
                         master_counter['valence'][Hashable(valence)] += 1
                 if args.hybrid:
                     hybrid = r.change_across_reaction(Molecule.get_hybrid_count)
                     if hybrid and args.list:
-                        print("Hybridisation Change Count : ", hybrid)
+                        print(utils.counter_to_print_string(hybrid, "Hybridisation Change Count"))
                     if hybrid:
                         master_counter['hybrid'][Hashable(hybrid)] += 1
                 if args.ringcountold:
                     ringcountold = r.ring_change()
                     if ringcountold and args.list:
-                        print("Ring Count (Old Method) : ", ringcountold)
+                        print(utils.counter_to_print_string(ringcountold, "Ring Count (Old Method)"))
                     if ringcountold:
                         master_counter['ringcount_old'][Hashable(ringcountold)] += 1
                 if args.stereoold:  # TODO fix this
@@ -120,13 +126,13 @@ def changes_ops(args, parser):
                     stereoold = r.stereo_change(args.stereoold.get('wd', None), args.stereoold.get('sp2', None),
                                                 args.stereoold.get('sp3', None))
                     if stereoold and args.list:
-                        print('Stereo Change Count (Old Method) : ', stereoold)
+                        print(utils.counter_to_print_string(stereoold, "Stereo Change Count (Old Method)"))
                     if stereoold:
                         master_counter['stereo_old'][Hashable(stereoold)] += 1
         print('\nStats\n-----')
         for key, value in master_counter.items():
             if value:
-                print(key, "  ", value)
+                print(utils.counter_to_print_string(value,key))
     else:
         parser.print_help()
 

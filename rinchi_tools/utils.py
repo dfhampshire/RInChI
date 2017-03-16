@@ -249,6 +249,8 @@ def construct_output_text(data, header_order=False):
 
 
 def counter_to_print_string(counter, name):
+    if isinstance(counter,str):
+        counter = eval(counter)
     string = '{}\n{}'.format(name,'-'*len(name))
     for key, value in counter.items():
         if value:
