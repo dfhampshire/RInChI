@@ -31,7 +31,7 @@ def add_stats(subparser):
 def stats_ops(args):
     data = tools.rinchi_to_dict_list(open(args.input),)
     rinchis = (item['rinchi'] for item in data)
-    data = tools.process_stats(rinchis, args.mostcommon)
+    data = tools.process_stats(rinchis, int(args.mostcommon))
     p_string = 'STATS\n-----\n'
     p_string += utils.counter_to_print_string(data['pops'],'Populations')
     if args.reactants or args.all:
