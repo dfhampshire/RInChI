@@ -314,6 +314,7 @@ def split_rinchi(rinchi):
         no_structs: returns a list of the numbers of unknown structures in each layer
     """
     inchi_components = RInChI().inchis_from_rinchi(rinchi, "")
+    inchi_components = RInChI().inchis_from_rinchi(rinchi, "")
     direction = inchi_components['Direction']
     reactants = inchi_components['Reactants']
     products = inchi_components['Products']
@@ -526,6 +527,8 @@ def add(rinchis):
     Returns:
         rinchi: A RInChI representing the overall process.
     """
+    rinchis = list(filter(None, rinchis))
+
     used = set()
     made = set()
     present = set()
