@@ -299,6 +299,7 @@ class Molecule:
             self.atoms[index].mobile_protons = 1
 
     def generate_edge_list(self):
+        # TODO fix generation
         """
         Takes the connective layer of an inchi and returns the molecular graph as an edge list, parsing it directly
         using re.
