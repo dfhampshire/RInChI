@@ -705,7 +705,8 @@ def process_stats(rinchis, mostcommon=None):
 
     data['pops'] = data['reactants'] + data['products'] + data['agents']
     if mostcommon is not None:
-        print(data.items())
+        for k,v in data.items():
+            print(k, Counter(dict(v.most_common(mostcommon))))
         data = {k: Counter(dict(v.most_common(mostcommon))) for k, v in data.items()}
 
     return data
