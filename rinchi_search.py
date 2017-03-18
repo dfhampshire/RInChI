@@ -86,7 +86,7 @@ def search_ops(args):
         outstring = utils.construct_output_text(results)
         print(outstring)
     if args.output_format == "file":
-        utils.output(utils.construct_output_text(results), "search_result", "rinchi")
+        utils.output(utils.construct_output_text(results), "search_result", ".rinchi")
     if args.output_format == "stats":
         total = 0
         for the_key, the_value in results.items():
