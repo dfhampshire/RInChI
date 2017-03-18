@@ -675,7 +675,7 @@ def process_stats(rinchis, mostcommon=None):
 
     Args:
         rinchis: An iterable of RInChIs
-        *args: The operations to perform on each rinchi
+        most_common: Return only the most common items
 
     Returns:
         Dictionary of counters containing the information.

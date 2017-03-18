@@ -8,8 +8,7 @@ implemented elsewhere.
 
 import time
 
-from rinchi_tools import database, utils
-from rinchi_tools.rinchi_lib import RInChI
+from rinchi_tools import Reaction, database, utils
 
 
 def get_aldols():
@@ -28,7 +27,7 @@ def get_aldols():
 
 def test():
     r = 'RInChI=0.03.1S/C6H12/c1-4-6(3)5-2/h4H,5H2,1-3H3/b6-4+!C7H5ClO3/c8-6-3-1-2-5(4-6)7(9)11-10/h1-4,10H<>C6H12O/c1-4-6(3)5(2)7-6/h5H,4H2,1-3H3/t5-,6-/m0/s1/d+'
-    print(RInChI().inchis_from_rinchi(r))
+    print(Reaction(r).generate_svg_image("letsgo"))
 
 if __name__ == "__main__":
     #get_aldols()

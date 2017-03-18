@@ -157,7 +157,7 @@ class Reaction:
         out = []
 
         for group in (self.reactant_inchis, self.product_inchis, self.agent_inchis):
-            inchi_tempfile = tempfile.NamedTemporaryFile(mode='w+t', delete=False)
+            inchi_tempfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False)
 
             for inchi in group:
                 inchi_tempfile.write(inchi + "\n")
@@ -170,9 +170,16 @@ class Reaction:
             out.append(i_out)
             print(i_out)
 
+        outnames = []
+
         for i, item in enumerate(out):
-            with open(outname + str(i) + ".svg", "w") as text:
-                text.write(out[i])
+            outfname = outname + str(i) + ".svg"
+            print("Outputting {}".format(outfname))
+            outnames.append(outfname)
+            with open(outfname, "wb") as bytesdata:
+                bytesdata.write(out[i])
+
+        return outnames
 
     ############################################
     # Calculating changes across reactions
