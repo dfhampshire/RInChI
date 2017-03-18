@@ -300,7 +300,6 @@ def sql_key_to_rinchi(key, db_filename, table_name, keytype="L", column=None):
         field = column
     else:
         raise ValueError('The keytype argument must be one of "L" , "S" or "W" or the column parameter must be given')
-    print(table_name,key,field)
     cursor = _sql_search(cursor, table_name, ["rinchi"], key, field)
     rinchi = cursor.fetchone()[0]
     db.close()
