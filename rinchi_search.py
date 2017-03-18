@@ -84,7 +84,7 @@ def search_ops(args):
 
     if args.output_format == "list":
         outstring = utils.construct_output_text(results)
-        print(outstring,"*")
+        print(outstring)
     if args.output_format == "file":
         utils.output(utils.construct_output_text(results), "search_result", "rinchi")
     if args.output_format == "stats":
