@@ -181,8 +181,8 @@ class Reaction:
             outfname = outname + str(i) + ".svg"
             print("Outputting {}".format(outfname))
             outnames.append(outfname)
-            with open(outfname, "wb") as bytesdata:
-                bytesdata.write(bytes(out[i],encoding='utf-8'))
+            with open(outfname, "wb") as bytesfile:
+                bytesfile.write(bytes(out[i],encoding='utf-8'))
 
         return outnames
 

@@ -13,7 +13,7 @@ Converts RInChIs to and from various chemical reaction file formats.
 import argparse
 import os
 
-from rinchi_tools import Reaction, conversion, utils
+from rinchi_tools import Reaction, _external, conversion, utils
 
 
 def convert_ops(args, parser):
@@ -65,7 +65,9 @@ def convert_ops(args, parser):
         for rinchi in args.input.splitlines():
             if rinchi.startswith("RInChI="):
                 r = Reaction(rinchi)
-                r.generate_svg_image(os.path.splitext(args.fileout)[0])
+                outfile = "output" + _external.SEPARATOR + os.path.splitext(args.fileout)[0]
+                print(outfile)
+                r.generate_svg_image(outfile)
     else:
         parser.print_help()
 
