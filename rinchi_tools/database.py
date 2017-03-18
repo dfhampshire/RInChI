@@ -425,7 +425,6 @@ def search_master(search_term, db=None, table_name=None, is_sql_db=False, hyb=No
         result_dict = search_rinchis(search_term, db=db, table_name=table_name, isotopic=isotopic, is_sql_db=is_sql_db,
                                      hyb=hyb, val=val, rings=rings, ringelements=ring_type, formula=formula,
                                      reactant=reactant, product=product, agent=agent, number=number)
-    print('there')
     return result_dict
 
 def search_for_roles(db, table_name, reactant_subs=None, product_subs=None, agent_subs=None,limit=200):

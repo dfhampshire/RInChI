@@ -83,7 +83,8 @@ def search_ops(args):
                                      args.agent, args.number, args.key, args.ringelement, args.isotopic)
 
     if args.output_format == "list":
-        print(utils.construct_output_text(results))
+        outstring = utils.construct_output_text(results)
+        print(outstring,"*")
     if args.output_format == "file":
         utils.output(utils.construct_output_text(results), "search_result", "rinchi")
     if args.output_format == "stats":
