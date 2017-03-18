@@ -367,22 +367,28 @@ def search_rinchis(search_term, db=None, table_name=None, is_sql_db=False, hyb=N
         cursor = _flat_file_to_search_db(db)
         results = _string_finder(search_term, cursor, table_name, number)
 
-    result_dict = {'as_reactant': [], 'as_product': [], 'as_agent': []}
+    result_dict = {'as_reactant': [], 'as_product': [], 'as_agent': [],'unknown':[]}
 
     # Linear
     for rinchi in results:
         r = Reaction(rinchi)
         if r.detect_reaction(hyb_i=hyb, val_i=val, rings_i=rings, formula_i=formula, isotopic=isotopic,
                              ring_present=ringelements) or skip:
+            not_found = True
             if reactant:
                 if any(search_term in s for s in r.reactant_inchis):
                     result_dict['as_reactant'].append(rinchi)
+                    not_found = False
             if product:
                 if any(search_term in s for s in r.product_inchis):
                     result_dict['as_product'].append(rinchi)
+                    not_found = False
             if agent:
                 if any(search_term in s for s in r.agent_inchis):
                     result_dict['as_agent'].append(rinchi)
+                    not_found = False
+            if not_found:
+                result_dict['unknown'].append(rinchi)
 
     return result_dict
 
