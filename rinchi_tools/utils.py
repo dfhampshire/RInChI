@@ -78,7 +78,7 @@ def create_output_file(output_path, default_extension,create_out_dir=True):
     return output_file, output_path
 
 
-def call_command(args):
+def call_command(args,debug=False):
     """
     Run a command as a subprocess and return the output
 
@@ -89,6 +89,8 @@ def call_command(args):
         The output of query and error code
     """
     process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if debug:
+        print(" ".join(args))
     out, err = process.communicate()
     return out.decode("utf-8"), err.decode("utf-8")
 

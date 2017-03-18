@@ -26,8 +26,15 @@ def get_aldols():
 
 
 def test():
-    r = 'RInChI=0.03.1S/C6H12/c1-4-6(3)5-2/h4H,5H2,1-3H3/b6-4+!C7H5ClO3/c8-6-3-1-2-5(4-6)7(9)11-10/h1-4,10H<>C6H12O/c1-4-6(3)5(2)7-6/h5H,4H2,1-3H3/t5-,6-/m0/s1/d+'
+    r = 'RInChI=0.03.1S/C4H8O/c1-3-4(2)5-3/h3-4H,1-2H3/t3-,4?/m0/s1<>C4H9BrO/c1-3(5)4(2)6/h3-4,6H,1-2H3/t3-,4+/m1/s1!Na.H2O/h;1H2/q+1;/p-1/d-'
     print(Reaction(r).generate_svg_image("letsgo"))
+
+def test2():
+    with open("tester",mode="w+b") as f:
+        f.write(bytes("InChI=1S/C6H12/c1-4-6(3)5-2/h4H,5H2,1-3H3\n",encoding="utf-8"))
+        i_out, i_err = utils.call_command(["obabel", "-iinchi", f.name, "-osvg", "-xd", "-xC", "-xj", "-xr 1"])
+        print(i_err)
+        print(i_out)
 
 if __name__ == "__main__":
     #get_aldols()

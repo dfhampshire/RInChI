@@ -63,8 +63,9 @@ def convert_ops(args, parser):
                                              return_webkey=args.webkey)
     elif args.svg:
         for rinchi in args.input.splitlines():
-            r = Reaction(rinchi)
-            r.generate_svg_image(os.path.splitext(args.fileout)[0])
+            if rinchi.startswith("RInChI="):
+                r = Reaction(rinchi)
+                r.generate_svg_image(os.path.splitext(args.fileout)[0])
     else:
         parser.print_help()
 

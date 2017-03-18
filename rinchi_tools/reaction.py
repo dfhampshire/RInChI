@@ -161,12 +161,14 @@ class Reaction:
             inchi_tempfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False)
 
             for inchi in group:
-                print(inchi)
-                inchi_tempfile.write(bytes(inchi + "\n",encoding='utf-8'))
+                inchi = tools.remove_stereo(inchi)
+                inchi_tempfile.write(bytes(inchi+'\n',encoding='utf-8'))
+
             inchi_tempfile.close()
 
             # Uses the obabel package - must be installed on the system running the script
             i_out, i_err = utils.call_command(
+                #["obabel", "-iinchi", inchi_tempfile.name, "-osmi"],debug=True)
                 ["obabel", "-iinchi", inchi_tempfile.name, "-osvg", "-xd", "-xC", "-xj", "-xr 1"])
             os.unlink(inchi_tempfile.name)
             print(i_err)

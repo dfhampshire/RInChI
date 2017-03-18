@@ -709,3 +709,32 @@ def process_stats(rinchis, mostcommon=None):
         data = {k: Counter(dict(v.most_common(mostcommon))) for k, v in data.items()}
 
     return data
+
+
+def remove_stereo(inchi):
+    """
+    Removes stereochemistry from an InChI
+
+    Args:
+        inchi: an InChI as a string
+
+    Returns:
+        an InChI
+    """
+    # Save the InChI to a temporary file.
+    inchi_tempfile = tempfile.NamedTemporaryFile(delete=False)
+    inchi_tempfile.write(bytes(inchi, 'UTF-8'))
+
+    # A newline is required at the end of the file or the InChI program fails
+    # to generate any output (this may be a bug).
+    inchi_tempfile.write(bytes('\n', 'UTF-8'))
+    inchi_tempfile.close()
+
+    # Run the inchi-1 program, and extract the AuxInfo
+    args = [_external.INCHI_PATH, inchi_tempfile.name, '-stdio', '-InChI2InChI','-NoLabels','-SNon']
+    raw_inchi_out, inchi_err = utils.call_command(args)
+    os.unlink(inchi_tempfile.name)
+    for line in raw_inchi_out.splitlines():
+        if line.startswith("InChI"):
+            inchi = line
+    return inchi
