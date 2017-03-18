@@ -303,6 +303,7 @@ def sql_key_to_rinchi(key, db_filename, table_name, keytype="L", column=None):
     cursor = _sql_search(cursor, table_name, ["rinchi"], key, field)
     rinchi = cursor.fetchone()[0]
     db.close()
+    print('here')
     return rinchi
 
 
