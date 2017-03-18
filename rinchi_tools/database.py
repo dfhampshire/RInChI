@@ -290,6 +290,9 @@ def sql_key_to_rinchi(key, db_filename, table_name, keytype="L", column=None):
     db = sqlite3.connect(db_filename)
     cursor = db.cursor()
 
+    if key.startswith(('Short-RInChIKey', 'Long-RInChIKey', 'Web-RInChIKey')):
+        keytype = key[0]
+
     if keytype == "L":
         field = "longkey"
     elif keytype == "S":
@@ -303,7 +306,6 @@ def sql_key_to_rinchi(key, db_filename, table_name, keytype="L", column=None):
     cursor = _sql_search(cursor, table_name, ["rinchi"], key, field)
     rinchi = cursor.fetchone()[0]
     db.close()
-    print('here')
     return rinchi
 
 
@@ -423,6 +425,7 @@ def search_master(search_term, db=None, table_name=None, is_sql_db=False, hyb=No
         result_dict = search_rinchis(search_term, db=db, table_name=table_name, isotopic=isotopic, is_sql_db=is_sql_db,
                                      hyb=hyb, val=val, rings=rings, ringelements=ring_type, formula=formula,
                                      reactant=reactant, product=product, agent=agent, number=number)
+    print('there')
     return result_dict
 
 def search_for_roles(db, table_name, reactant_subs=None, product_subs=None, agent_subs=None,limit=200):
