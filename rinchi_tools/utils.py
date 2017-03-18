@@ -283,6 +283,8 @@ def string_to_dict(string):
     Converts a string of form 'a=1,b=2,c=3' to a dictionary of form {a:1,b:2,c:3}
     Returns:
     """
+    if not string or string is None:
+        return {}
     assert isinstance(string,str)
     items = string.split(',')
     splititems = (item.split('=') for item in items)
