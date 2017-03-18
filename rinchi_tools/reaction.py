@@ -8,6 +8,7 @@ This module contains the Reaction class and associated functions
 """
 
 import itertools
+import os
 import tempfile
 from collections import Counter
 
@@ -160,12 +161,14 @@ class Reaction:
             inchi_tempfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False)
 
             for inchi in group:
-                inchi_tempfile.write(inchi + "\n")
+                print(inchi)
+                inchi_tempfile.write(bytes(inchi + "\n",encoding='utf-8'))
             inchi_tempfile.close()
 
             # Uses the obabel package - must be installed on the system running the script
             i_out, i_err = utils.call_command(
                 ["obabel", "-iinchi", inchi_tempfile.name, "-osvg", "-xd", "-xC", "-xj", "-xr 1"])
+            os.unlink(inchi_tempfile.name)
             print(i_err)
             out.append(i_out)
             print(i_out)
@@ -177,7 +180,7 @@ class Reaction:
             print("Outputting {}".format(outfname))
             outnames.append(outfname)
             with open(outfname, "wb") as bytesdata:
-                bytesdata.write(out[i])
+                bytesdata.write(bytes(out[i],encoding='utf-8'))
 
         return outnames
 
