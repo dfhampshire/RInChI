@@ -166,7 +166,6 @@ def rinchis_to_keys(data, longkey=False, shortkey=False, webkey=False, inc_rinch
     for entry in data_list:
         assert isinstance(entry, dict)
         if 'rauxinfo' not in entry and inc_rauxinfo:
-            print('here')
             # Generate rauxinfo
             entry['rauxinfo'] = tools.generate_rauxinfo(entry['rinchi'])
         if not inc_rauxinfo:
