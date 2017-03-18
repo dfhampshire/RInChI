@@ -203,7 +203,7 @@ def construct_output_text(data, header_order=False):
     # Set default order for the output sting
     if not header_order or isinstance(header_order, bool):
         header_order = ['rinchi', 'rauxinfo', 'longkey', 'shortkey', 'webkey', 'rxn_data', 'rxndata', 'as_reactant',
-                        'as_product', 'as_agent']
+                        'as_product', 'as_agent','unknown']
 
     assert isinstance(header_order, list)
 
