@@ -13,7 +13,7 @@ a free python library for the manipulation of chemical formats, now stored perma
 
 import hashlib
 
-from . import _v02_inchi_key, tools, utils
+from . import _v02_inchi_key, utils, v02_tools
 
 # The following variable defines the version number of the RInChIKeys created
 # by this module.
@@ -57,7 +57,7 @@ def rinchi_2_longkey(rinchi):
         The Long-RInChIKey of the RinChI.
     """
     # Split the RInChI into constituent InChIs
-    gp1, gp2, gp3, rxn_layers = tools.split_rinchi(rinchi)
+    gp1, gp2, gp3, direction, ns = v02_tools._split_rinchi(rinchi)
 
     # Convert each InChI to an InChIKey
     def inchikey_converter(inchis):
@@ -109,7 +109,9 @@ def rinchi_2_longkey(rinchi):
     inchikey_vers = utils.consolidate(inchikey_gp1_verss + inchikey_gp2_verss + inchikey_gp3_verss)
 
     # Hash reaction layers.
-    rxn_layers_hash = _rxn_layers_hasher(rxn_layers)
+    if direction:
+        direction = "d" + direction
+    rxn_layers_hash = _rxn_layers_hasher([direction])
 
     # Construct and return the Long-RInChIKey
     if inchikey_gp3:
@@ -130,12 +132,12 @@ def rinchi_2_shortkey(rinchi):
         shortkey:
             The Short-RInChIKey of the RInChI
     """
-    gp1, gp2, gp3, rxn_layers = tools.split_rinchi(rinchi)
+    gp1, gp2, gp3, dir,ns = v02_tools._split_rinchi(rinchi)
     gp1_vers, gp1_major, gp1_minor = _rinchi_gp_hasher(gp1)
     gp2_vers, gp2_major, gp2_minor = _rinchi_gp_hasher(gp2)
     gp3_vers, gp3_major, gp3_minor = _rinchi_gp_hasher(gp3)
     vers = utils.consolidate([gp1_vers, gp2_vers, gp3_vers])
-    rxn_layers_hash = _rxn_layers_hasher(rxn_layers)
+    rxn_layers_hash = _rxn_layers_hasher(["d" + dir])
     shortkey = 'Short-RInChIKey=%s%s-%s-%s-%s-%s-%s-%s-%s' % (
         RINCHIKEY_VERSION, vers, rxn_layers_hash, gp1_major, gp2_major, gp3_major, gp1_minor, gp2_minor, gp3_minor)
     return shortkey
@@ -263,7 +265,7 @@ def _alphabet_hash(arg, length='64'):
     """
 
     def sha256_hash(arg):
-        return hashlib.sha256(arg).hexdigest()
+        return hashlib.sha256(bytes(arg,encoding='utf-8')).hexdigest()
 
     def alphabet_encode(num, alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
         if num == 0:

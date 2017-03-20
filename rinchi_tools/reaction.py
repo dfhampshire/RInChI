@@ -161,6 +161,7 @@ class Reaction:
             inchi_tempfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False)
 
             for inchi in group:
+                # Fixes a documented obabel bug. Updating Obabel to 2.4.1 would render this fix unnecessary
                 inchi = tools.remove_stereo(inchi)
                 inchi_tempfile.write(bytes(inchi+'\n',encoding='utf-8'))
 

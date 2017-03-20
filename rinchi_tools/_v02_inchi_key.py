@@ -1172,11 +1172,12 @@ doublets = ["AA", "AB", "AC", "AD", "AE", "AF", "AG", "AH", "AI", "AJ", "AK", "A
 
 def get_sha256(text):
     hasher = hashlib.sha256()
-    hasher.update(text)
+    hasher.update(bytes(text,encoding='utf-8'))
     return hasher.digest()
 
 
 def triplet1(key):
+    key = str(key)
     b0 = ord(key[0])
     b1 = ord(key[1]) & 0x3f
     h = b0 | b1 << 8
@@ -1184,6 +1185,7 @@ def triplet1(key):
 
 
 def triplet2(a):
+    a = str(a)
     b0 = ord(a[1]) & 0xc0  # 1100 0000
     b1 = ord(a[2])  # 1111 1111
     b2 = ord(a[3]) & 0x0f  # 0000 1111
@@ -1192,6 +1194,7 @@ def triplet2(a):
 
 
 def triplet3(a):
+    a = str(a)
     b0 = ord(a[3]) & 0xf0  # 1111 0000
     b1 = ord(a[4])  # 1111 1111
     b2 = ord(a[5]) & 0x03  # 0000 0011
@@ -1200,6 +1203,7 @@ def triplet3(a):
 
 
 def triplet4(a):
+    a = str(a)
     b0 = ord(a[5]) & 0xfc  # 1111 1100
     b1 = ord(a[6])  # 1111 1111
     h = (b0 | b1 << 8) >> 2
@@ -1207,6 +1211,7 @@ def triplet4(a):
 
 
 def dublet_28_to_36(a):
+    a = str(a)
     b0 = ord(a[3]) & 0xf0  # 1111 0000
     b1 = ord(a[4]) & 0x1f  # 0001 1111
     h = (b0 | b1 << 8) >> 4
@@ -1214,6 +1219,7 @@ def dublet_28_to_36(a):
 
 
 def dublet_56_to_64(a):
+    a = str(a)
     b0 = ord(a[7])  # 1111 1111
     b1 = ord(a[8]) & 0x01  # 0000 0001
     h = (b0 | b1 << 8)

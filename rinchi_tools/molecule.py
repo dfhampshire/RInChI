@@ -161,7 +161,7 @@ class Molecule:
 
         """
         if ";" in inchi or "*" in inchi:
-                return [Molecule(inch) for inch in Molecule.composite_inchi_to_simple(inchi)]
+            return [Molecule(inch) for inch in Molecule.composite_inchi_to_simple(inchi)]
         else:
             return [Molecule(inchi)]
     #####################################################################
@@ -405,8 +405,7 @@ class Molecule:
 
     def no_conlayer_gen_atoms(self):
         """
-        Sets the self.atoms property for molecules without a connectivity layer when not due to incomplete information,
-        e.g. atom hydrides or elements
+        Sets the self.atoms property for molecules without a connectivity layer.
         """
         if self.is_simple is not None:
             return self.is_simple

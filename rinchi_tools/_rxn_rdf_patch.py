@@ -28,6 +28,8 @@ def rxn_to_molfs(rxn):
 
     # Count the stated number of reactants and products in the RXN file.
 
+    while not rxn.startswith('$RXN'):
+        rxn = rxn[1:]
     rxnts_prods_line = rxn.splitlines()[4]
     num_reactants = int(rxnts_prods_line[0:3])
     num_products = int(rxnts_prods_line[3:6])

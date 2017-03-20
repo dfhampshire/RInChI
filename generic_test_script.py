@@ -8,7 +8,7 @@ implemented elsewhere.
 
 import time
 
-from rinchi_tools import Reaction, database, utils
+from rinchi_tools import RInChI, Reaction, conversion, database, utils, v02_rinchi_key
 
 
 def get_aldols():
@@ -36,6 +36,20 @@ def test2():
         print(i_err)
         print(i_out)
 
+def test3():
+    r = RInChI().rinchikey_from_rinchi("RInChI=0.03.1S/C4H8O/c1-3-4(2)5-3/h3-4H,1-2H3/t3-,4?/m0/s1<>C4H9BrO/c1-3(5)4(2)6/h3-4,6H,1-2H3/t3-,4+/m1/s1!Na.H2O/h;1H2/q+1;/p-1/d-","L")
+
+def test4():
+    r = v02_rinchi_key.rinchi_2_longkey("RInChI=0.02.1S/C4H8O/c1-3-4(2)5-3/h3-4H,1-2H3/t3-,4?/m0/s1///C4H9BrO/c1-3(5)4(2)6/h3-4,6H,1-2H3/t3-,4+/m1/s1//Na.H2O/h;1H2/q+1;/p-1/d-")
+
+
+def test5():
+    rdf = open('../newdata/I20160830.rdf').read()
+    csv = 'test-resources/test.csv'
+    conversion.rdf_to_csv_append(rdf,csv)
+
 if __name__ == "__main__":
     #get_aldols()
-    test()
+    #print(timeit.timeit('test4()',"from __main__ import test4",number=10000))
+    #print(timeit.timeit('test3()',"from __main__ import test3",number=10000))
+    test5()

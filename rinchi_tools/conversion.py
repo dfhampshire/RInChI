@@ -19,8 +19,6 @@ This module provides a variety of functions for the interconversion of RInChIS, 
 import csv
 import os
 
-import pandas
-
 from . import _rxn_rdf_patch, tools, utils
 from .rinchi_lib import RInChI
 
@@ -231,7 +229,7 @@ def rdf_to_csv(rdf, outfile="rinchi", return_rauxinfo=False, return_longkey=Fals
     return os.path.abspath(path)
 
 
-def rdf_to_csv_append(rdf, csv_file):
+def rdf_to_csv_append(rdf, csv_file, existing_keys = None):
     """
     Append an existing CSV file with values from an RD file
 
@@ -241,9 +239,11 @@ def rdf_to_csv_append(rdf, csv_file):
     """
 
     # Open the existing csv_file and read the header defining which fields are present
-    df = pandas.read_csv(csv_file, sep="$", header=0)
-    old_rinchis = set(df['rinchi'])
-    header = list(df)
+    with open(csv_file) as f:
+        reader = csv.DictReader(f, delimiter="$")
+        header = reader.fieldnames
+        if existing_keys is None:
+            existing_keys = set(row['longkey'] for row in reader)
 
     return_rauxinfo = "rauxinfo" in header
     return_longkey = "longkey" in header
@@ -255,18 +255,12 @@ def rdf_to_csv_append(rdf, csv_file):
                           return_longkeys=return_longkey, return_shortkeys=return_shortkey,
                           return_webkeys=return_webkey)
 
-    # Convert both lists of rinchis into sets - unique, does not preserve order
-    rinchis = set((entry['rinchi'] for entry in data))
-
-    # The rinchis that need to be added to the csv_file are the complement of the new rinchis in the old
-    rinchis.difference_update(old_rinchis)
-
     # Add all new, unique rinchis to the csv_file
     with open(csv_file, "a") as db:
         writer = csv.DictWriter(db, header, delimiter='$')
         # Add rows determined
         try:
-            rows = [entry for entry in data if entry['rinchi'] in rinchis]
+            rows = [entry for entry in data if entry['longkey'] not in existing_keys]
             writer.writerows(rows)
         except csv.Error:
             pass

@@ -222,18 +222,16 @@ def _split_rinchi(rinchi):
 
     def inchi_builder(rinchi_group, inchi_version):
         u_struct = 0
+        inchis = []
         if rinchi_group:
             inchi_bodies = rinchi_group.split('//')
-            inchis = []
             for inchi_body in inchi_bodies:
                 if inchi_body == "X" or inchi_body == "x":
                     u_struct += 1
                 else:
                     inchi = 'InChI=' + inchi_version + '/' + inchi_body
                     inchis.append(inchi)
-            return inchis, u_struct
-        else:
-            return [], u_struct
+        return inchis, u_struct
 
     layer2_inchis, l2u = inchi_builder(rinchi_groups[0], inchi_version)
     layer3_inchis, l3u = inchi_builder(rinchi_groups[1], inchi_version)
