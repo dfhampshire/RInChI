@@ -26,35 +26,33 @@ class Molecule:
 
     def __init__(self, inchi):
         self.inchi = inchi.rstrip()
+
+        if ";" in self.inchi or "*" in self.inchi:
+            raise ValueError('Composite InChI detected - please use the Molecule.new() method')
+
         self.atoms = {}  # dictionary of atom objects
         self.formula = None
         self.formula_dict = {}
+        self.edge_list = None
+        self.fingerprint = None
+        self.is_simple = None
+        self.conlayer = None
+        self.atom_bonds_set = False
+
+        # Ring counting
         self.rings = []
         self.ring_count = None
         self.ring_count_by_atoms = None
-        self.fingerprint = None
-        self.edge_list = None
-        self.is_simple = None
-        self.ring_permutations = None  # Stores the ring permutations for easy ring searching
-
-        # Flag for whether a ring search has taken place, avoids unnecessary computation
+        self.ring_permutations = None
         self.has_searched_rings = False
-        self.has_set_elements = False
+        self.number_of_rings = None
 
-        # Flag for whether the molecule has a connection layer - whether or not it is a simple species
-        self.has_conlayer = True if self.inchi_to_layer("c") else False
-
-        # For all molecules, construct molecular graph
-        if self.has_conlayer:
-            self.number_of_rings = self.count_rings()['rings']
-        else:
-            self.number_of_rings = 0
-
-        self.no_conlayer_gen_atoms()
-        self.generate_atoms()
-        self.set_atomic_elements()
-        self.set_atomic_hydrogen()
+        # Matching flag
         self.matched = False
+
+        # Perform initialisation
+        self.init_level = None
+        self.initialize()
 
     def __str__(self):
         return "<Molecule Object 'inchi':{}>".format(self.inchi)
@@ -62,8 +60,27 @@ class Molecule:
     def __repr__(self):
         return "Molecule : {}".format(self.inchi)
 
+    def initialize(self,level=1):
+        """
+        Initialises the molecule based on a level required
+        """
+        self.conlayer = self.inchi_to_layer("c")
+
+        if self.conlayer:
+            self.number_of_rings = self.count_rings()['rings']
+        else:
+            self.number_of_rings = 0
+
+        if not self.formula_dict:
+            self.chemical_formula_to_dict()
+        self.set_atoms()
+        if self.conlayer:
+            self.calculate_edges()
+        self.set_atomic_hydrogen()
+
+
     @staticmethod
-    def composite_inchi_to_simple(inchi):
+    def composite_to_simple(inchi):
         """
         Splits an inchi with multiple disconnected components into a list of connected inchis
 
@@ -161,12 +178,29 @@ class Molecule:
 
         """
         if ";" in inchi or "*" in inchi:
-            return [Molecule(inch) for inch in Molecule.composite_inchi_to_simple(inchi)]
+            return [Molecule(inch) for inch in Molecule.composite_to_simple(inchi)]
         else:
             return [Molecule(inchi)]
     #####################################################################
-    # Generate molecular properties, ie.  molecular graph, chemical formula
+    # Generating molecular properties, ie.  molecular graph, chemical formula
     #####################################################################
+
+    def inchi_to_layer(self, l):
+        """
+        Get a particular layer of the InChI
+
+        Args:
+            l: The layer of the InChI to retrieve
+
+        Returns:
+            The InChI layer desired
+        """
+        layers = self.inchi.split("/")
+        for layer in layers:
+            if layer.startswith(l):
+                return layer[1:]
+        else:
+            return None
 
     def inchi_to_chemical_formula(self):
         """
@@ -205,51 +239,57 @@ class Molecule:
 
         self.formula_dict = result
 
-    def set_atomic_elements(self):
+    def set_atoms(self):
         """
-        Sets the atomic element property for each of the instances of the the Atom class.
+        Sets the atoms objects with their appropriate indexes and elements for each of the instances of the the Atom
+        class.
         """
-        if not self.formula_dict:
-            self.chemical_formula_to_dict()
-        ordering = []
-        ordered_atoms = []
+        fd = self.formula_dict.copy()
+        fd.pop('H', None)
+        elements = tuple(fd.keys())
+        num_elements = sum(fd.values())
 
-        # In the canonical InChI labelling scheme, carbon is first, all other elements are arranged alphabetically,
-        # excluding hydrogen
-        if "C" in self.formula_dict.keys():
-            ordering.append("C")
-        heteroatoms = sorted([a for a in self.formula_dict.keys() if not (a == "C" or a == "H")])
+        if num_elements == 0:
+            # Must be hydrogen only
+            self.atoms = {1: Atom(1)}
+            self.atoms[1].element = 'H'
+            self.is_simple = True
+        elif num_elements == 1:
+            self.atoms = {1: Atom(1)}
+            self.atoms[1].element = elements[0]
+            self.is_simple = True
+        elif num_elements >= 2:
+            ordering = []
+            ordered_atoms = []
 
-        ordering += heteroatoms
-        for e in ordering:
-            ordered_atoms.extend([e] * self.formula_dict[e])
+            # In the canonical InChI labelling scheme, carbon is first, all other elements are arranged alphabetically,
+            # excluding hydrogen
+            if "C" in elements:
+                ordering.append("C")
+            heteroatoms = sorted([a for a in elements if not (a == "C" or a == "H")])
+            ordering += heteroatoms
 
-        # Match the canonical InChI labels to their elements
-        if self.has_conlayer:
-            self.has_set_elements = True
-            for i in range(len(ordered_atoms)):
-                    self.atoms[i + 1].element = ordered_atoms[i]
+            for e in ordering:
+                ordered_atoms.extend([e] * fd[e])
 
-    def inchi_to_layer(self, l):
-        """
-        Get a particular layer of the InChI
+            # Set index and elements
+            for index in range(num_elements):
+                self.atoms[index + 1] = Atom(index + 1)
+                self.atoms[index + 1].element = ordered_atoms[index]
+            self.is_simple = False
 
-        Args:
-            l: The layer of the InChI to retrieve
-
-        Returns:
-            The InChI layer desired
-        """
-        layers = self.inchi.split("/")
-        for layer in layers:
-            if layer.startswith(l):
-                return layer[1:]
-        else:
-            return None
+        if num_elements == 2 and not self.conlayer:
+            # Solves problems when dealing with atoms which contain only two non hydrogen atoms and have no connectivity
+            # layer, but their structure can be deduced.
+            self.edge_list = [(1, 2)]
+            self.conlayer = '1-2'
+            self.inchi += ('/c1-2')
 
     def set_atomic_hydrogen(self):
         """
-        Takes the molecular graph and the inchi, and sets the number of protons attached to each atom
+        Takes the molecular graph and the inchi, and sets the number of protons attached to each atom.
+
+        Requires initialised atoms.
         """
         h_layer = self.inchi_to_layer("h")
 
@@ -299,7 +339,6 @@ class Molecule:
             self.atoms[index].mobile_protons = 1
 
     def generate_edge_list(self):
-        # TODO fix generation
         """
         Takes the connective layer of an inchi and returns the molecular graph as an edge list, parsing it directly
         using re.
@@ -307,17 +346,15 @@ class Molecule:
         Returns:
             edges: A list containing the edges of the molecular graph
         """
-        conlayer = self.inchi_to_layer("c")
 
-        # Check if a connection layer was actually passed
-        if not conlayer:
-            self.has_conlayer = False
+        # Check if a connection layer is present
+        if not self.conlayer:
             return None
 
         # Initialise a list containing the edges of the molecular graph, and copies of the connective layer that will
         # be destroyed in the process
-        conlayer_mut = copy.deepcopy(conlayer)
-        conlayer_comma = copy.deepcopy(conlayer)
+        conlayer_mut = copy.deepcopy(self.conlayer)
+        conlayer_comma = copy.deepcopy(self.conlayer)
         edges = []
 
         # Timeout variable ensures while loop will terminate, even if a non-valid string is passed
@@ -374,7 +411,29 @@ class Molecule:
                     edges.append(new_edge)
         return edges
 
-    def generate_atoms(self, lst=None):
+    def calculate_edges(self, edge_list=None):
+        """
+        Sets the node-edge graph as a dict.
+
+        Args:
+            edge_list: A molecular graph as a list of edges.  If no list is passed, the function sets the atoms for its
+                own instance.
+        """
+        if edge_list is None:
+            if self.edge_list is None:
+                self.edge_list = self.generate_edge_list()
+            edge_list = self.edge_list
+
+
+        # Add bonds to the atom objects
+        for edge in edge_list:
+            self.atoms[edge[0]].bonds.append(edge[1])
+            self.atoms[edge[1]].bonds.append(edge[0])
+            self.atom_bonds_set = True
+
+        return edge_list
+
+    def edges_to_atoms(self, ls):
         """
         Sets the node-edge graph as a dict.
 
@@ -382,15 +441,6 @@ class Molecule:
             lst: A molecular graph as a list of edges.  If no list is passed, the function sets the atoms for its
                 own instance.
         """
-        if lst:
-            ls = lst
-        else:
-            if self.edge_list is None:
-                self.edge_list = self.generate_edge_list()
-            ls = self.edge_list
-            if not ls:
-                # set atom for simple molecule
-                return None
 
         llist = {atom: Atom(atom) for edge in ls for atom in edge}
 
@@ -398,62 +448,7 @@ class Molecule:
         for edge in ls:
             llist[edge[0]].bonds.append(edge[1])
             llist[edge[1]].bonds.append(edge[0])
-        if lst:
-            return llist
-        else:
-            self.atoms = llist
-
-    def no_conlayer_gen_atoms(self):
-        """
-        Sets the self.atoms property for molecules without a connectivity layer.
-        """
-        if self.is_simple is not None:
-            return self.is_simple
-
-        if not self.formula_dict:
-            self.chemical_formula_to_dict()
-        fd = self.formula_dict.copy()
-        fd.pop('H', None)
-        atoms = tuple(fd.keys())
-        num_elements = sum(fd.values())
-        if self.has_conlayer:
-            retval = False
-        else:
-            if num_elements == 1:
-                self.atoms = {1: Atom(1)}
-                self.atoms[1].element = atoms[0]
-                retval = True
-            elif num_elements == 0:
-                self.atoms = {1: Atom(1)}
-                self.atoms[1].element = 'H'
-                retval = True
-            elif num_elements >= 2:
-                # Could be a non hydrogen single bonded molecule, assume c1-2 if so.
-                #Check single atom of each non hydrogen
-                ordering = []
-                ordered_atoms = []
-
-                # In the canonical InChI labelling scheme, carbon is first, all other elements are arranged alphabetically,
-                # excluding hydrogen
-                if "C" in atoms:
-                    ordering.append("C")
-                heteroatoms = sorted([a for a in atoms if not (a == "C")])
-                ordering += heteroatoms
-
-                for e in ordering:
-                    ordered_atoms.extend([e] * fd[e])
-
-                self.has_set_elements = True
-                if num_elements == 2:
-                    self.edge_list = [(1,2)]
-                for index in range(len(ordered_atoms)):
-                    self.atoms[index + 1] = Atom(index + 1)
-                    self.atoms[index + 1].element = ordered_atoms[index]
-                retval = False
-            else:
-                retval = False
-        self.is_simple = retval
-        return retval
+        return llist
 
     #######################################################################
     # RING FINDING METHODS
@@ -472,13 +467,10 @@ class Molecule:
         Returns:
             tree_edges: A list of tree edges.
             back_edges: A list of back edges. The list length is equal to the smallest number of cycles that can
-                describe the cycle space of the molecular graph
+            describe the cycle space of the molecular graph
 
         """
 
-        # Ensure that the molecular graph has been generated
-        if not self.atoms:
-            self.generate_atoms()
 
         # Copy of the atom list that will be destroyed
         llist_mut = copy.deepcopy(self.atoms)
@@ -614,7 +606,7 @@ class Molecule:
             partial_edges = [e for e in (tree_edges + back_edges)]
             partial_edges.remove(edge)
 
-            partial_graph = self.generate_atoms(partial_edges)
+            partial_graph = self.edges_to_atoms(partial_edges)
 
             path = self.find_shortest_path(partial_graph, start, end)
 
@@ -630,16 +622,13 @@ class Molecule:
             list of all minimal rings, sorted by the number of edges they contain
         """
         # Ensure that the molecular graph was calculated
-        if not self.atoms:
-            return None
-        self.generate_atoms()
         cycles = []
         for edge in self.edge_list:
             remainder = [e for e in self.edge_list if not e == edge]
             if not remainder:
                 break
             try:
-                path = self.breadth_first_search(self.generate_atoms(remainder), edge[0], edge[1])
+                path = self.breadth_first_search(self.edges_to_atoms(remainder), edge[0], edge[1])
                 if path:
                     cycles.append(self.edge_list_to_vector(self.path_to_cycle_edge_list(path)))
             except KeyError:
@@ -656,9 +645,6 @@ class Molecule:
         Returns:
             list of all minimal rings, sorted by the number of edges they contain
         """
-        if not self.atoms:
-            return None
-        self.generate_atoms()
         cycles = []
         for edge in self.edge_list:
             remainder = [e for e in self.edge_list if not e == edge]
@@ -666,9 +652,9 @@ class Molecule:
                 break
             for node in self.atoms.keys():
                 try:
-                    path_a = self.find_shortest_path(self.generate_atoms(remainder), edge[0], node)
+                    path_a = self.find_shortest_path(self.edges_to_atoms(remainder), edge[0], node)
                     if path_a:
-                        path_b = self.find_shortest_path(self.generate_atoms(remainder), node, edge[1])
+                        path_b = self.find_shortest_path(self.edges_to_atoms(remainder), node, edge[1])
                         if path_b and (len(set(path_a).intersection(path_b)) == 1):
                             cycles.append(self.edge_list_to_vector(self.path_to_cycle_edge_list(path_a + path_b)))
                 except KeyError:
@@ -690,12 +676,6 @@ class Molecule:
             None
         """
 
-        # If no atoms are set, molecule is a simple species - has no rings
-        if not self.atoms:
-            self.rings = None
-            self.ring_count = Counter()
-            return None
-
         # Calculates the minimal cycle basis for an inputted sorted cycle space
         minimum_cycle_basis = []
         for cycle in cycles:
@@ -714,9 +694,9 @@ class Molecule:
                 # elif cycle == [sum(i) % 2 for i in zip(*minimum_cycle_basis)]:
                 # print(cycle, minimum_cycle_basis)
 
-        s = [self.edge_list_to_atoms(self.vector_to_edge_list(x)) for x in minimum_cycle_basis]
+        s = [self.edge_list_to_atoms_spanned(self.vector_to_edge_list(x)) for x in minimum_cycle_basis]
         self.rings = s
-        return None
+        return s
 
     def edge_list_to_vector(self, subset):
         """
@@ -752,9 +732,9 @@ class Molecule:
         edges = []
         for i in range(len(path)):
             try:
-                edges.append([path[i], path[i + 1]])
+                edges.append(tuple(sorted((path[i], path[i + 1]))))
             except IndexError:
-                edges.append([path[i], path[0]])
+                edges.append(tuple(sorted((path[i], path[0]))))
         return edges
 
     def vector_to_edge_list(self, vector):
@@ -774,7 +754,7 @@ class Molecule:
         return ls
 
     @staticmethod
-    def edge_list_to_atoms(edge_list):
+    def edge_list_to_atoms_spanned(edge_list):
         """
         Takes an edge list and returns a list of atoms spanned
 
@@ -831,8 +811,6 @@ class Molecule:
         if not self.has_searched_rings:
             self.calculate_rings()
 
-        self.set_atomic_elements()
-
         count = Counter()
 
         all_perms_sets = {}
@@ -859,6 +837,10 @@ class Molecule:
 
         self.ring_permutations = all_perms_sets
         self.ring_count_by_atoms = count
+
+    ################
+    # Analysis
+    ################
 
     def get_ring_count(self):
         """
@@ -893,7 +875,6 @@ class Molecule:
             A Counter object containing the hybridisation of the atoms
         """
         if self.atoms:
-            self.set_atomic_elements()
             self.set_atomic_hydrogen()
             return Counter([a.get_hybridisation() for a in self.atoms.values()])
         else:
@@ -907,7 +888,6 @@ class Molecule:
             A Counter object containing the valences of the atoms
         """
         if self.atoms:
-            self.set_atomic_elements()
             self.set_atomic_hydrogen()
             return Counter([a.get_valence() for a in self.atoms.values()])
         else:
@@ -1073,28 +1053,24 @@ class Molecule:
             ring_count: The number of rings in the InChI.
         """
         count = Counter()
-        full_conlayer = self.inchi_to_layer('c')
-        if full_conlayer is None:
+        conlayer = self.inchi_to_layer('c')
+        if conlayer is None:
             return count
-
-        # Split connectivity layer into contributions from different components.
-        conlayers = full_conlayer.split(';')
 
         # For each component, count the number of rings and add it to the total.
         ring_count = 0
-        for conlayer in conlayers:
-            # Simple species do not have a connectivity layer.
-            if conlayer:
+        # Simple species do not have a connectivity layer.
+        if conlayer:
 
-                # Consider stoichiometry
-                multiplier = 1
-                if conlayer[1] == '*':
-                    multiplier = int(conlayer[0])
-                    conlayer = conlayer[2:]
-                atoms = (conlayer.replace('(', '-').replace(')', '-').replace(',', '-').split('-'))
-                for index, atom in enumerate(atoms):
-                    if atom in atoms[:index]:
-                        ring_count += multiplier
+            # Consider stoichiometry
+            multiplier = 1
+            if conlayer[1] == '*':
+                multiplier = int(conlayer[0])
+                conlayer = conlayer[2:]
+            atoms = (conlayer.replace('(', '-').replace(')', '-').replace(',', '-').split('-'))
+            for index, atom in enumerate(atoms):
+                if atom in atoms[:index]:
+                    ring_count += multiplier
         count['rings'] = ring_count
         if count['rings'] != 0:
             count['molecules'] = 1

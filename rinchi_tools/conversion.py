@@ -260,11 +260,16 @@ def rdf_to_csv_append(rdf, csv_file, existing_keys = None):
         writer = csv.DictWriter(db, header, delimiter='$')
         # Add rows determined
         try:
-            rows = [entry for entry in data if entry['longkey'] not in existing_keys]
-            writer.writerows(rows)
+            to_add = []
+            for entry in data:
+                lkey = entry['longkey']
+                if lkey not in existing_keys:
+                    to_add.append(entry)
+                    existing_keys.add(lkey)
+            writer.writerows(to_add)
         except csv.Error:
             pass
-
+    return
 
 def create_csv_from_directory(root_dir, outname, return_rauxinfo=False, return_longkey=False, return_shortkey=False,
                               return_webkey=False):
@@ -286,7 +291,7 @@ def create_csv_from_directory(root_dir, outname, return_rauxinfo=False, return_l
     # Flag for whether the database should be created or appended
     database_has_started = False
     db_path = ''
-
+    existing_keys = None
     # Iterate over all files in the root directory
     for root, folders, filenames in os.walk(root_dir):
         file_number = len(filenames)
@@ -298,7 +303,7 @@ def create_csv_from_directory(root_dir, outname, return_rauxinfo=False, return_l
                 # Only try to process files with an .rdf extension
                 if os.path.splitext(filename)[1] == ".rdf":
                     if database_has_started:
-                        rdf_to_csv_append(data, db_path)
+                        existing_keys = rdf_to_csv_append(data, db_path,existing_keys)
                     else:
                         db_path = rdf_to_csv(data, outname, return_rauxinfo, return_longkey, return_shortkey,
                                              return_webkey)

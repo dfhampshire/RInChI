@@ -26,7 +26,7 @@ class Atom:
     def __str__(self):
         try:
             if self.element is not None:
-                return "<Atom Object 'index':{} 'element':{}>".format(self.index,self.element)
+                return "<Atom Object 'index':{} 'element':{}{}{}>".format(self.index,self.element,self.protons,self.mobile_protons)
             else:
                 return "<Atom Object 'index':{} 'element':None>".format(self.index)
         except:
@@ -35,7 +35,7 @@ class Atom:
     def __repr__(self):
         try:
             if self.element is not None:
-                return "<Atom Object 'index':{} 'element':{}>".format(self.index,self.element)
+                return "<Atom Object 'index':{} 'element':{}{}{}>".format(self.index,self.element,self.protons,self.mobile_protons)
             else:
                 return "<Atom Object 'index':{} 'element':None>".format(self.index)
         except:
