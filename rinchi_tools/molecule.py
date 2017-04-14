@@ -54,6 +54,13 @@ class Molecule:
         self.init_level = None
         self.initialize()
 
+    def __iter__(self):
+        for atom in self.atoms.values():
+            yield atom
+
+    def __getitem__(self, key):
+        return self.atoms[key]
+
     def __str__(self):
         return "<Molecule Object 'inchi':{}>".format(self.inchi)
 
@@ -297,12 +304,16 @@ class Molecule:
             return None
 
         # Currently ignoring mobile hydrogen - Eliminate mobile hydrogen, stored as bracketed sections of the string
-        mobile_groups = re.findall(r"\(H\d?,([\d,]+)\)", h_layer)
-        mobile_protons = []
+        mobile_groups = re.findall(r"\(H(\d?),([\d,]+)\)", h_layer)
+        mobile_protons = {}
 
-        for group in mobile_groups:
-            for num in group.split(","):
-                mobile_protons.append(int(num))
+        for num, indexes in mobile_groups:
+            if not num:
+                num = 1
+            centres = indexes.split(",")
+            for centre in centres:
+                mobile_protons[int(centre)] = (int(num),len(centres))
+
 
         h_layer = re.sub(r"\([\d\-,]+\)", "", h_layer)
 
@@ -335,8 +346,11 @@ class Molecule:
                     self.atoms[index].protons = key
 
         # Mark atoms with mobile protons as such
-        for index in mobile_protons:
-            self.atoms[index].mobile_protons = 1
+        for item in mobile_protons.items():
+            atom = self.atoms[item[0]]
+            atom.mobile_protons = item[1][0]
+            atom.mpcc = item[1][1]
+
 
     def generate_edge_list(self):
         """

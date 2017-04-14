@@ -22,11 +22,16 @@ class Atom:
         self.hyb = None
         self.attached_edges = None
         self.valence = None
+        self.mpcc = 0 # Mobile proton center count
 
     def __str__(self):
         try:
             if self.element is not None:
-                return "<Atom Object 'index':{} 'element':{}{}{}>".format(self.index,self.element,self.protons,self.mobile_protons)
+                return "<Atom Object 'index':{} 'element':{} 'H':{} 'Mob-H':{} 'MPCC': {}>".format(self.index,
+                                                                                                   self.element,
+                                                                                                   self.protons,
+                                                                                                   self.mobile_protons,
+                                                                                                   self.mpcc)
             else:
                 return "<Atom Object 'index':{} 'element':None>".format(self.index)
         except:
@@ -35,7 +40,11 @@ class Atom:
     def __repr__(self):
         try:
             if self.element is not None:
-                return "<Atom Object 'index':{} 'element':{}{}{}>".format(self.index,self.element,self.protons,self.mobile_protons)
+                return "<Atom Object 'index':{} 'element':{} 'H':{} 'Mob-H':{} 'MPCC': {}>".format(self.index,
+                                                                                                   self.element,
+                                                                                                   self.protons,
+                                                                                                   self.mobile_protons,
+                                                                                                   self.mpcc)
             else:
                 return "<Atom Object 'index':{} 'element':None>".format(self.index)
         except:
