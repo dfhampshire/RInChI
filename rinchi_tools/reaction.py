@@ -424,39 +424,51 @@ class Reaction:
         agent_s = [Molecule(r) for r in agent_subs]
 
         def matcher_worker(sub, master):
-            if not master.matched or not exclusive:
+            """
+            Has been written so that these functions could be implimented with multiprocessing in future
+            """
+            if not master.matched_in_layer or not exclusive:
             #  print(sub.inchi, master.inchi)
                 ret = Matcher(sub, master).is_sub()
                 if ret:
-                    master.matched = True
+                    master.matched_in_layer = True
                 return ret
             else:
                 return False
 
         def find_in_layer(sub, layer):
-            for i in layer:
-                if matcher_worker(sub, i) or not i:
+            for mol in layer:
+                if matcher_worker(sub, mol) or not mol:
                     return True
             return False
 
         def find_subs(subs, layer):
             for sub in subs:
                 if not find_in_layer(sub, layer):
+                    reset(layer)
                     return False
+            reset(layer)
             return True
+
+        def reset(mol_list):
+            for mol in mol_list:
+                mol.matched_in_layer = False
 
         if not find_subs(reactant_s, reactants):
             return False
-        elif rct_disappears:
-            if find_subs(reactant_s,product_s):
+        elif rct_disappears: # Check if reactant functionality found in the products
+            if find_subs(reactant_s, products):
                 return False
+
         if not find_subs(product_s, products):
             return False
         elif pdt_appears:
             if find_subs(product_s, reactants):
                 return False
+
         if not find_subs(agent_s, agents):
             return False
+
         return True
 
 

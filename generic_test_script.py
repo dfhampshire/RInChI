@@ -6,9 +6,9 @@ implemented elsewhere.
     Duncan Hampshire 2017
 """
 
-import time, os
+import time
 
-from rinchi_tools import RInChI, Reaction, conversion, database, utils, v02_rinchi_key, Molecule
+from rinchi_tools import database, utils
 
 
 def get_aldols():
@@ -29,41 +29,5 @@ def get_aldols():
         file.write(i + '\n')
     print("Finished in {}".format(time.strftime("%H:%M:%S", time.gmtime(time.time()-tstart))))
 
-
-def test():
-    r = 'RInChI=0.03.1S/C4H8O/c1-3-4(2)5-3/h3-4H,1-2H3/t3-,4?/m0/s1<>C4H9BrO/c1-3(5)4(2)6/h3-4,6H,1-2H3/t3-,4+/m1/s1!Na.H2O/h;1H2/q+1;/p-1/d-'
-    print(Reaction(r).generate_svg_image("letsgo"))
-
-def test2():
-    with open("tester",mode="w+b") as f:
-        f.write(bytes("InChI=1S/C6H12/c1-4-6(3)5-2/h4H,5H2,1-3H3\n",encoding="utf-8"))
-        i_out, i_err = utils.call_command(["obabel", "-iinchi", f.name, "-osvg", "-xd", "-xC", "-xj", "-xr 1"])
-        print(i_err)
-        print(i_out)
-
-def test3():
-    r = RInChI().rinchikey_from_rinchi("RInChI=0.03.1S/C4H8O/c1-3-4(2)5-3/h3-4H,1-2H3/t3-,4?/m0/s1<>C4H9BrO/c1-3(5)4(2)6/h3-4,6H,1-2H3/t3-,4+/m1/s1!Na.H2O/h;1H2/q+1;/p-1/d-","L")
-
-def test4():
-    r = v02_rinchi_key.rinchi_2_longkey("RInChI=0.02.1S/C4H8O/c1-3-4(2)5-3/h3-4H,1-2H3/t3-,4?/m0/s1///C4H9BrO/c1-3(5)4(2)6/h3-4,6H,1-2H3/t3-,4+/m1/s1//Na.H2O/h;1H2/q+1;/p-1/d-")
-
-
-def test5():
-    rdf = open('../newdata/I20160830.rdf').read()
-    csv = 'test-resources/test.csv'
-    conversion.rdf_to_csv_append(rdf,csv)
-
-def test6():
-    root_dir = "../newdata"
-    for root, folders, filenames in os.walk(root_dir):
-        lister = filenames[2854:]
-        for i in lister:
-            path = root+'/'+i
-            dest = root + '/todo' + i
-            os.rename(path,dest)
-
 if __name__ == "__main__":
-    #get_aldols()
-    #print(timeit.timeit('test4()',"from __main__ import test4",number=10000))
-    #print(timeit.timeit('test3()',"from __main__ import test3",number=10000))
     get_aldols()

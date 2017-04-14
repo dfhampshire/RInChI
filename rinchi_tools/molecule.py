@@ -48,7 +48,7 @@ class Molecule:
         self.number_of_rings = None
 
         # Matching flag
-        self.matched = False
+        self.matched_in_layer = False
 
         # Perform initialisation
         self.init_level = None
