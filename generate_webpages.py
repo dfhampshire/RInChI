@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """
-Generates web-pages
+Webpage Generation Script
+--------------------------
 
 Automates the generation of PHP web-pages that contain RInChIs, RAuxInfos and Keys for both the version 0.02 and 0.03
-rinchi versions.
+rinchi versions. Specific to RInChI website so not suitable for wide distribution.
 
-    Duncan Hampshire 2017
+Modifications:
+ - Duncan Hampshire 2017
 """
 
 import argparse
@@ -19,11 +21,9 @@ def create_index_page(directory, end="", start=""):
     """
     Creates an index page for all file in a directory
     Args:
-        end:
-        start:
-        directory:
-
-    Returns:
+        end: The start string of the files to create an index for.
+        start: The end string (usually an extension) of the files to create an index for.
+        directory: The directory containing the files to index
 
     """
     files = []
@@ -45,7 +45,7 @@ def create_index_page(directory, end="", start=""):
 
 def get_rinchis_rauxinfos(db, table_name, number=1000):
     """
-    Gets a list of rinchi - rauxinfo tuples
+    Gets a list of RInChI - rauxinfo tuples
     """
     db = sqlite3.connect(db)
     cursor = db.cursor()
@@ -83,6 +83,25 @@ def tuple_to_html_page(data_tuple, inc_rinchi=True, inc_rauxinfo=True, inc_longk
 
 def run(db, table_name, destination, prefix, inc_rinchi=True, inc_rauxinfo=True, inc_longkey=True, inc_shortkey=True,
         inc_webkey=True, custom=None, number=1000):
+    """
+    Generates webpages and index.
+
+    Args:
+        db: The database path containing the rinchis
+        table_name: The table containing the RInChIs
+        destination:
+        prefix:
+        inc_rinchi:
+        inc_rauxinfo:
+        inc_longkey:
+        inc_shortkey:
+        inc_webkey:
+        custom:
+        number:
+
+    Returns:
+
+    """
     results = get_rinchis_rauxinfos(db, table_name, number)
     indexer = 1
     for result in results:

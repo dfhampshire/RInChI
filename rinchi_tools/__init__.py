@@ -1,15 +1,15 @@
 """
-RInChI Tools
+RInChI Extended Toolkit
+-----------------------
 
 This module contains additional functions from that officially distributed by the InChI trust. It develops a range of
 tools and programs to manipulate RInChIs, a concise machine readable reaction identifier.
 
-    Authors
-    -----------------
-    C.H.G. Allen 2012
-    N.A. Parker 2013
-    B. Hammond 2014
-    D.F. Hampshire 2016
+Authors:
+ - C.H.G. Allen 2012
+ - N.A. Parker 2013
+ - B. Hammond 2014
+ - D.F. Hampshire 2016
 
 ---------------------------------------------------------------------------------------------------------------------
 
@@ -30,4 +30,3 @@ from .matcher import Matcher
 from .molecule import Molecule
 from .reaction import Reaction
 from .rinchi_lib import RInChI
-

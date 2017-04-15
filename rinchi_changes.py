@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 """
-RInChI changes analysis script
+RInChI Changes Analysis Script
+------------------------------
 
-This script analyses RInChI(s) for changes
+This script analyses RInChI(s) for changes in properties.
 
-    D. Hampshire 2017
+Modifications:
+ - C. Allen
+ - B. Hammond 2014
+ - D.F. Hampshire 2017
+    Interface completely rewritten. New features added. Based on prior work.
 """
 
 import argparse
@@ -17,14 +22,11 @@ from rinchi_tools.utils import Hashable
 
 def changes_ops(args, parser):
     """
-    Operations for the changes command line tool
+    Executes the changes operations.
 
     Args:
-        args:
-        parser:
-
-    Returns:
-
+        args: The output of the ``parser.parse_args()``. The command line arguments.
+        parser: An ``ArgumentParser`` object
     """
     if args.key:
         try:
@@ -139,9 +141,10 @@ def changes_ops(args, parser):
 
 def add_changes(subparser):
     """
-
+    Adds the arguments for the changes operation to the ``ArgumentParser`` object.
+    
     Args:
-        subparser:
+        subparser: An ``ArgumentParser`` object
     """
     assert isinstance(subparser, argparse.ArgumentParser)
     subparser.add_argument("input", help="The file or string containing RInChI(s) or Long Key to be processed")

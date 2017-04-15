@@ -1,5 +1,6 @@
 """
-RInChI C library interface module.
+RInChI C library interface module
+---------------------------------
 
 This module provides functions defining how RInChIs and RAuxInfos are constructed from InChIs and reaction data.  It
 also interfaces with the RInChI v0.03 software as provided by the InChI trust.
@@ -7,7 +8,8 @@ also interfaces with the RInChI v0.03 software as provided by the InChI trust.
 This file is based on that provided with the official v0.03 RInChI software release, but with modifications to ensure
 Python 3 compatibility.  Documentation was adapted from the official v0.03 release document.
 
-    D. Hampshire 2017
+Modifications:
+ - D. Hampshire 2017
 """
 
 import ctypes as ct
@@ -16,7 +18,8 @@ from . import _external
 
 
 class StringHandler(object):
-    """ Enables seamless use with Python 3 by converting to ascii within the argument objects
+    """
+    Enables seamless use with Python 3 by converting to ascii within the argument objects
     """
 
     @classmethod
@@ -71,7 +74,6 @@ class RInChI:
 
         Args:
             return_code : the return code from the C library
-
         """
         if return_code != 0:
             err_message = str(self.lib_latest_error_message(), 'utf-8')
@@ -89,7 +91,6 @@ class RInChI:
 
         Returns:
             tuple pair of the RInChI and RAuxInfo generated
-
         """
         result_rinchi_string = ct.c_char_p()
         result_rinchi_auxinfo = ct.c_char_p()
@@ -114,7 +115,6 @@ class RInChI:
 
         Returns:
             a RInChIKey
-
         """
 
         result = ct.c_char_p()
@@ -153,9 +153,14 @@ class RInChI:
             Exception: RInChi format related errors
 
         Returns:
-            A dict of five lists: Direction, No-Structures, Reactants, Products, and Agents. Each Reactant,
-                Product, and Agent list contains a set of (InChI, AuxInfo) tuples.  The No-Structures list contains
-                No-Structure counts for Reactants, Products, and Agents.
+            A dictionary of data returned. The structure is as below::
+                {'Direction': [direction character],
+                 'No-Structures': [list of no-structures],
+                 'Reactants': [list of inchis & auxinfos],
+                 'Products': [list of inchis & auxinfos],
+                 'Agents': [list of inchis] & auxinfos}
+            Each Reactant, Product, and Agent list contains a set of (InChI, AuxInfo) tuples. The
+            No-Structures list contains No-Structure counts for Reactants, Products, and Agents.
         """
         inchis = ct.c_char_p()
         self.rinchi_errorcheck(self.lib_inchis_from_rinchi(rinchi_string, rinchi_auxinfo, ct.byref(inchis)))

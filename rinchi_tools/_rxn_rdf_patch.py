@@ -1,7 +1,9 @@
 """
-Patch for the v0.03 C++ release which produces erroneous results on inputting RXN and RD files.
+Patch for the v0.03 C++ release to import non standard RXN and RD files.
 
-    D. Hampshire 2017
+Modifications:
+ - C. Allen 2012
+ - D.F. Hampshire 2017
 """
 
 import os
@@ -108,9 +110,9 @@ def _rdf_rxn_2_molfs(rxn_entry):
         rxn_entry: An RXN entry from an RDFile.  This consists of everything following a "$RXN" tag.
 
     Returns:
-        reactions: A list of tuples of lists; each tuple represents a reaction, and consists of a list of reactant
-            molfiles and a list of product molfiles.  Catalysts, solvents, etc.  are returned as both a reactant and
-            a product (i.e. present on both sides of the reaction).
+        A list of tuples of lists; each tuple represents a reaction, and consists of a list of reactant
+        molfiles and a list of product molfiles.  Catalysts, solvents, etc.  are returned as both a reactant and
+        a product (i.e. present on both sides of the reaction).
     """
     reactants, products, agents, ldata = rxn_to_molfs(rxn_entry.strip())
 
@@ -178,10 +180,14 @@ def molf_2_inchi(molf):
         molf: The contents of a molfile as a string.
 
     Returns:
-        inchi: The InChI.
-        auxinfo: The InChI's AuxInfo, if required.
+        A tuple containing:
+            inchi:
+                The InChI.
+            auxinfo:
+                The InChI's AuxInfo, if required.
+
         N.B. If the inchi program fails to generate data, an empty string will
-            be returned instead.
+        be returned instead.
     """
     # Saves the molfile to a temporary file.
     molf_tempfile = tempfile.NamedTemporaryFile(delete=False)
@@ -210,14 +216,14 @@ def molfiles_2_rinchi(reactants, products, agents, direction='+', nstructs=''):
     Convert an RXN file to a RInChI.
 
     Args:
-        reactants:
-        products:
-        agents:
-        direction:
-        nstructs:
+        reactants: list of Reactant molfiles
+        products: list of product molfiles
+        agents: list of agent molfiles
+        direction: The direction of the reaction
+        nstructs: The no structure flag
 
     Returns:
-        A tuple containing (rinchi, rauxinfo)
+        A tuple containing the rinchi and rauxinfo
     """
 
     # Run the InChI program on the Molfiles, generating AuxInfo if required.
@@ -237,6 +243,16 @@ def molfiles_2_rinchi(reactants, products, agents, direction='+', nstructs=''):
 
 
 def rxn_to_rinchi(rxn_entry, force_equilibrium=False):
+    """
+    Converts a rxn file to a RInChI
+
+    Args:
+        rxn_entry: The RXN entry as a string
+        force_equilibrium: Whether to force the output RInChI to be an equilibrium reaction
+
+    Returns:
+        A tuple of RInChI and RAuxInfo data
+    """
     reactants, products, agents, _ = rxn_to_molfs(rxn_entry.strip())
     if force_equilibrium:
         direction = '='
@@ -247,6 +263,18 @@ def rxn_to_rinchi(rxn_entry, force_equilibrium=False):
 
 
 def rdf_to_rinchi(rdf_entry, start=0, stop=0, force_equilibrium=False):
+    """
+    Converts an RD file into a list of RInChIs
+
+    Args:
+        rdf_entry: The RD file as a string
+        start: The index of the entry to start at.
+        stop: The index of the entry to end at.
+        force_equilibrium: Whether to force the output RInChI to be an equilibrium reaction
+
+    Returns:
+        A generator object yielding tuples of RInChI and RAuxInfo data
+    """
     reactions = rdf_to_molfs(rdf_entry, start, stop)
     if force_equilibrium:
         direction = '='

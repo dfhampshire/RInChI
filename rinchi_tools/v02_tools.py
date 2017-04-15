@@ -1,16 +1,10 @@
 """
 RInChI v0.02 to 0.03 conversion scripts.
 
-    D.F. Hampshire 2016
+Modifications:
+ - D.F. Hampshire 2016
 """
 from . import tools, utils
-
-
-class VersionError(Exception):
-    """
-    Define an exception which deals with InChI and RInChI versions
-    """
-    pass
 
 
 def convert_rinchi(rinchi):
@@ -21,7 +15,7 @@ def convert_rinchi(rinchi):
         rinchi: A RInChI of version 0.02.
 
     Returns:
-        rinchi: A RInChI of version 0.03.
+        A RInChI of version 0.03.
     """
     layer2_inchis, layer3_inchis, layer4_inchis, direction, u_structs = _split_rinchi(rinchi)
     rinchi = tools.build_rinchi(layer2_inchis, layer3_inchis, layer4_inchis, direction, u_structs)
@@ -36,7 +30,7 @@ def generate_rauxinfo(rinchi):
         rinchi: The RInChI of which to create the RAuxInfo.
 
     Returns:
-        rauxinfo: The RAuxInfo of the RinChI
+        The RAuxInfo of the RinChI
 
     Raises:
         VersionError: If the generated AuxInfos are not of the same version.
@@ -69,11 +63,12 @@ def generate_rauxinfo(rinchi):
                 is unable to be described by an InChI.
 
         Returns:
-            versions: A list of the version identifiers of the AuxInfos.
-            auxinfo_group: A string of AuxInfo bodies delimited by double-
-                slashes ("//") ready for inclusion in a RAuxInfo.
-
-
+            A tuple containing:
+                versions:
+                    A list of the version identifiers of the AuxInfos.
+                auxinfo_group:
+                    A string of AuxInfo bodies delimited by double-
+                    slashes ("//") ready for inclusion in a RAuxInfo.
         """
         versions = []
         bodies = []
@@ -114,7 +109,7 @@ def convert_rauxinfo(rauxinfo):
         rauxinfo: A RAuxInfo of version 0.02.
 
     Returns:
-        rauxinfo: A RAuxInfo of version 0.03.
+        A RAuxInfo of version 0.03.
     """
     layer2_auxinfos, layer3_auxinfos, layer4_auxinfos = _split_rauxinfo(rauxinfo)
     rauxinfo = tools.build_rauxinfo(layer2_auxinfos, layer3_auxinfos, layer4_auxinfos)
@@ -130,8 +125,11 @@ def convert_all(rinchi, rauxinfo):
         rauxinfo: A RAuxInfo of version 0.02.
 
     Returns:
-        rauxinfo: A RAuxInfo of version 0.03.
-        rauxinfo: A RAuxInfo of version 0.03.
+        A tuple containing:
+            rauxinfo:
+                A RAuxInfo of version 0.03.
+            rauxinfo:
+                A RAuxInfo of version 0.03.
     """
     rauxinfo = convert_rauxinfo(rauxinfo)
     rinchi = convert_rauxinfo(rinchi)
@@ -146,10 +144,13 @@ def _split_rauxinfo(rauxinfo):
         rauxinfo: An RAuxInfo of version v0.02
 
     Returns:
-        layer2_auxinfos: list of layer 2 auxinfos
-        layer3_auxinfos: list of layer 3 auxinfos
-        layer4_auxinfos: list of layer 4 auxinfos
-
+        A tuple containing:
+            layer2_auxinfos:
+                list of layer 2 auxinfos
+            layer3_auxinfos:
+                list of layer 3 auxinfos
+            layer4_auxinfos:
+                list of layer 4 auxinfos
     """
 
     # Separate version information from the RAuxInfo body.

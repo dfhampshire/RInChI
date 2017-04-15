@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 """
+Testing Script
+--------------
+
 Script used to test various the module during development.  Not for general distribution.  Successful code is
 implemented elsewhere.
 
-    Duncan Hampshire 2017
+Modifications:
+ - D.F. Hampshire 2017
 """
 
 import time
@@ -27,7 +31,7 @@ def get_aldols():
     print(Matcher(c1,m1).is_sub())
     #print(r2.has_substructures(reactant_subs=(e,),product_subs=(c,)))
     file, path = utils.create_output_file('aldols','.rinchi')
-    for i in database.search_for_roles('database/rinchi.db','rinchis03', product_subs=(c,), reactant_subs=(e,),limit=40000):
+    for i in database.search_for_roles('database/rinchi.db','rinchis03', product_subs=(c,), reactant_subs=(e,),limit=0):
         file.write(i + '\n')
     print("Finished in {}".format(time.strftime("%H:%M:%S", time.gmtime(time.time()-tstart))))
 

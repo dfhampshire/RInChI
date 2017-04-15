@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """
 RInChI databasing tools script
+------------------------------
 
 Converts, creates, and removes from SQL databases
 
-    B. Hammond 2014
-    D. Hampshire 2016 - Major features added
-
+Modifications:
+ - B. Hammond 2014
+ - D.F. Hampshire 2016
+    Major features added
 """
 
 import argparse
@@ -55,10 +57,11 @@ def add_db(subparser):
 
 def db_ops(args, parser):
     """
+    Executes the database operations.
 
     Args:
-        args:
-        parser:
+        args: The output of the ``parser.parse_args()``. The command line arguments.
+        parser: An ``ArgumentParser`` object
     """
     args.output = args.output
     if args.rdf2db:

@@ -1,19 +1,24 @@
 """
-RInChI conversion module.
+RInChI conversion module
+------------------------
 
 This module provides a variety of functions for the interconversion of RInChIS, Molfiles, RXNfiles and more.
 
-    C.H.G. Allen 2012
-
-    N.A. Parker 2013: minor additional material added (specifically, .rxn to mol file agent conversion and
-        subsequent amendments for agents in the .rxn to RInChI converter). added support to the rxn2rinchi function
-        for non standard .rxn files containing reaction agents specified separately from the reactants and products.
-    B. Hammond 2014: extended support for non standard .rxn files to the rdf parsing functions. Modified all .rxn
-        handling functions to no longer discard reaction data in the $DTYPE/$DATUM  format, instead optionally returns
-        them.
-    D.F. Hampshire 2016: Removed functions now included in source v0.03 software (commands that interface with
-        RInChI).  Similar python functionality can be found from the rinchi_lib.py interfacing file.  Some functions
-        are now modified to use this rinchi_lib.py interface.
+Modifications:
+ - C.H.G. Allen 2012
+ - N.A. Parker 2013
+    minor additional material added (specifically, .rxn to mol file agent conversion and
+    subsequent amendments for agents in the .rxn to RInChI converter). added support to the rxn2rinchi function
+    for non standard .rxn files containing reaction agents specified separately from the reactants and products.
+ - B. Hammond 2014
+    extended support for non standard .rxn files to the rdf parsing functions. Modified all .rxn
+    handling functions to no longer discard reaction data in the $DTYPE/$DATUM  format, instead optionally returns
+    them.
+ - D.F. Hampshire 2016
+    Removed functions now included in source v0.03 software (commands that interface with
+    RInChI).  Similar python functionality can be found from the rinchi_lib.py interfacing file.  Some functions
+    are now modified to use this rinchi_lib.py interface. Major restructuring across library means functions have
+    been extensively moved to / from elsewhere.
 
 """
 import csv
@@ -89,17 +94,21 @@ def rdf_to_rinchis(rdf, start=0, stop=0, force_equilibrium=False, return_rauxinf
 
 def rxn_to_rinchi(rxn_text, ret_rauxinfo=False, longkey=False, shortkey=False, webkey=False, force_equilibrium=False):
     """
+    Convert a RXN to a dictionary of calculated data.
 
     Args:
-        rxn_text:
-        ret_rauxinfo:
-        longkey:
-        shortkey:
-        webkey:
-        force_equilibrium:
+        rxn_text: The RXN text as a string
+        ret_rauxinfo: Return RAuxInfo
+        longkey: Return the Long Key
+        shortkey: Return the Short Key
+        webkey: Return the Web Key
+        force_equilibrium: Force the output direction to be an equilibrium
 
     Returns:
-        a dictionary of data
+        A dictionary of data with the key as the property name like so::
+
+            {'rinchi': '[DATA], 'rauxinfo': [DATA, ... }
+
     """
 
     # Generate the requested data.
@@ -122,11 +131,11 @@ def rinchi_to_file(data, rxnout=True):
     Takes a file object or a multi-line string and returns a list of output file text blocks (RXN or RDF)
 
     Args:
-        data:
-        rxnout:
+        data: The string of a file input or a file object.
+        rxnout: Return a reaction file. Otherwise, return an RD file
 
     Returns:
-        A list of rxn of rd file text blocks
+        A list of RXN of RD file text blocks
 
     """
     rinchi_data = tools.rinchi_to_dict_list(data)
@@ -150,7 +159,7 @@ def rinchis_to_keys(data, longkey=False, shortkey=False, webkey=False, inc_rinch
     Converts a list of rinchis in a flat file into a dictionary of RInChIs and keys
 
     Args:
-        inc_rauxinfo:
+        inc_rauxinfo: Include the RAuxInfo in the result
         data: The data string or file object to parse
         longkey: Whether to include the longkey
         shortkey: Whether to include the shortkey
@@ -158,7 +167,9 @@ def rinchis_to_keys(data, longkey=False, shortkey=False, webkey=False, inc_rinch
         inc_rinchi: Whether to include the original rinchi
 
     Returns:
-        list of dictionaries containing the data produced.
+        list of dictionaries containing the data produced data with the key as the property name like so::
+
+            {'rinchi': '[DATA], 'rauxinfo': [DATA, ... }
     """
     data_list = tools.rinchi_to_dict_list(data)
     for entry in data_list:
@@ -179,7 +190,7 @@ def rinchis_to_keys(data, longkey=False, shortkey=False, webkey=False, inc_rinch
         if webkey:
             entry['webkey'] = RInChI().rinchikey_from_rinchi(entry['rinchi'], "W")
         if not inc_rinchi:
-            # Remove rinchi if not needed
+            # Remove RInChI if not needed
             del entry['rinchi']
     return data_list
 

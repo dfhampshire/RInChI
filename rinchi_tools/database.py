@@ -481,7 +481,7 @@ def rdf_to_sql(rdfile, db_filename, table_name, columns=None):
     columns = _get_sql_columns(cursor, table_name)
 
 
-    # Open the rdfile and convert its contents to a dict of rinchis and rinchi data
+    # Open the rdfile and convert its contents to a dict of rinchis and RInChI data
     rdf_data = conversion.rdf_to_rinchis(rdfile, columns=columns)
 
     # Transform in place the dicts storing rxn info to their string representations
@@ -530,7 +530,7 @@ def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=Fals
     Args:
          db_filename: The db filename to which the changes should be made.  The new db is added as a table.
          table_name: the name for the new v03 rinchi table.
-         v02_rinchi: The name of the v02 rinchi column.  Defaults to False (No rinchi in db).
+         v02_rinchi: The name of the v02 rinchi column.  Defaults to False (No RInChI in db).
          v02_rauxinfo: The name of the v02 rauxinfo column.  Defaults to False (No rauxinfos in db).
          v03_rinchi: The name of the v03 new rinchi column.  Defaults to False (No rinchi column will be created).
          v03_rauxinfo: The name of the v03 new rinchi column.  Defaults to False (No rauxinfo column will be created).

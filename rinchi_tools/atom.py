@@ -1,10 +1,13 @@
 """
 RInChI Object Orientated Atom Class Module
+------------------------------------------
 
 This module contains the Atom class and associated functions
 
-    B. Hammond 2014
-    D. Hampshire 2017 - Significant restructuring of the class to gain more consistent and less verbose code.
+Modifications:
+ - B. Hammond 2014
+ - D. Hampshire 2017
+    Restructuring and changes as documented in Project Report
 """
 
 
@@ -56,7 +59,6 @@ class Atom:
 
         Returns:
             Number of bonds
-
         """
         if self.valence is None:
             if self.mobile_protons == 0:
@@ -83,9 +85,9 @@ class Atom:
 
     def get_attached_edges(self):
         """
+        Get the edges attached to this atom.
 
         Returns: The edges attached to the molecule.
-
         """
         if self.attached_edges is None:
             self.attached_edges = [tuple(sorted((self.index, bond))) for bond in self.bonds]

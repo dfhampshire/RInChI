@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 """
 RInChI Searching Script
+-----------------------
 
 Searches an SQL database for InChIs.
 
-    D. Hampshire 2017 - Rewrote search function completely. Based on the work of B. Hammond 2014
+Modifications:
+ - B. Hammond 2014
+ - D.F. Hampshire 2017
+    Rewrote search function completely
+
 """
 
 import argparse
@@ -15,9 +20,10 @@ from rinchi_tools.utils import string_to_dict as sd
 
 def add_search(subparser):
     """
-
+    Adds the arguments for the search operation to the ``ArgumentParser`` object.
+    
     Args:
-        subparser:
+        subparser: An ``ArgumentParser`` object
     """
     assert isinstance(subparser, argparse.ArgumentParser)
 
@@ -69,12 +75,11 @@ def add_search(subparser):
 
 def search_ops(args):
     """
-
+    Executes the search operations.
+    
     Args:
-        args:
-
-    Returns:
-
+        args: The output of the ``parser.parse_args()``
+        parser: An ``ArgumentParser`` object
     """
     if args.table_name:
         args.is_database = True

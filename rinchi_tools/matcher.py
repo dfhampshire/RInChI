@@ -1,3 +1,13 @@
+"""
+RInChI Substructure Matching Module
+----------------------------------------------
+
+This module contains the matcher for matching molecules.
+
+Modifications:
+ - D. Hampshire 2017
+"""
+
 import collections
 from itertools import product
 
@@ -8,8 +18,8 @@ class Matcher(object):
     """
     Implementation of VF2 algorithm for matching as a subgraph of another.
 
-    made using
-    http://lalg.fri.uni-lj.si/pub/amalfi/papers/vf-algorithm.pdf
+    made using this `site
+    <http://lalg.fri.uni-lj.si/pub/amalfi/papers/vf-algorithm.pdf>`_.
 
     Uses the python set implementation widely for best performance.
     """
@@ -118,11 +128,11 @@ class Matcher(object):
 
     def is_compatible(self, mapping):
         """
-        Checks if
-        1. The atom mapping has the correct atom
-        2. Checks that other things
+        Checks if:
+         1. The atom mapping has the correct atom
+         2. Checks that other things
 
-        returns a list of compatable atoms.
+        Returns a list of compatible atoms.
         """
         # Add checks here for comparing whether the master atom matches the sub atom
         # insert boolean functions or other test criteria
@@ -181,6 +191,12 @@ class Matcher(object):
         return atom_mapping, sub_atoms_mapped, master_atoms_mapped
 
     def count_compatable(self, mapping):
+        """
+        Checks that the terminal sets as computed the mapping have the appropriate bond counts.
+
+        Also sets terminal sets for next iteration to avoid unnecessary repeated computation.
+
+        """
         self.term_sets = ()
         new_state = self.gen_test_state(mapping)
         master_term = self.get_terminal_atoms(new_state[2], self.master)  # Calculate Tin_master
@@ -203,10 +219,16 @@ class Matcher(object):
             return False
 
     def sub_count(self):
+        """
+        The number of unique matched found in the molecule
+        """
         return sum(1 for _ in self.match())
 
 
 class Backup(object):
+    """
+    Stores the backed up mappings
+    """
     def __init__(self, matcher_object):
         self.mapping_stack = []
         assert isinstance(matcher_object, Matcher)
@@ -240,5 +262,8 @@ class Backup(object):
         self.mapping_stack.append(instance)
 
     def depth(self):
+        """
+        The depth of the iterations
+        """
         depth = len(self.mapping_stack)
         return depth

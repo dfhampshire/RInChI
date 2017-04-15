@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """
 RInChI Statictics Script
+------------------------
 
-Searches an SQL database for InChIs.
+Calculates summary statistics for a flat file of RInChIs.
 
-    D. Hampshire 2017 - Rewrote search function completely. Based on the work of B. Hammond 2014
+Modifications:
+ - D.F. Hampshire 2017
 """
 
 import argparse
@@ -13,6 +15,12 @@ from rinchi_tools import tools, utils
 
 
 def add_stats(subparser):
+    """
+    Adds the arguments for the stats operation to the ``ArgumentParser`` object.
+    
+    Args:
+        subparser: An ``ArgumentParser`` object
+    """
     assert isinstance(subparser, argparse.ArgumentParser)
 
     # Add main search arguments
@@ -29,6 +37,13 @@ def add_stats(subparser):
 
 
 def stats_ops(args):
+    """
+    Executes the statitics operations.
+
+    Args:
+        args: The output of the ``parser.parse_args()``. The command line arguments.
+        parser: An ``ArgumentParser`` object
+    """
     data = tools.rinchi_to_dict_list(open(args.input),)
     rinchis = (item['rinchi'] for item in data)
     data = tools.process_stats(rinchis, int(args.mostcommon))

@@ -1,10 +1,13 @@
 """
 RInChI Object Orientated Reaction Class Module
+----------------------------------------------
 
 This module contains the Reaction class and associated functions
 
-    B. Hammond 2014
-    D. Hampshire 2017 - Significant restructuring of the class to gain more consistent and less verbose code.
+Modifications:
+ - B. Hammond 2014
+ - D. Hampshire 2017
+    Significant restructuring of the class to gain more consistent and less verbose code.
 """
 
 import itertools
@@ -31,7 +34,7 @@ class Reaction:
     def __init__(self, rinchi):
         """
         Args:
-            rinchi: A RInChI which represent the reaction
+            rinchi: A RInChI which represents the reaction
         """
 
         # Split the RInChI into it's InChIs:
@@ -266,7 +269,7 @@ class Reaction:
             inchi: an Inchi
 
         Returns:
-            Returns the rinchi if the inchi is present, otherwise returns None.
+            Returns the RInChI if the inchi is present, otherwise returns None.
 
         """
         for mol in layer:
@@ -380,10 +383,7 @@ class Reaction:
         Determine how the number of rings changes in a reaction. Old method
 
         Returns:
-            ring_change: The number of rings created by the reaction.  If rings are destroyed, this will be negative.
-                If the reaction is an equilibrium or direction is unspecified, the value of ring change will be the
-                absolute (i.e.  positive) value.
-            cyclic_mol_change
+            A counter containing the changes across the reaction.
         """
         changes = self.change_across_reaction(Molecule.count_rings)
 
@@ -406,7 +406,6 @@ class Reaction:
 
         Returns:
             Boolean, whether the substructures are contained
-
         """
         if reactant_subs is None:
             reactant_subs = ()
@@ -470,5 +469,3 @@ class Reaction:
             return False
 
         return True
-
-

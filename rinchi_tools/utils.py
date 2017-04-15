@@ -38,14 +38,17 @@ def output(text, output_path=False, default_extension=False):
         print(text)
 
 
-def create_output_file(output_path, default_extension,create_out_dir=True):
+def create_output_file(output_path, default_extension, create_out_dir=True):
     """
+    Creates an output file
 
     Args:
-        output_path:
-        default_extension:
+        output_path: the path of the file to create
+        default_extension: the extension to use for the file
+        create_out_dir: Create an output directory
 
     Returns:
+        A tuple containing a file object and the path of the file object.
 
     """
     # Assign extension from output name if provided
@@ -100,7 +103,7 @@ def consolidate(items):
     Check that all non-empty items in an iterable are identical
 
     Args:
-         items:
+         items: the iterable
 
     Raises:
          ValueError: Items are not all identical
@@ -165,9 +168,9 @@ def read_input_file(input_path, filetype_check=False, return_file_object=False):
     Reads an input path into a string
 
     Args:
-        input_path:
-        filetype_check:
-        return_file_object:
+        input_path: The path of the file to open
+        filetype_check: Check type of file
+        return_file_object: Return a file object instead of a string
 
     Returns:
         A multi-line string or a file object
@@ -197,7 +200,7 @@ def construct_output_text(data, header_order=False):
         header_order: Optional list of keys for the dictionaries. The list can contain non present keys.
 
     Returns:
-        data_string: The output as a text block
+        The output as a text block
     """
 
     # Set default order for the output sting
@@ -251,6 +254,13 @@ def construct_output_text(data, header_order=False):
 
 
 def counter_to_print_string(counter, name):
+    """
+    Formats counter for printing
+
+    Args:
+        counter: The ``Counter`` object
+        name: Name of the data stored in the counter
+    """
     if isinstance(counter,str):
         counter = eval(counter)
     string = '{}\n{}'.format(name,'-'*len(name))
@@ -263,7 +273,7 @@ def counter_to_print_string(counter, name):
 
 class Hashable(object):
     """
-    Make an object hashable for counting
+    Make an object hashable for counting. Used to count counters
     """
 
     def __init__(self, val):
@@ -281,7 +291,6 @@ class Hashable(object):
 def string_to_dict(string):
     """
     Converts a string of form 'a=1,b=2,c=3' to a dictionary of form {a:1,b:2,c:3}
-    Returns:
     """
     if not string or string is None:
         return {}

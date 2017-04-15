@@ -1,10 +1,13 @@
 """
 RInChI Object Orientated Molecule Class Module
+----------------------------------------------
 
 This module contains the Molecule class and associated functions
 
-    B. Hammond 2014
-    D. Hampshire 2017 - Significant restructuring of the class to gain more consistent and less verbose code.
+Modifications:
+ - B. Hammond 2014
+ - D. Hampshire 2017
+    Significant restructuring of the class to gain more consistent and less verbose code.
 """
 
 import copy

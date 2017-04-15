@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """
-RInChI Master Script. Contains all of the action of the RInChI module!
+RInChI Master Script
+--------------------
 
-Uses a system of subparsers which can be called independently.
+Contains all of the action of the RInChI module! Uses a system of subparsers which can be called independently.
 
-    Duncan Hampshire 2017
-
+Modifications:
+ - D.F. Hampshire 2017
 """
 
 import argparse
@@ -38,7 +39,7 @@ if __name__ == "__main__":
     db_parser = main_functions.add_parser('db', description=db_role, help=db_role)
     rinchi_database.add_db(db_parser)
 
-    # Add rinchi changes tools
+    # Add RInChI changes tools
     changes_role = "RInChI Changes Analysis"
     changes_parser = main_functions.add_parser('changes', description=changes_role, help=changes_role)
     rinchi_changes.add_changes(changes_parser)
