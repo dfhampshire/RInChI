@@ -6,6 +6,7 @@ RInChI Master Script
 Contains all of the action of the RInChI module! Uses a system of subparsers which can be called independently.
 
 Modifications:
+
  - D.F. Hampshire 2017
 """
 

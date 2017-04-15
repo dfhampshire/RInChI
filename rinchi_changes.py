@@ -6,9 +6,13 @@ RInChI Changes Analysis Script
 This script analyses RInChI(s) for changes in properties.
 
 Modifications:
+
  - C. Allen
+
  - B. Hammond 2014
+
  - D.F. Hampshire 2017
+
     Interface completely rewritten. New features added. Based on prior work.
 """
 

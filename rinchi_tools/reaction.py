@@ -5,8 +5,11 @@ RInChI Object Orientated Reaction Class Module
 This module contains the Reaction class and associated functions
 
 Modifications:
+
  - B. Hammond 2014
+
  - D. Hampshire 2017
+
     Significant restructuring of the class to gain more consistent and less verbose code.
 """
 

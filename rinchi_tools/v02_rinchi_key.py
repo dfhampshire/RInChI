@@ -1,5 +1,6 @@
 """
-Version 0.02 RInChIKey generation library module.
+Version 0.02 RInChIKey generation library module
+------------------------------------------------
 
 This module provides functions to create Long- and Short-RInChIKeys from RInChIs.
 
@@ -7,8 +8,11 @@ The supplied implementation of the inchi_2_inchikey function uses the InChIKey c
 a free python library for the manipulation of chemical formats, now stored permanently in the v02_inchi_key.py module.
 
 Modifications:
+
  - C.H.G. Allen 2012
+
  - D.F. Hampshire 2016
+
     Modified for Python3 compatibility
 
 """

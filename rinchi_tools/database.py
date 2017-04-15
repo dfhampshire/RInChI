@@ -1,10 +1,16 @@
 """
 RInChI Database Module
+----------------------
 
 Provides tools for converting, creating, and removing from SQL databases
 
-    Ben Hammond 2014
-    D. Hampshire 2017 - Python 3 restructuring and new function addition. Significantly modularised the exisiting code
+Modifications:
+
+ - B. Hammond 2014
+
+ - D. Hampshire 2017
+
+    Python 3 restructuring and new function addition. Significantly modularised the exisiting code
 """
 import csv
 import logging

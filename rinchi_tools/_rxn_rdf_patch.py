@@ -2,7 +2,9 @@
 Patch for the v0.03 C++ release to import non standard RXN and RD files.
 
 Modifications:
+
  - C. Allen 2012
+
  - D.F. Hampshire 2017
 """
 

@@ -1,9 +1,12 @@
 """
-RInChI utilities module.
-
-    D.F. Hampshire 2016
+RInChI utilities module
+-----------------------
 
 This module provides functions that perform various non RInChI specific tasks.
+
+Modifications:
+
+ - D.F. Hampshire 2016
 """
 
 import os

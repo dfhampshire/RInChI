@@ -6,8 +6,11 @@ RInChI Searching Script
 Searches an SQL database for InChIs.
 
 Modifications:
+
  - B. Hammond 2014
+
  - D.F. Hampshire 2017
+
     Rewrote search function completely
 
 """

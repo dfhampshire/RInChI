@@ -6,6 +6,7 @@ RInChI Statictics Script
 Calculates summary statistics for a flat file of RInChIs.
 
 Modifications:
+
  - D.F. Hampshire 2017
 """
 

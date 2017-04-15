@@ -1,7 +1,9 @@
 """
-RInChI v0.02 to 0.03 conversion scripts.
+RInChI v0.02 to 0.03 conversion scripts
+---------------------------------------
 
 Modifications:
+
  - D.F. Hampshire 2016
 """
 from . import _external, tools, utils

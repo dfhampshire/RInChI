@@ -6,8 +6,11 @@ RInChI conversion script
 Converts RInChIs to and from various chemical reaction file formats.
 
 Modifications:
+
  - C. Allen 2012
+
  - D.F. Hampshire 2016
+
     Code rewritten for Python 3 using the argparse module, and major structural and procedural
     changes.
 """
@@ -77,7 +80,7 @@ def convert_ops(args, parser):
 def add_convert(subparser):
     """
     Adds the arguments for the conversion operation to the ``ArgumentParser`` object.
-    
+
     Args:
         subparser: An ``ArgumentParser`` object
     """

@@ -1,11 +1,15 @@
 """
-RInChI tools module.
+RInChI tools module
+-------------------
 
 This module provides functions defining how RInChIs and RAuxInfos are constructed from InChIs and reaction data.  It
 also interfaces with the RInChI v0.03 software as provided by the InChI trust.
 
-    C.H.G. Allen 2012
-    D.F. Hampshire 2016
+Modifications:
+
+ - C.H.G. Allen 2012
+
+ - D.F. Hampshire 2016
 
 """
 import os

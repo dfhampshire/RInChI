@@ -5,8 +5,11 @@ RInChI Object Orientated Atom Class Module
 This module contains the Atom class and associated functions
 
 Modifications:
+
  - B. Hammond 2014
+ 
  - D. Hampshire 2017
+ 
     Restructuring and changes as documented in Project Report
 """
 

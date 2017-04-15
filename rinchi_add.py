@@ -6,8 +6,11 @@ RInChI addition script
 This script adds together flat files of RInChIs separated by newlines.
 
 Modifications:
+
  - C.H.G. Allen 2012
+
  - D.F. Hampshire 2016
+
     Rewritten to use argparse module and Python3
 
 """
@@ -20,7 +23,7 @@ from rinchi_tools import tools, utils
 def add_addition(subparser):
     """
     Adds the arguments for the addition operation to the ``ArgumentParser`` object.
-    
+
     Args:
         subparser: An ``ArgumentParser`` object
     """
@@ -35,7 +38,7 @@ def add_addition(subparser):
 def addition_ops(args, parser):
     """
     Executes the addition operations.
-    
+
     Args:
         args: The output of the ``parser.parse_args()``. The command line arguments.
         parser: An ``ArgumentParser`` object

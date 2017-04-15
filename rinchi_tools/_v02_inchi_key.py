@@ -17,7 +17,9 @@ This file has been extracted from the OASA python Library to provide legacy supp
 v0.02.
 
 Modifications:
+
  - D. Hampshire 2017
+
      Ported to Python 3
 """
 

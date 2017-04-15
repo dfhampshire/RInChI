@@ -7,6 +7,7 @@ Script used to test various the module during development.  Not for general dist
 implemented elsewhere.
 
 Modifications:
+
  - D.F. Hampshire 2017
 """
 

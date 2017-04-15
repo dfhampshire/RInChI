@@ -1,10 +1,12 @@
 """
 RInChI external software location module.
 
-    D. Hampshire 2016
-
 This module defines variables that specify the paths to external software and files
 used by the RInChI tools.
+
+Modifications:
+
+- D. Hampshire 2016
 """
 import copy
 import os

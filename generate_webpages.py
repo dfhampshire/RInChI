@@ -7,6 +7,7 @@ Automates the generation of PHP web-pages that contain RInChIs, RAuxInfos and Ke
 rinchi versions. Specific to RInChI website so not suitable for wide distribution.
 
 Modifications:
+
  - Duncan Hampshire 2017
 """
 

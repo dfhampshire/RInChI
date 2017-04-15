@@ -6,8 +6,11 @@ RInChI databasing tools script
 Converts, creates, and removes from SQL databases
 
 Modifications:
+
  - B. Hammond 2014
+
  - D.F. Hampshire 2016
+
     Major features added
 """
 

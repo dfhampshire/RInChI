@@ -9,6 +9,7 @@ This file is based on that provided with the official v0.03 RInChI software rele
 Python 3 compatibility.  Documentation was adapted from the official v0.03 release document.
 
 Modifications:
+
  - D. Hampshire 2017
 """
 
