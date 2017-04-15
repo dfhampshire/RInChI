@@ -1,5 +1,5 @@
 """
-RInChI v0.02 to 0.03 conversion scripts
+RInChI v0.02 to 0.03 Conversion Module
 ---------------------------------------
 
 Modifications:

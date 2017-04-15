@@ -1,4 +1,7 @@
 """
+InChI Key Module
+----------------
+
 --------------------------------------------------------------------------
     This file is part of OASA - a free chemical python library Copyright (C) 2003-2008 Beda Kosata <beda@zirael.org>
 

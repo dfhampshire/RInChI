@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-RInChI conversion script
+RInChI Conversion Script
 ------------------------
 
 Converts RInChIs to and from various chemical reaction file formats.

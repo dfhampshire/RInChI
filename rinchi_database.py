@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-RInChI databasing tools script
+RInChI Databasing Tools Script
 ------------------------------
 
 Converts, creates, and removes from SQL databases

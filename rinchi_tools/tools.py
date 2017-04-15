@@ -1,5 +1,5 @@
 """
-RInChI tools module
+RInChI Tools Module
 -------------------
 
 This module provides functions defining how RInChIs and RAuxInfos are constructed from InChIs and reaction data.  It

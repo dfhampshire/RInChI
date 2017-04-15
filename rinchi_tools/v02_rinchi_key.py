@@ -1,5 +1,5 @@
 """
-Version 0.02 RInChIKey generation library module
+Version 0.02 RInChIKey Generation Library Module
 ------------------------------------------------
 
 This module provides functions to create Long- and Short-RInChIKeys from RInChIs.

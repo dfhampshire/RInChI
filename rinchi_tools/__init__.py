@@ -1,19 +1,9 @@
 """
 RInChI Extended Toolkit
------------------------
+=======================
 
 This module contains additional functions from that officially distributed by the InChI trust. It develops a range of
 tools and programs to manipulate RInChIs, a concise machine readable reaction identifier.
-
-Authors:
-
- - C.H.G. Allen 2012
- 
- - N.A. Parker 2013
-
- - B. Hammond 2014
-
- - D.F. Hampshire 2016-17
 
 ---------------------------------------------------------------------------------------------------------------------
 
@@ -27,6 +17,17 @@ Authors:
     the specific language governing permissions and limitations under the License.
 
 ---------------------------------------------------------------------------------------------------------------------
+
+Authors:
+
+ - C.H.G. Allen 2012
+ 
+ - N.A. Parker 2013
+
+ - B. Hammond 2014
+
+ - D.F. Hampshire 2016-17
+
 """
 # Create alias names for the main class objects
 from .atom import Atom

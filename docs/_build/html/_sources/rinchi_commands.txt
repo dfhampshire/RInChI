@@ -1,0 +1,283 @@
+.. automodule:: rinchi
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    
+::
+    
+    Usage: rinchi.py [-h] {search,convert,db,changes,addition,stats} ...
+
+    RInChI Module Command Line Tools. Can execute each of the other functions, allowing 
+    for a complete command line program navigation.
+
+    positional arguments:
+      {search,convert,db,changes,addition,stats}
+                            Main Function
+        search              Search for RInChIs, InChIs & their components or
+                            RInChI Keys in a RInChI SQL Database / Flat File
+        convert             RInChI Conversion to/from other formats
+        db                  RInChI SQL Database Manipulation Tools
+        changes             RInChI Changes Analysis
+        addition            RInChI Addition
+        stats               RInChI Statistical analysis
+
+    optional arguments:
+      -h, --help            show this help message and exit
+
+.. automodule:: rinchi_add
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    
+::
+
+    usage: rinchi_add.py [-h] [-o [OUTPUT]] input_path
+
+    This script combines seperate RInChIs representing the steps of a multi-step
+    reaction into a total RInChI representing the overall reaction.
+
+    The input RInChI file should contain the RInChIs representing the steps of the
+    reaction IN ORDER and seperated by line breaks.
+
+    positional arguments:
+      input_path            Path of file to input
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      -o [OUTPUT], --output [OUTPUT]
+                            Output the result to a file. Optionally specify the
+                            file output name
+    
+.. automodule:: rinchi_changes
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    
+::
+        
+    usage: rinchi_changes.py [-h] (-b | -r | -k) [--list] [--filein] [--ringcount]
+                             [--formula] [--valence] [--hybrid]
+                             [--ringcountelements] [--ringcountold]
+                             [--stereoold [STEREOOLD]]
+                             input
+
+    RInChI Analysis and Manipulation
+
+    positional arguments:
+      input                 The file or string containing RInChI(s) or Long Key to
+                            be processed
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      -b, --batch           Process multiple RInChIs
+      -r, --rinchi          Process a single RInChI
+      -k, --key             Process a RInChI key
+
+    File options:
+      --list                List RInChIs along with results. Otherwise returns
+                            count populations
+      --filein              Assert that the input is a file
+
+    Operation:
+      --ringcount           Change in ring populations by size
+      --formula             Change in formula across a reaction
+      --valence             Change in valence across reaction
+      --hybrid              Change in hybridisation of C atoms across reaction
+      --ringcountelements   Change in ring populations by ring elements
+      --ringcountold        Change in ring populations. Old method
+      --stereoold [STEREOOLD]
+                            Change stereocentres. Old method. Takes an argument as
+                            a dictionary such as
+                            {'sp2':True,'sp3':False,'wd':True} for options to 1.
+                            Count sp2 centres 2. Count sp3 centre 3. Well defined
+                            stereocentres only
+       
+.. automodule:: rinchi_convert
+    :members:
+    :undoc-members:
+    :show-inheritance:
+   
+::
+   
+    usage: rinchi_convert.py [-h]
+                             (--rxn2rinchi | --rdf2rinchi | --rinchi2file | --rinchi2key | --rdf2csv | --dir2csv | --svg)
+                             [-o [FILEOUT]] [-i] [-e] [-ra] [-l] [-s] [-w] [-r]
+                             [-ordf] [-orxn]
+                             input
+
+    RInChI Conversion tools
+
+    positional arguments:
+      input                 The path of the file or folder to be converted, or the
+                            input string
+
+    optional arguments:
+      -h, --help            show this help message and exit
+
+    Conversion Type:
+      --rxn2rinchi          RXN to RInChI conversion
+      --rdf2rinchi          RDF to RInChI conversion
+      --rinchi2file         RInChI-to-File conversion. Accepts any file containing
+                            a rinchi and optionally rauxinfo. The RAuxInfo must
+                            immediately follow the RInChI
+      --rinchi2key          RInChi to RInChI-Key conversion
+      --rdf2csv             Create or append a .csv with an rdfile
+      --dir2csv             Convert a directory of rdfiles to a single csv file
+      --svg                 Convert a RInChI to a collection of .svg files
+
+    All operations:
+      -o [FILEOUT], --fileout [FILEOUT]
+                            Save the output to disk.
+      -i, --filein          Assert that the input is a file
+
+    Conversion to RInChI file:
+      -e, --equilibrium     Force output to be an equilibrium reaction
+      -ra, --rauxinfo       Generate and return RAuxInfo
+      -l, --longkey         Generate and return the Long-RInChIKey
+      -s, --shortkey        Generate and return the Short-RInChIKey
+      -w, --webkey          Generate and return the Web-RInChIKey
+
+    Converting RInChIs to Keys:
+      -r, --include_rinchi  Include original RInChI in the output
+
+    Converting to a RXN/RDF:
+      -ordf, --rdfileoutput
+                            Output as RDFile. Otherwise RXN file(s) are produced
+      -orxn, --rxnfileoutput
+                            Output as RXNFile
+    
+.. automodule:: rinchi_database
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    
+::    
+
+    usage: rinchi_database.py [-h] [-o [OUTPUT]] [--rdf2db] [--csv2db]
+                              [--ufingerprints] [--rfingerprints]
+                              [--cfingerprints] [--convert2_to_3]
+                              [--generate_rauxinfo] [-k [{L,S,W}]]
+                              [database] [input]
+
+    Database Tools Module
+
+    positional arguments:
+      database              The existing database to manipulate, or the name of
+                            database to be created
+      input                 The name of the input data file or table
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      -o [OUTPUT], --output [OUTPUT]
+                            The output table name or something else to output
+
+    Adding Data to a database:
+      --rdf2db              Convert and add an rdfile to an SQL database
+      --csv2db              Add the contents of a rinchi .csv file to an SQL
+                            database
+
+    Fingerprints:
+      --ufingerprints       Adds new entries to the fpts table containing
+                            fingerprint data
+      --rfingerprints       Returns the fingerprint of a given key
+      --cfingerprints       Returns all RInChIs containing the given InChI to
+                            STDOUT
+
+    Converting operations:
+      --convert2_to_3       Creates a new table of v.03 rinchis from a table of
+                            v.02 rinchis
+      --generate_rauxinfo   Generate RAuxInfos from rinchis within a SQL database
+      -k [{L,S,W}], --key [{L,S,W}]
+                            Returns the RInChI corresponding to a given key.
+                            Optionally accepts an argument denoting the type of
+                            key to lookup
+    
+.. automodule:: rinchi_search
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    
+::
+        
+    usage: rinchi_search.py [-h] (-k [{L,S,W,N}] | -i | -l) [-db]
+                            [-o {list,file,stats}] [-hb HYBRIDISATION]
+                            [-v VALENCE] [-r RINGS] [-f FORMULA] [-re RINGELEMENT]
+                            [-iso] [-rct] [-pdt] [-agt] [-n NUMBER]
+                            search_term file [table_name]
+
+    Search for RInChIs, InChIs & their components or RInChI Keys in a RInChI SQL
+    Database / Flat File
+
+    positional arguments:
+      search_term           The search_term to find
+      file                  The database or flat file to search
+      table_name            The table name for the search to be performed on.
+                            Providing this argument asserts that the input file is
+                            an SQL database
+
+    optional arguments:
+      -h, --help            show this help message and exit
+
+    Action:
+      -k [{L,S,W,N}], --key [{L,S,W,N}]
+                            Returns the RInChI corresponding to a given key.
+                            Optionally accepts an argument denoting the type of
+                            key to lookup
+      -i, --inchi           Returns all RInChIs containing the given InChI with
+                            filters
+      -l, --layer           Search for a component of an InChI in a database
+
+    Input / Output Options:
+      -db, --is_database    Assert that the input is a database. If the table_name
+                            argument is not provided then the default value of
+                            'rinchis03' is used
+      -o {list,file,stats}, --output_format {list,file,stats}
+                            The format of the output - must be one of 'list',
+                            'file', 'stats'
+
+    Filters - the changes should be of the form 'sp2=1,sp3=-1,...':
+      -hb HYBRIDISATION, --hybridisation HYBRIDISATION
+                            The changes in hybridisation sought
+      -v VALENCE, --valence VALENCE
+                            The changes in valence sought
+      -r RINGS, --rings RINGS
+                            The changes in ring numbers sought by size
+      -f FORMULA, --formula FORMULA
+                            The changes in the formula sought by element
+      -re RINGELEMENT, --ringelement RINGELEMENT
+                            Search for reactions containing a certain ring type
+      -iso, --isotopic      Search for reactions containing defined isotopic
+                            layers
+      -rct, --reactant      Search for the InChI in the reactants
+      -pdt, --product       Search for the InChI in the products
+      -agt, --agent         Search for the InChI in the agents
+      -n NUMBER, --number NUMBER
+                            Limit the number of initial search results. A value of
+                            0 means no limit
+        
+.. automodule:: rinchi_stats
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    
+::
+        
+    usage: rinchi_stats.py [-h] [-all] [-r] [-p] [-a] [-d] [-u] [-m [MOSTCOMMON]]
+                           input
+
+    RInChI Statistical analysis
+
+    positional arguments:
+      input                 The flat file of rinchis to generate statistics from
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      -all                  return all information
+      -r, --reactants       Include information about the reactants
+      -p, --products        Include Information about the products
+      -a, --agents          Include information about the agents
+      -d, --directions      Include information about the directions
+      -u, --unknownstructs  Include information about unknown structures
+      -m [MOSTCOMMON], --mostcommon [MOSTCOMMON]
+                            Only include information about the most commonly
+                            occuring items

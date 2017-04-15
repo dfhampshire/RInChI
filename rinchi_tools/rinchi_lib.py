@@ -1,5 +1,5 @@
 """
-RInChI C library interface module
+RInChI C Library Interface Module
 ---------------------------------
 
 This module provides functions defining how RInChIs and RAuxInfos are constructed from InChIs and reaction data.  It
@@ -11,6 +11,7 @@ Python 3 compatibility.  Documentation was adapted from the official v0.03 relea
 Modifications:
 
  - D. Hampshire 2017
+
 """
 
 import ctypes as ct
@@ -155,11 +156,13 @@ class RInChI:
 
         Returns:
             A dictionary of data returned. The structure is as below::
+            
                 {'Direction': [direction character],
                  'No-Structures': [list of no-structures],
                  'Reactants': [list of inchis & auxinfos],
                  'Products': [list of inchis & auxinfos],
                  'Agents': [list of inchis] & auxinfos}
+                 
             Each Reactant, Product, and Agent list contains a set of (InChI, AuxInfo) tuples. The
             No-Structures list contains No-Structure counts for Reactants, Products, and Agents.
         """

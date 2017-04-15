@@ -1,0 +1,34 @@
+Welcome to the RInChI Extended Toolkit documentation!
+=====================================================
+
+This is the documentation for the RInChI Extended Toolkit. For a demonstration of the 
+active toolkit, please visit the active `RInChI site`_. Below is an index of the documentation for
+the project. It includes documentation for the toolkit itself and the command line executables, including
+help texts from the executables.
+
+.. _`RInChI site`: http://www-rinchi.ch.cam.ac.uk/
+
+
+RInChI Extended Toolkit
+-----------------------
+
+.. toctree::
+   :maxdepth: 4
+   
+   rinchi_tools
+
+Scripts for executing the toolkit
+---------------------------------
+
+.. toctree::
+   :maxdepth: 4
+
+   rinchi_commands
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+

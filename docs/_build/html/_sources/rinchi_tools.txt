@@ -1,0 +1,59 @@
+.. automodule:: rinchi_tools
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: rinchi_tools.atom
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: rinchi_tools.conversion
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: rinchi_tools.database
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: rinchi_tools.matcher
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: rinchi_tools.molecule
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: rinchi_tools.reaction
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: rinchi_tools.rinchi_lib
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: rinchi_tools.tools
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: rinchi_tools.utils
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: rinchi_tools.v02_rinchi_key
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: rinchi_tools.v02_tools
+    :members:
+    :undoc-members:
+    :show-inheritance:

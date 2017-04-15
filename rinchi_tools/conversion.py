@@ -1,5 +1,5 @@
 """
-RInChI conversion module
+RInChI Conversion Module
 ------------------------
 
 This module provides a variety of functions for the interconversion of RInChIS, Molfiles, RXNfiles and more.

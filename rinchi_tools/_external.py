@@ -1,5 +1,6 @@
 """
-RInChI external software location module.
+RInChI External and Module Variable
+-----------------------------------
 
 This module defines variables that specify the paths to external software and files
 used by the RInChI tools.

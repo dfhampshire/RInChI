@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-RInChI addition script
+RInChI Addition Script
 ----------------------
 
 This script adds together flat files of RInChIs separated by newlines.

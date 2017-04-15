@@ -1,5 +1,5 @@
 """
-RInChI utilities module
+RInChI Utilities Module
 -----------------------
 
 This module provides functions that perform various non RInChI specific tasks.

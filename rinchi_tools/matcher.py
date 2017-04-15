@@ -1,6 +1,6 @@
 """
 RInChI Substructure Matching Module
-----------------------------------------------
+-----------------------------------
 
 This module contains the matcher for matching molecules.
 
