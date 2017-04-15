@@ -1173,7 +1173,7 @@ doublets = ["AA", "AB", "AC", "AD", "AE", "AF", "AG", "AH", "AI", "AJ", "AK", "A
 
 def get_sha256(text):
     hasher = hashlib.sha256()
-    hasher.update(bytes(text,encoding='utf-8'))
+    hasher.update(bytes(text, encoding='utf-8'))
     return hasher.digest()
 
 

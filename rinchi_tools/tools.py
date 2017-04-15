@@ -71,7 +71,7 @@ def build_rinchi(l2_inchis=None, l3_inchis=None, l4_inchis=None, direction='', u
     try:
         inchi_version = utils.consolidate(l2_versions + l3_versions + l4_versions)
     except ValueError:
-        raise VersionError("RInChI can only be made from same-version InChIs.")
+        raise _external.VersionError("RInChI can only be made from same-version InChIs.")
 
     # Decide in which order the RInChI layers should be displayed.  Amend no structure flag accordingly.
     if l2_rinchi_layer > l3_rinchi_layer:
@@ -175,7 +175,7 @@ def build_rinchi_rauxinfo(l2_input=None, l3_input=None, l4_input=None, direction
     try:
         inchi_version = utils.consolidate(l2_versions + l3_versions + l4_versions)
     except ValueError:
-        raise VersionError("RInChI can only be made from same-version InChIs.")
+        raise _external.VersionError("RInChI can only be made from same-version InChIs.")
 
     # Decide in which order the RInChI layers should be displayed.  Amend no structure flag accordingly.
     if l2_rinchi_layer > l3_rinchi_layer:
@@ -259,7 +259,7 @@ def build_rauxinfo(l2_auxinfo, l3_auxinfo, l4_auxinfo):
     try:
         auxinfo_version = utils.consolidate(l2_auxinfo_versions + l3_auxinfo_versions + l4_auxinfo_versions)
     except ValueError:
-        raise VersionError("RAuxInfo can only be made from same-version AuxInfos")
+        raise _external.VersionError("RAuxInfo can only be made from same-version AuxInfos")
 
     # Construct and return the RAuxInfo
     if auxinfo_l4:
@@ -319,7 +319,6 @@ def split_rinchi(rinchi):
             no_structs:
                 returns a list of the numbers of unknown structures in each layer
     """
-    inchi_components = RInChI().inchis_from_rinchi(rinchi, "")
     inchi_components = RInChI().inchis_from_rinchi(rinchi, "")
     direction = inchi_components['Direction']
     reactants = inchi_components['Reactants']
@@ -688,14 +687,14 @@ def process_stats(rinchis, mostcommon=None):
 
     Args:
         rinchis: An iterable of RInChIs
-        most_common: Return only the most common items
+        mostcommon: Return only the most common items
 
     Returns:
         Dictionary of counters containing the information.
 
     """
     mostcommon = int(mostcommon)
-    data = {'reactants': Counter(), 'products': Counter(), 'agents': Counter(), 'directions' : Counter(),
+    data = {'reactants': Counter(), 'products': Counter(), 'agents': Counter(), 'directions': Counter(),
             'unknownstructs': Counter(), 'components': Counter()}
 
     for rinchi in rinchis:
@@ -744,7 +743,7 @@ def remove_stereo(inchi):
     inchi_tempfile.close()
 
     # Run the inchi-1 program, and extract the AuxInfo
-    args = [_external.INCHI_PATH, inchi_tempfile.name, '-stdio', '-InChI2InChI','-NoLabels','-SNon']
+    args = [_external.INCHI_PATH, inchi_tempfile.name, '-stdio', '-InChI2InChI', '-NoLabels', '-SNon']
     raw_inchi_out, inchi_err = utils.call_command(args)
     os.unlink(inchi_tempfile.name)
     for line in raw_inchi_out.splitlines():

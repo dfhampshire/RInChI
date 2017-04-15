@@ -43,6 +43,7 @@ RINCHI_TEMP_DATABASE = RINCHI_DATABASE_PATH + SEPARATOR + "rinchi_temp.db"
 # Set test folder
 TEST_PATH = ROOT + "{0}test-resources".format(SEPARATOR)
 
+
 # Define Error Handling
 
 class RInChIError(ValueError):

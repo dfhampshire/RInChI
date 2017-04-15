@@ -81,12 +81,13 @@ def create_output_file(output_path, default_extension, create_out_dir=True):
     return output_file, output_path
 
 
-def call_command(args,debug=False):
+def call_command(args, debug=False):
     """
     Run a command as a subprocess and return the output
 
     Args:
          args: The command to execute as a string
+         debug: Debug the command
 
     Returns:
         The output of query and error code
@@ -206,7 +207,7 @@ def construct_output_text(data, header_order=False):
     # Set default order for the output sting
     if not header_order or isinstance(header_order, bool):
         header_order = ['rinchi', 'rauxinfo', 'longkey', 'shortkey', 'webkey', 'rxn_data', 'rxndata', 'as_reactant',
-                        'as_product', 'as_agent','unknown']
+                        'as_product', 'as_agent', 'unknown']
 
     assert isinstance(header_order, list)
 
@@ -261,12 +262,12 @@ def counter_to_print_string(counter, name):
         counter: The ``Counter`` object
         name: Name of the data stored in the counter
     """
-    if isinstance(counter,str):
+    if isinstance(counter, str):
         counter = eval(counter)
-    string = '{}\n{}'.format(name,'-'*len(name))
+    string = '{}\n{}'.format(name, '-' * len(name))
     for key, value in counter.items():
         if value:
-            string += '\n' + "{} : {}".format(key,value)
+            string += '\n' + "{} : {}".format(key, value)
     string += '\n'
     return string
 
@@ -288,14 +289,15 @@ class Hashable(object):
     def __eq__(self, other):
         return str(self.val) == str(other.val)
 
+
 def string_to_dict(string):
     """
     Converts a string of form 'a=1,b=2,c=3' to a dictionary of form {a:1,b:2,c:3}
     """
     if not string or string is None:
         return {}
-    assert isinstance(string,str)
+    assert isinstance(string, str)
     items = string.split(',')
     splititems = (item.split('=') for item in items)
-    retdict = {str(i[0]):int(i[1]) for i in splititems}
+    retdict = {str(i[0]): int(i[1]) for i in splititems}
     return retdict

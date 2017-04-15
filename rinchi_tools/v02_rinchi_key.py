@@ -15,11 +15,12 @@ Modifications:
 
 import hashlib
 
-from . import _v02_inchi_key, utils, v02_tools
+from . import _external, _v02_inchi_key, utils, v02_tools
 
 # The following variable defines the version number of the RInChIKeys created
 # by this module.
 RINCHIKEY_VERSION = 'b'
+
 
 def _inchi_2_inchikey(inchi):
     """
@@ -124,12 +125,12 @@ def rinchi_2_shortkey(rinchi):
     Returns:
         The Short-RInChIKey of the RInChI
     """
-    gp1, gp2, gp3, dir,ns = v02_tools._split_rinchi(rinchi)
+    gp1, gp2, gp3, di, ns = v02_tools._split_rinchi(rinchi)
     gp1_vers, gp1_major, gp1_minor = _rinchi_gp_hasher(gp1)
     gp2_vers, gp2_major, gp2_minor = _rinchi_gp_hasher(gp2)
     gp3_vers, gp3_major, gp3_minor = _rinchi_gp_hasher(gp3)
     vers = utils.consolidate([gp1_vers, gp2_vers, gp3_vers])
-    rxn_layers_hash = _rxn_layers_hasher(["d" + dir])
+    rxn_layers_hash = _rxn_layers_hasher(["d" + di])
     shortkey = 'Short-RInChIKey=%s%s-%s-%s-%s-%s-%s-%s-%s' % (
         RINCHIKEY_VERSION, vers, rxn_layers_hash, gp1_major, gp2_major, gp3_major, gp1_minor, gp2_minor, gp3_minor)
     return shortkey
@@ -157,7 +158,7 @@ def _rinchi_gp_hasher(rinchi_gp):
             inchi = inchi[6:]
         vers, body = inchi.split('/', 1)
         if vers != '1S':
-            raise InchiError('Sorry, only RInChI version X.X.1S is supported at present.')
+            raise _external.InChIError('Sorry, only RInChI version X.X.1S is supported at present.')
         layers = body.split('/')
         major_layers = [layers[0]]
         proton_count = 0
@@ -218,7 +219,7 @@ def _rxn_layers_hasher(rxn_layers):
         dlayer_found = False
         if layer.startswith('d'):
             if dlayer_found:
-                raise RinchiError('RInChI contains more than one direction layer!')
+                raise _external.RInChIError('RInChI contains more than one direction layer!')
             if layer[1] == "+":
                 dflag = "F"
             elif layer[1] == "-":
@@ -226,7 +227,7 @@ def _rxn_layers_hasher(rxn_layers):
             elif layer[1] == "=":
                 dflag = "E"
             else:
-                raise RinchiError('Non-standard direction layer!')
+                raise _external.RInChIError('Non-standard direction layer!')
             dlayer_found = True
             dlayer_index = index
     if not dlayer_found:
@@ -255,9 +256,10 @@ def _alphabet_hash(arg, length='64'):
     Returns:
         The SHA256 hash
     """
+    length = int(length)
 
     def sha256_hash(arg):
-        return hashlib.sha256(bytes(arg,encoding='utf-8')).hexdigest()
+        return hashlib.sha256(bytes(arg, encoding='utf-8')).hexdigest()
 
     def alphabet_encode(num, alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
         if num == 0:

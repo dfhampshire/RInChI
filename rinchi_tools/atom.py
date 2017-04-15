@@ -15,6 +15,7 @@ class Atom:
     """
     A class containing a brief description of an atom, for use as nodes in a graph describing a molecule
     """
+
     def __init__(self, index=None):
         self.index = index
         self.bonds = []
@@ -25,7 +26,7 @@ class Atom:
         self.hyb = None
         self.attached_edges = None
         self.valence = None
-        self.mpcc = 0 # Mobile proton center count
+        self.mpcc = 0  # Mobile proton center count
 
     def __str__(self):
         try:
@@ -62,7 +63,7 @@ class Atom:
         """
         if self.valence is None:
             if self.mobile_protons == 0:
-                self.valence =  len(self.bonds) + self.protons
+                self.valence = len(self.bonds) + self.protons
         return self.valence
 
     def get_hybridisation(self):

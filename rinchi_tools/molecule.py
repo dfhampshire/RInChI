@@ -70,9 +70,9 @@ class Molecule:
     def __repr__(self):
         return "Molecule : {}".format(self.inchi)
 
-    def initialize(self,level=1):
+    def initialize(self):
         """
-        Initialises the molecule based on a level required
+        Initialises the molecule
         """
         self.conlayer = self.inchi_to_layer("c")
 
@@ -87,7 +87,6 @@ class Molecule:
         if self.conlayer:
             self.calculate_edges()
         self.set_atomic_hydrogen()
-
 
     @staticmethod
     def composite_to_simple(inchi):
@@ -119,13 +118,13 @@ class Molecule:
             for fm in formulas:
                 assert isinstance(fm, str)
                 if fm[0].isdigit():
-                    cnt, form = re.match('([0-9]+)(.*)',fm).groups()
-                    multiples.append([[form]*int(cnt),fm])
-            for new_list,fm in multiples:
+                    cnt, form = re.match('([0-9]+)(.*)', fm).groups()
+                    multiples.append([[form] * int(cnt), fm])
+            for new_list, fm in multiples:
                 insert_list(formulas, fm, new_list)
             return formulas
 
-        def layer_splitter(comps,prefix):
+        def layer_splitter(comps, prefix):
             """
             Generates multiple formula strings
             """
@@ -134,9 +133,9 @@ class Molecule:
                 assert isinstance(comp, str)
                 if '*' in comp:
                     cnt, comp_new = comp.split('*')
-                    multiples.append([[comp_new]*int(cnt),comp])
+                    multiples.append([[comp_new] * int(cnt), comp])
 
-            for new_list,fm in multiples:
+            for new_list, fm in multiples:
                 insert_list(comps, fm, new_list)
 
             comps = [(prefix + item) if (item != "") else "" for item in comps]
@@ -156,23 +155,21 @@ class Molecule:
 
         # Formula is split on '.', other layers are split on ';'
 
-        components = 0
-
         for l in remainder:
             prefix = l[0]
             ls = l[1:].split(";")
             ls = layer_splitter(ls, prefix)
             individuals.append(ls)
 
-
         # Transposes a list of split lists into a list of split inchis
         individuals = list(zip_longest(*individuals, fillvalue=""))
-         # Inchis are reassembled and returned
+
+        # Inchis are reassembled and returned
         def gen_lists(ind):
             for i in ind:
                 yield [j for j in i if j]
 
-        ret =  (header + "/" + "/".join(x) for x in gen_lists(individuals) if x)
+        ret = (header + "/" + "/".join(x) for x in gen_lists(individuals) if x)
         return ret
 
     @staticmethod
@@ -191,6 +188,7 @@ class Molecule:
             return [Molecule(inch) for inch in Molecule.composite_to_simple(inchi)]
         else:
             return [Molecule(inchi)]
+
     #####################################################################
     # Generating molecular properties, ie.  molecular graph, chemical formula
     #####################################################################
@@ -293,7 +291,7 @@ class Molecule:
             # layer, but their structure can be deduced.
             self.edge_list = [(1, 2)]
             self.conlayer = '1-2'
-            self.inchi += ('/c1-2')
+            self.inchi += '/c1-2'
 
     def set_atomic_hydrogen(self):
         """
@@ -315,8 +313,7 @@ class Molecule:
                 num = 1
             centres = indexes.split(",")
             for centre in centres:
-                mobile_protons[int(centre)] = (int(num),len(centres))
-
+                mobile_protons[int(centre)] = (int(num), len(centres))
 
         h_layer = re.sub(r"\([\d\-,]+\)", "", h_layer)
 
@@ -346,14 +343,13 @@ class Molecule:
 
             # Give each atom the correct number of protons
             for index in indexes:
-                    self.atoms[index].protons = key
+                self.atoms[index].protons = key
 
         # Mark atoms with mobile protons as such
         for item in mobile_protons.items():
             atom = self.atoms[item[0]]
             atom.mobile_protons = item[1][0]
             atom.mpcc = item[1][1]
-
 
     def generate_edge_list(self):
         """
@@ -441,7 +437,6 @@ class Molecule:
                 self.edge_list = self.generate_edge_list()
             edge_list = self.edge_list
 
-
         # Add bonds to the atom objects
         for edge in edge_list:
             self.atoms[edge[0]].bonds.append(edge[1])
@@ -450,12 +445,13 @@ class Molecule:
 
         return edge_list
 
-    def edges_to_atoms(self, ls):
+    @staticmethod
+    def edges_to_atoms(ls):
         """
         Sets the node-edge graph as a dict.
 
         Args:
-            lst: A molecular graph as a list of edges.  If no list is passed, the function sets the atoms for its
+            ls: A molecular graph as a list of edges.  If no list is passed, the function sets the atoms for its
                 own instance.
         """
 
@@ -487,7 +483,6 @@ class Molecule:
             describe the cycle space of the molecular graph
 
         """
-
 
         # Copy of the atom list that will be destroyed
         llist_mut = copy.deepcopy(self.atoms)

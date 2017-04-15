@@ -240,13 +240,14 @@ def rdf_to_csv(rdf, outfile="rinchi", return_rauxinfo=False, return_longkey=Fals
     return os.path.abspath(path)
 
 
-def rdf_to_csv_append(rdf, csv_file, existing_keys = None):
+def rdf_to_csv_append(rdf, csv_file, existing_keys=None):
     """
     Append an existing CSV file with values from an RD file
 
     Args:
         rdf: The RD file as a text block
         csv_file: the CSV file path
+        existing_keys: The keys already existing in the CSV file
     """
 
     # Open the existing csv_file and read the header defining which fields are present
@@ -273,6 +274,7 @@ def rdf_to_csv_append(rdf, csv_file, existing_keys = None):
         try:
             to_add = []
             for entry in data:
+                assert isinstance(entry, dict)
                 lkey = entry['longkey']
                 if lkey not in existing_keys:
                     to_add.append(entry)
@@ -280,7 +282,8 @@ def rdf_to_csv_append(rdf, csv_file, existing_keys = None):
             writer.writerows(to_add)
         except csv.Error:
             pass
-    return
+    return existing_keys
+
 
 def create_csv_from_directory(root_dir, outname, return_rauxinfo=False, return_longkey=False, return_shortkey=False,
                               return_webkey=False):
@@ -314,7 +317,7 @@ def create_csv_from_directory(root_dir, outname, return_rauxinfo=False, return_l
                 # Only try to process files with an .rdf extension
                 if os.path.splitext(filename)[1] == ".rdf":
                     if database_has_started:
-                        existing_keys = rdf_to_csv_append(data, db_path,existing_keys)
+                        existing_keys = rdf_to_csv_append(data, db_path, existing_keys)
                     else:
                         db_path = rdf_to_csv(data, outname, return_rauxinfo, return_longkey, return_shortkey,
                                              return_webkey)

@@ -88,7 +88,7 @@ def changes_ops(args, parser):
                     # Count the change in ring populations across the reactions
                     ringcount = r.change_across_reaction(Molecule.get_ring_count)
                     if ringcount and args.list:
-                        print(utils.counter_to_print_string(ringcount,"Ring Count"))
+                        print(utils.counter_to_print_string(ringcount, "Ring Count"))
                     if ringcount:
                         master_counter['ringcount'][Hashable(ringcount)] += 1
                 if args.ringcountelements:
@@ -134,7 +134,7 @@ def changes_ops(args, parser):
         print('\nStats\n-----')
         for key, value in master_counter.items():
             if value:
-                print(utils.counter_to_print_string(value,key))
+                print(utils.counter_to_print_string(value, key))
     else:
         parser.print_help()
 
@@ -142,7 +142,7 @@ def changes_ops(args, parser):
 def add_changes(subparser):
     """
     Adds the arguments for the changes operation to the ``ArgumentParser`` object.
-    
+
     Args:
         subparser: An ``ArgumentParser`` object
     """

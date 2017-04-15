@@ -166,13 +166,12 @@ class Reaction:
             for inchi in group:
                 # Fixes a documented obabel bug. Updating Obabel to 2.4.1 would render this fix unnecessary
                 inchi = tools.remove_stereo(inchi)
-                inchi_tempfile.write(bytes(inchi+'\n',encoding='utf-8'))
+                inchi_tempfile.write(bytes(inchi + '\n', encoding='utf-8'))
 
             inchi_tempfile.close()
 
             # Uses the obabel package - must be installed on the system running the script
-            i_out, i_err = utils.call_command(
-                #["obabel", "-iinchi", inchi_tempfile.name, "-osmi"],debug=True)
+            i_out, i_err = utils.call_command(  # ["obabel", "-iinchi", inchi_tempfile.name, "-osmi"],debug=True)
                 ["obabel", "-iinchi", inchi_tempfile.name, "-osvg", "-xd", "-xC", "-xj", "-xr 1"])
             os.unlink(inchi_tempfile.name)
             print(i_err)
@@ -186,7 +185,7 @@ class Reaction:
             print("Outputting {}".format(outfname))
             outnames.append(outfname)
             with open(outfname, "wb") as bytesfile:
-                bytesfile.write(bytes(out[i],encoding='utf-8'))
+                bytesfile.write(bytes(out[i], encoding='utf-8'))
 
         return outnames
 
@@ -392,7 +391,8 @@ class Reaction:
             changes['rings'] = abs(changes['rings'])
         return Counter(changes)
 
-    def has_substructures(self, reactant_subs=None, product_subs=None, agent_subs=None, exclusive=True, rct_disappears=False, pdt_appears=True):
+    def has_substructures(self, reactant_subs=None, product_subs=None, agent_subs=None, exclusive=True,
+                          rct_disappears=False, pdt_appears=True):
         """
         Detects if the reaction is a substructure
 
@@ -427,7 +427,7 @@ class Reaction:
             Has been written so that these functions could be implimented with multiprocessing in future
             """
             if not master.matched_in_layer or not exclusive:
-            #  print(sub.inchi, master.inchi)
+                #  print(sub.inchi, master.inchi)
                 ret = Matcher(sub, master).is_sub()
                 if ret:
                     master.matched_in_layer = True
@@ -455,7 +455,7 @@ class Reaction:
 
         if not find_subs(reactant_s, reactants):
             return False
-        elif rct_disappears: # Check if reactant functionality found in the products
+        elif rct_disappears:  # Check if reactant functionality found in the products
             if find_subs(reactant_s, products):
                 return False
 

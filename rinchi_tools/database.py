@@ -45,7 +45,7 @@ def _pragma_sql_env(cursor):
     cursor.execute(''' PRAGMA main.cache_size=5000''')
 
 
-def _create_sql_table(cursor, table_name, columns,unique=None):
+def _create_sql_table(cursor, table_name, columns, unique=None):
     """
     Create an SQL table
 
@@ -60,7 +60,7 @@ def _create_sql_table(cursor, table_name, columns,unique=None):
         ut = ", UNIQUE({}) ON CONFLICT REPLACE".format(unique)
 
     column_string = " TEXT, ".join(columns)
-    cursor.execute('CREATE TABLE IF NOT EXISTS {} ({})'.format(table_name, column_string))
+    cursor.execute('CREATE TABLE IF NOT EXISTS {} ({}){}'.format(table_name, column_string, ut))
 
 
 def _get_sql_columns(cursor, table_name):
@@ -92,7 +92,6 @@ def _sql_insert(cursor, table_name, data, columns=None, exec_many=False):
     """
     if columns is None:
         columns = _get_sql_columns(cursor, table_name)
-
 
     command = (
         "INSERT INTO {}({}) VALUES (".format(table_name, ", ".join(columns)) + ", ".join(["?"] * len(columns)) + ")")
@@ -139,7 +138,7 @@ def _drop_table_if_needed(table_name, cursor):
     return
 
 
-def _sql_search(cursor, table_name, columns=None, lookup_value=None, field=None, use_like=False, limit=None, random=True):
+def _sql_search(cursor, table_name, columns=None, lookup_value=None, field=None, use_like=False, limit=None):
     """
     Search for a value in an SQL database
 
@@ -367,7 +366,7 @@ def search_rinchis(search_term, db=None, table_name=None, is_sql_db=False, hyb=N
         cursor = _flat_file_to_search_db(db)
         results = _string_finder(search_term, cursor, table_name, number)
 
-    result_dict = {'as_reactant': [], 'as_product': [], 'as_agent': [],'unknown':[]}
+    result_dict = {'as_reactant': [], 'as_product': [], 'as_agent': [], 'unknown': []}
 
     # Linear
     for rinchi in results:
@@ -426,34 +425,37 @@ def search_master(search_term, db=None, table_name=None, is_sql_db=False, hyb=No
         if search_term.startswith(('Short-RInChIKey', 'Long-RInChIKey', 'Web-RInChIKey')):
             keytype = search_term[0]
     if keytype is not None:
-        result_dict = {'rinchi': [sql_key_to_rinchi(key=search_term, db_filename=db, table_name=table_name, keytype=keytype)]}
+        result_dict = {
+            'rinchi': [sql_key_to_rinchi(key=search_term, db_filename=db, table_name=table_name, keytype=keytype)]}
     else:
         result_dict = search_rinchis(search_term, db=db, table_name=table_name, isotopic=isotopic, is_sql_db=is_sql_db,
                                      hyb=hyb, val=val, rings=rings, ringelements=ring_type, formula=formula,
                                      reactant=reactant, product=product, agent=agent, number=number)
     return result_dict
 
-def search_for_roles(db, table_name, reactant_subs=None, product_subs=None, agent_subs=None,limit=200):
+
+def search_for_roles(db, table_name, reactant_subs=None, product_subs=None, agent_subs=None, limit=200):
     """
     Searches for reactions in a particular roles
     """
     logging.basicConfig(filename='roles.log', level=logging.DEBUG)
     db = sqlite3.connect(db)
     cursor = db.cursor()
-    _sql_search(cursor,table_name,columns=("rinchi",),limit=limit,random=True)
+    _sql_search(cursor, table_name, columns=("rinchi",), limit=limit)
     rinchis = (i[0] for i in cursor.fetchall())
     count = 1
     print('starting')
     for rinchi in rinchis:
-        if count % 11000 == 0 and limit==0:
-            print("{}% complete".format(int(count/11000)),flush=True)
+        if count % 11000 == 0 and limit == 0:
+            print("{}% complete".format(int(count / 11000)), flush=True)
         count += 1
         try:
             r = Reaction(rinchi)
-            if r.has_substructures(reactant_subs,product_subs,agent_subs):
+            if r.has_substructures(reactant_subs, product_subs, agent_subs):
                 yield rinchi
         except KeyError:
             logging.info('Failed : ', rinchi)
+
 
 # Converting to SQL databases
 #############################
@@ -474,12 +476,11 @@ def rdf_to_sql(rdfile, db_filename, table_name, columns=None):
     db = sqlite3.connect(db_filename)
     cursor = db.cursor()
 
-    if not _check_table_exists(table_name,cursor):
-        _create_sql_table(cursor, table_name, columns,'longkey')
+    if not _check_table_exists(table_name, cursor):
+        _create_sql_table(cursor, table_name, columns, 'longkey')
 
     # Repopulate columns variable.  Useful for pre-existing table
     columns = _get_sql_columns(cursor, table_name)
-
 
     # Open the rdfile and convert its contents to a dict of rinchis and RInChI data
     rdf_data = conversion.rdf_to_rinchis(rdfile, columns=columns)
@@ -512,9 +513,9 @@ def csv_to_sql(csv_name, db_filename, table_name):
         reader = csv.reader(csvfile, delimiter="$")
         columns = tuple(next(reader))
         if not _check_table_exists(table_name, cursor):
-            _create_sql_table(cursor, table_name, columns,'longkey')
+            _create_sql_table(cursor, table_name, columns, 'longkey')
         rows = (row for row in reader)
-        _sql_insert(cursor, table_name,rows,exec_many=True)
+        _sql_insert(cursor, table_name, rows, exec_many=True)
 
     db.commit()
     db.close()
@@ -778,7 +779,7 @@ def _depopulate_queue(q, columns, table_name):
     """
     db = sqlite3.connect(_external.RINCHI_TEMP_DATABASE)
     cursor = db.cursor()
-    _create_sql_table(cursor, table_name, columns,'longkey')
+    _create_sql_table(cursor, table_name, columns, 'longkey')
     logging.info("depopulating")
     while True:
         try:

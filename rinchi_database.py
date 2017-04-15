@@ -55,13 +55,12 @@ def add_db(subparser):
                               'denoting the type of key to lookup ')
 
 
-def db_ops(args, parser):
+def db_ops(args):
     """
     Executes the database operations.
 
     Args:
         args: The output of the ``parser.parse_args()``. The command line arguments.
-        parser: An ``ArgumentParser`` object
     """
     args.output = args.output
     if args.rdf2db:
@@ -91,4 +90,4 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=role)
     add_db(parser)
     args = parser.parse_args()
-    db_ops(args, parser)
+    db_ops(args)

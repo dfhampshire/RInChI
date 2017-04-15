@@ -49,9 +49,9 @@ if __name__ == "__main__":
     addition_parser = main_functions.add_parser('addition', description=addition_role, help=addition_role)
     rinchi_add.add_addition(addition_parser)
 
-    #Add statistical analysis functionality
+    # Add statistical analysis functionality
     stats_role = "RInChI Statistical analysis"
-    stats_parser = main_functions.add_parser('stats', description=stats_role,help=stats_role)
+    stats_parser = main_functions.add_parser('stats', description=stats_role, help=stats_role)
     rinchi_stats.add_stats(stats_parser)
 
     args = parser.parse_args()
@@ -62,7 +62,7 @@ if __name__ == "__main__":
     elif args.command == 'convert':
         rinchi_convert.convert_ops(args, convert_parser)
     elif args.command == 'db':
-        rinchi_database.db_ops(args, db_parser)
+        rinchi_database.db_ops(args)
     elif args.command == 'changes':
         rinchi_changes.changes_ops(args, changes_parser)
     elif args.command == 'addition':

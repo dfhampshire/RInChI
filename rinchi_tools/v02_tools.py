@@ -4,7 +4,7 @@ RInChI v0.02 to 0.03 conversion scripts.
 Modifications:
  - D.F. Hampshire 2016
 """
-from . import tools, utils
+from . import _external, tools, utils
 
 
 def convert_rinchi(rinchi):
@@ -92,7 +92,7 @@ def generate_rauxinfo(rinchi):
     try:
         auxinfo_vers = utils.consolidate(auxinfo_gp1_verss + auxinfo_gp2_verss + auxinfo_gp3_verss)
     except ValueError:
-        raise VersionError("RAuxInfo can only be made from same-version AuxInfos")
+        raise _external.VersionError("RAuxInfo can only be made from same-version AuxInfos")
 
     # Construct and return the RAuxInfo
     if auxinfo_gp3:
@@ -204,7 +204,7 @@ def _split_rinchi(rinchi):
         else:
             inchi_version = ''
     else:
-        raise VersionError("RInChI must be version 0.02")
+        raise _external.VersionError("RInChI must be version 0.02")
 
     # Remove reaction data layers.
     direction = ""

@@ -53,8 +53,8 @@ def get_rinchis_rauxinfos(db, table_name, number=1000):
     return results
 
 
-def tuple_to_html_page(data_tuple, inc_rinchi=True, inc_rauxinfo=True, inc_longkey=True, inc_shortkey=True, inc_webkey=True,
-                       custom=None):
+def tuple_to_html_page(data_tuple, inc_rinchi=True, inc_rauxinfo=True, inc_longkey=True, inc_shortkey=True,
+                       inc_webkey=True, custom=None):
     """
     Create HTML page text from a data_tuple
     """

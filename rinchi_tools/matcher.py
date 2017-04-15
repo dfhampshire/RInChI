@@ -50,6 +50,9 @@ class Matcher(object):
         return all(atom_index in self.sub_atoms_mapped for atom_index in (self.sub.atoms.keys()))
 
     def new_state(self, mapping):
+        """
+        Generates an new state from a mapping
+        """
         self.atom_mapping.add(mapping)
         self.sub_atoms_mapped.add(mapping[0])
         self.master_atoms_mapped.add(mapping[1])
@@ -142,7 +145,7 @@ class Matcher(object):
         hyb_ok = master_atom.get_hybridisation() == sub_atom.get_hybridisation()
         protons_ok = master_atom.protons <= sub_atom.protons
 
-        criteria = [self.bonds_compatible(mapping), self.count_compatable(mapping),element_ok, hyb_ok, protons_ok]
+        criteria = [self.bonds_compatible(mapping), self.count_compatable(mapping), element_ok, hyb_ok, protons_ok]
 
         # General criteria
 
@@ -229,6 +232,7 @@ class Backup(object):
     """
     Stores the backed up mappings
     """
+
     def __init__(self, matcher_object):
         self.mapping_stack = []
         assert isinstance(matcher_object, Matcher)
