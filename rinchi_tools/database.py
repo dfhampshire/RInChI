@@ -452,12 +452,36 @@ def search_for_roles(db, table_name, reactant_subs=None, product_subs=None, agen
     count = 1
     print('starting')
     for rinchi in rinchis:
-        if count % 11000 == 0 and limit == 0:
-            print("{}% complete".format(int(count / 11000)), flush=True)
+        if count % 10000 == 0:
+            print("{} Processed".format(count), flush=True)
         count += 1
         try:
             r = Reaction(rinchi)
             if r.has_substructures(reactant_subs, product_subs, agent_subs):
+                yield rinchi
+        except KeyError:
+            logging.info('Failed : ', rinchi)
+
+def search_for_roles_advanced(db, table_name, reactant_subs=None, product_subs=None, agent_subs=None, changing_subs=None,
+                     exclusive=False, unique=True, limit=200):
+    """
+    Searches for reactions in a particular functionality
+    """
+    logging.basicConfig(filename='roles.log', level=logging.DEBUG)
+    db = sqlite3.connect(db)
+    cursor = db.cursor()
+    _sql_search(cursor, table_name, columns=("rinchi",), limit=limit)
+    rinchis = (i[0] for i in cursor.fetchall())
+    count = 1
+    print('starting')
+    for rinchi in rinchis:
+        if count % 10000 == 0:
+            print("{} Processed".format(count), flush=True)
+        count += 1
+        try:
+            r = Reaction(rinchi)
+            if r.has_substructures_by_populations(reactant_subs, product_subs, agent_subs, changing_subs, exclusive,
+                                                  unique):
                 yield rinchi
         except KeyError:
             logging.info('Failed : ', rinchi)

@@ -68,10 +68,10 @@ class Molecule:
         return self.atoms[key]
 
     def __str__(self):
-        return "<Molecule Object 'inchi':{}>".format(self.inchi)
+        return "<Molecule Object {}>".format(self.inchi)
 
     def __repr__(self):
-        return "Molecule : {}".format(self.inchi)
+        return "<Molecule Object {}>".format(self.inchi)
 
     def initialize(self):
         """

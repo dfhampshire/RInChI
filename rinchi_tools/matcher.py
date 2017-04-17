@@ -224,9 +224,19 @@ class Matcher(object):
 
     def sub_count(self):
         """
-        The number of unique matched found in the molecule
+        The number of unique matches found in the molecule
         """
         return sum(1 for _ in self.match())
+
+    def sub_count_unique(self):
+        matched_sub = set()
+        matches = 0
+        for i in self.match():
+            current = [mapping[1] for mapping in i]
+            if all(atom not in matched_sub for atom in current):
+                matches += 1
+            matched_sub.update(current)
+        return matches
 
 
 class Backup(object):

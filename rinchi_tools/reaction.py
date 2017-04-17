@@ -67,6 +67,12 @@ class Reaction:
         for i in self.agent_inchis:
             self.reaction_agents.extend(Molecule.new(i))
 
+    def __str__(self):
+        return "<Reaction Object {}>".format(self.rinchi)
+
+    def __repr__(self):
+        return "<Reaction Object {}>".format(self.rinchi)
+
     #########################################
     # Calculating reaction properties ie keys, fingerprints
     #########################################
@@ -395,7 +401,7 @@ class Reaction:
         return Counter(changes)
 
     def has_substructures(self, reactant_subs=None, product_subs=None, agent_subs=None, exclusive=True,
-                          rct_disappears=False, pdt_appears=True):
+                          rct_disappears=True, pdt_appears=True):
         """
         Detects if the reaction is a substructure
 
@@ -472,3 +478,84 @@ class Reaction:
             return False
 
         return True
+
+    def has_substructures_by_populations(self, reactant_subs=None, product_subs=None, agent_subs=None, changing_subs=None, exclusive=False,
+                                         unique=True):
+        """
+        Detects if the reaction is a substructure
+
+        Args:
+            reactant_subs: Dictionary of reactant inchis and their populations in the layer
+            product_subs: Dictionary of product inchis and their populations in the layer
+            agent_subs: Dictionary of product inchis and their populations in the layer
+            changing_subs: Dictionary of inchi changes in populations
+            exclusive: Match one functionality per molecule of reactant
+            unique: Prevent matching the same atoms
+
+        Returns:
+            Boolean, whether the substructures are contained
+        """
+        reactant_subs = Counter(reactant_subs)
+        product_subs = Counter(product_subs)
+        agent_subs = Counter(agent_subs)
+        changing_subs = Counter(changing_subs)
+
+        reactants = self.reactants
+        products = self.products
+        agents = self.reaction_agents
+
+        rct_checklist = list(reactant_subs) + list(changing_subs)
+        pdt_checklist = list(product_subs) + list(changing_subs)
+        agt_checklist = list(agent_subs) + list(agent_subs)
+
+        def count_in_mol(sub, master):
+            """
+            Has been written so that these functions could be implimented with multiprocessing in future
+            """
+            if not master.matched_in_layer or not exclusive:
+                sub = Molecule(sub)
+                # print(sub, master)
+                if unique:
+                    ret = Matcher(sub, master).sub_count_unique()
+                else:
+                    ret = Matcher(sub, master).sub_count()
+                if ret:
+                    master.matched_in_layer = True
+                return ret
+            else:
+                return 0
+
+        def count_in_layer(sub, layer):
+            count = 0
+            for mol in layer:
+                count += count_in_mol(sub, mol)
+            return count
+
+        def find_subs(subs, layer):
+            subs_found = Counter()
+            for sub in subs:
+                subs_found[sub] = count_in_layer(sub, layer)
+            reset(layer)
+            return subs_found
+
+        def reset(mol_list):
+            for mol in mol_list:
+                mol.matched_in_layer = False
+
+
+        rcts = find_subs(rct_checklist, reactants)
+        pdts = find_subs(pdt_checklist, products)
+        agts = find_subs(agent_subs, agents)
+        changes = pdts - rcts
+
+        conditions = []
+        for rct, count in reactant_subs.items():
+            conditions.append(rcts[rct] == count)
+        for pdt, count in product_subs.items():
+            conditions.append(pdts[pdt] == count)
+        for agt, count in agent_subs.items():
+            conditions.append(agts[agt] == count)
+        for inchi, count in changing_subs.items():
+            conditions.append(changes[inchi] == count)
+
+        return all(conditions)
