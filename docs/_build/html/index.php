@@ -39,6 +39,9 @@
             
   <div class="section" id="welcome-to-the-rinchi-extended-toolkit-documentation">
 <h1>Welcome to the RInChI Extended Toolkit documentation!<a class="headerlink" href="#welcome-to-the-rinchi-extended-toolkit-documentation" title="Permalink to this headline">¶</a></h1>
+<p>The aim of the RInChI project, in the same vein as InChI, is to create a unique data string to describe a reaction.
+Reaction InChIs, or RInChIs, are such data strings. They use the InChI software and from an rxn input file a RInChI can be created.
+The tools for doing this are below, and some helpful information is given in the help pages.</p>
 <p>This is the documentation for the RInChI Extended Toolkit. For a demonstration of the
 active toolkit, please visit the active <a class="reference external" href="http://www-rinchi.ch.cam.ac.uk/">RInChI site</a>. Below is an index of the documentation for
 the project. It includes documentation for the toolkit itself and the command line executables, including

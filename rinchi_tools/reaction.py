@@ -546,15 +546,18 @@ class Reaction:
         rcts = find_subs(rct_checklist, reactants)
         pdts = find_subs(pdt_checklist, products)
         agts = find_subs(agent_subs, agents)
-        changes = pdts - rcts
+        changes = Counter()
+        changes.update(pdts)
+        changes.subtract(rcts)
+
 
         conditions = []
         for rct, count in reactant_subs.items():
-            conditions.append(rcts[rct] == count)
+            conditions.append(rcts[rct] >= count)
         for pdt, count in product_subs.items():
-            conditions.append(pdts[pdt] == count)
+            conditions.append(pdts[pdt] >= count)
         for agt, count in agent_subs.items():
-            conditions.append(agts[agt] == count)
+            conditions.append(agts[agt] >= count)
         for inchi, count in changing_subs.items():
             conditions.append(changes[inchi] == count)
 

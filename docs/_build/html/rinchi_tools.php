@@ -495,6 +495,12 @@ this is achieved by creating a new db for the processed data and then transferri
 </dd></dl>
 
 <dl class="function">
+<dt id="rinchi_tools.database.search_for_roles_advanced">
+<code class="descclassname">rinchi_tools.database.</code><code class="descname">search_for_roles_advanced</code><span class="sig-paren">(</span><em>db</em>, <em>table_name</em>, <em>reactant_subs=None</em>, <em>product_subs=None</em>, <em>agent_subs=None</em>, <em>changing_subs=None</em>, <em>exclusive=False</em>, <em>unique=True</em>, <em>limit=200</em><span class="sig-paren">)</span><a class="headerlink" href="#rinchi_tools.database.search_for_roles_advanced" title="Permalink to this definition">¶</a></dt>
+<dd><p>Searches for reactions in a particular functionality</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="rinchi_tools.database.search_master">
 <code class="descclassname">rinchi_tools.database.</code><code class="descname">search_master</code><span class="sig-paren">(</span><em>search_term</em>, <em>db=None</em>, <em>table_name=None</em>, <em>is_sql_db=False</em>, <em>hyb=None</em>, <em>val=None</em>, <em>rings=None</em>, <em>formula=None</em>, <em>reactant=False</em>, <em>product=False</em>, <em>agent=False</em>, <em>number=1000</em>, <em>keytype=None</em>, <em>ring_type=None</em>, <em>isotopic=None</em><span class="sig-paren">)</span><a class="headerlink" href="#rinchi_tools.database.search_master" title="Permalink to this definition">¶</a></dt>
 <dd><p>Search for an string within a RInChi database. Includes all options.</p>
@@ -753,8 +759,13 @@ we return the mapping.</p>
 <dl class="method">
 <dt id="rinchi_tools.matcher.Matcher.sub_count">
 <code class="descname">sub_count</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rinchi_tools.matcher.Matcher.sub_count" title="Permalink to this definition">¶</a></dt>
-<dd><p>The number of unique matched found in the molecule</p>
+<dd><p>The number of unique matches found in the molecule</p>
 </dd></dl>
+
+<dl class="method">
+<dt id="rinchi_tools.matcher.Matcher.sub_count_unique">
+<code class="descname">sub_count_unique</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rinchi_tools.matcher.Matcher.sub_count_unique" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="rinchi_tools.matcher.Matcher.sub_to_master">
@@ -1433,7 +1444,7 @@ valence changes, formula changes, hybridisation of C atom changes.</p>
 
 <dl class="method">
 <dt id="rinchi_tools.reaction.Reaction.has_substructures">
-<code class="descname">has_substructures</code><span class="sig-paren">(</span><em>reactant_subs=None</em>, <em>product_subs=None</em>, <em>agent_subs=None</em>, <em>exclusive=True</em>, <em>rct_disappears=False</em>, <em>pdt_appears=True</em><span class="sig-paren">)</span><a class="headerlink" href="#rinchi_tools.reaction.Reaction.has_substructures" title="Permalink to this definition">¶</a></dt>
+<code class="descname">has_substructures</code><span class="sig-paren">(</span><em>reactant_subs=None</em>, <em>product_subs=None</em>, <em>agent_subs=None</em>, <em>exclusive=True</em>, <em>rct_disappears=True</em>, <em>pdt_appears=True</em><span class="sig-paren">)</span><a class="headerlink" href="#rinchi_tools.reaction.Reaction.has_substructures" title="Permalink to this definition">¶</a></dt>
 <dd><p>Detects if the reaction is a substructure</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1446,6 +1457,31 @@ valence changes, formula changes, hybridisation of C atom changes.</p>
 <li><strong>exclusive</strong> &#8211; Match one functionality per molecule of reactant</li>
 <li><strong>rct_disappears</strong> &#8211; Only match if substructures not in products</li>
 <li><strong>pdt_appears</strong> &#8211; Only match if substructures not in reactants</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Boolean, whether the substructures are contained</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rinchi_tools.reaction.Reaction.has_substructures_by_populations">
+<code class="descname">has_substructures_by_populations</code><span class="sig-paren">(</span><em>reactant_subs=None</em>, <em>product_subs=None</em>, <em>agent_subs=None</em>, <em>changing_subs=None</em>, <em>exclusive=False</em>, <em>unique=True</em><span class="sig-paren">)</span><a class="headerlink" href="#rinchi_tools.reaction.Reaction.has_substructures_by_populations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Detects if the reaction is a substructure</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>reactant_subs</strong> &#8211; Dictionary of reactant inchis and their populations in the layer</li>
+<li><strong>product_subs</strong> &#8211; Dictionary of product inchis and their populations in the layer</li>
+<li><strong>agent_subs</strong> &#8211; Dictionary of product inchis and their populations in the layer</li>
+<li><strong>changing_subs</strong> &#8211; Dictionary of inchi changes in populations</li>
+<li><strong>exclusive</strong> &#8211; Match one functionality per molecule of reactant</li>
+<li><strong>unique</strong> &#8211; Prevent matching the same atoms</li>
 </ul>
 </td>
 </tr>

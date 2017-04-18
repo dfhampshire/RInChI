@@ -450,6 +450,10 @@
   </dt>
 
       
+  <dt><a href="rinchi_tools.php#rinchi_tools.reaction.Reaction.has_substructures_by_populations">has_substructures_by_populations() (rinchi_tools.reaction.Reaction method)</a>
+  </dt>
+
+      
   <dt><a href="rinchi_tools.php#rinchi_tools.utils.Hashable">Hashable (class in rinchi_tools.utils)</a>
   </dt>
 
@@ -764,6 +768,10 @@
   </dt>
 
       
+  <dt><a href="rinchi_tools.php#rinchi_tools.database.search_for_roles_advanced">search_for_roles_advanced() (in module rinchi_tools.database)</a>
+  </dt>
+
+      
   <dt><a href="rinchi_tools.php#rinchi_tools.database.search_master">search_master() (in module rinchi_tools.database)</a>
   </dt>
 
@@ -839,6 +847,10 @@
 
       
   <dt><a href="rinchi_tools.php#rinchi_tools.matcher.Matcher.sub_count">sub_count() (rinchi_tools.matcher.Matcher method)</a>
+  </dt>
+
+      
+  <dt><a href="rinchi_tools.php#rinchi_tools.matcher.Matcher.sub_count_unique">sub_count_unique() (rinchi_tools.matcher.Matcher method)</a>
   </dt>
 
       
