@@ -9,6 +9,7 @@ Modifications:
  - D.F. Hampshire 2016
 """
 
+import collections
 import os
 import subprocess
 import sys
@@ -265,10 +266,11 @@ def counter_to_print_string(counter, name):
         counter: The ``Counter`` object
         name: Name of the data stored in the counter
     """
+    assert isinstance(counter,collections.Counter)
     if isinstance(counter, str):
         counter = eval(counter)
     string = '{}\n{}'.format(name, '-' * len(name))
-    for key, value in counter.items():
+    for key, value in counter.most_common():
         if value:
             string += '\n' + "{} : {}".format(key, value)
     string += '\n'

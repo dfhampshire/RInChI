@@ -52,7 +52,8 @@ def get_aldols():
                                                 limit=0, exclusive=False):
         file.write(i + '\n')
     print("Finished in {}".format(time.strftime("%H:%M:%S", time.gmtime(time.time() - tstart))))
-
+    
 
 if __name__ == "__main__":
-    get_aldols()
+    #get_aldols()
+    r()
