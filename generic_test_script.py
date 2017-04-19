@@ -23,6 +23,8 @@ def get_aldols():
     fmdh = 'InChI=1S/CH2O/c1-2/h1H2'
     crt = 'InChI=1S/C4H6O/c1-2-3-4-5/h2-4H,1H3/b3-2+'
     p = "InChI=1S/P"
+    i = 'InChI=1S/C2H4/c1-2/h1-2H2'
+    aldol2 = 'InChI=1S/C4H8O2/c1-4(6)2-3-5/h3-4,6H,2H2,1H3'
     #c2 = 'InChI=1S/C5H10O2/c1-4(6)3-5(2)7/h4,6H,3H2,1-2H3'
     #d = 'InChI=1S/C6H12O/c1-4-6(3)5(2)7-6/h5H,4H2,1-3H3/t5-,6-/m0/s1'
     #r = 'InChI=1S/C10H8/c1-2-6-1-8-4-3-7-9(10)5-1/h1-8H'
@@ -44,7 +46,9 @@ def get_aldols():
     #print(Matcher(c1, e1).sub_count_unique())
     #print(r2.has_substructures_by_populations(reactant_subs={e:1}, product_subs={c:1}))
     file, path = utils.create_output_file('tester', '.rinchi')
-    for i in database.search_for_roles_advanced('database/rinchi.db', 'rinchis03', changing_subs={fmdh:-1,crt:1},reactant_subs={p:1,ethanal:1},
+    for i in database.search_for_roles_advanced('database/rinchi.db', 'rinchis03',
+                                                changing_subs={crt:1,fmdh:-1},
+                                                reactant_subs={p:1,ethanal:1},
                                                 limit=0, exclusive=False):
         file.write(i + '\n')
     print("Finished in {}".format(time.strftime("%H:%M:%S", time.gmtime(time.time() - tstart))))
