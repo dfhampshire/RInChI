@@ -304,5 +304,5 @@ def string_to_dict(string):
     assert isinstance(string, str)
     items = string.split(',')
     splititems = (item.split('=') for item in items)
-    retdict = {str(i[0]): int(i[1]) for i in splititems}
+    retdict = {str(i[0]).strip(): int(i[1]) for i in splititems}
     return retdict
