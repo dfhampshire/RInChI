@@ -83,7 +83,7 @@ def search_ops(args):
         args.is_database = True
     results = database.search_master(args.search_term, args.file, args.table_name, args.is_database,
                                      sd(args.hybridisation), sd(args.valence), sd(args.rings), sd(args.formula),
-                                     args.reactant, args.product, args.agent, args.number, args.key, args.ringelement,
+                                     args.reactant, args.product, args.agent, args.number, args.key, sd(args.ringelement),
                                      args.isotopic)
 
     if args.output_format == "list":

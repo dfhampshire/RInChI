@@ -320,7 +320,7 @@ class Reaction:
             assert isinstance(m, Molecule)
             return m.has_isotopic_layer()
 
-    def detect_reaction(self, hyb_i=None, val_i=None, rings_i=None, formula_i=None, isotopic=False, ring_present=None):
+    def detect_reaction(self, hyb_i=None, val_i=None, rings_i=None, formula_i=None, isotopic=False, ring_elements=None):
         """
         Detect if a reaction satisfies certain conditions.  Allows searching for reactions based on ring changes,
         valence changes, formula changes, hybridisation of C atom changes.
@@ -332,7 +332,7 @@ class Reaction:
             rings_i: The ring change(s) desired
             formula_i: The formula change(s) desired
             isotopic: Whether to look for reactions involving an isotopic InChI
-            ring_present: Look for a ring in the reaction
+            ring_elements: Look for a ring in the reaction
 
         Returns:
             True if the given reaction satisfies all the conditions, otherwise False.
@@ -346,6 +346,8 @@ class Reaction:
             formula_i = {}
         if hyb_i is None:
             hyb_i = {}
+        if ring_elements is None:
+            ring_elements = {}
         if formula_i:
             formula = self.change_across_reaction(Molecule.get_formula)
             if not all(entry in formula.items() for entry in formula_i.items()):
@@ -362,8 +364,9 @@ class Reaction:
             rings = self.change_across_reaction(Molecule.get_ring_count)
             if not all([entry in rings.items() for entry in rings_i.items()]):
                 return False
-        if ring_present is not None:
-            if not self.has_ring(ring_present):
+        if ring_elements is not None:
+            ring_els = self.change_across_reaction(Molecule.get_ring_count_inc_elements)
+            if not all([entry in ring_els.items() for entry in ring_elements.items()]):
                 return False
         if isotopic:
             if not self.has_isotopic_inchi():

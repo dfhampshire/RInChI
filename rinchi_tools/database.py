@@ -377,8 +377,7 @@ def search_rinchis(search_term, db=None, table_name=None, is_sql_db=False, hyb=N
     # Linear
     for rinchi in results:
         r = Reaction(rinchi)
-        if r.detect_reaction(hyb_i=hyb, val_i=val, rings_i=rings, formula_i=formula, isotopic=isotopic,
-                             ring_present=ringelements) or skip:
+        if r.detect_reaction(hyb_i=hyb, val_i=val, rings_i=rings, formula_i=formula, isotopic=isotopic, ring_elements=ringelements) or skip:
             not_found = True
             if reactant:
                 if any(search_term in s for s in r.reactant_inchis):
