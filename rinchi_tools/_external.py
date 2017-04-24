@@ -32,11 +32,11 @@ else:
 EXEC_PATH = ROOT + '{0}rinchi_tools{0}libs'.format(SEPARATOR)
 INCHI_PATH = EXEC_PATH + '{0}inchi-1'.format(SEPARATOR)
 
-# Path to the v0.03 RInChI C library
+# Path to the v1.00 RInChI C library
 LIB_RINCHI_PATH = EXEC_PATH + SEPARATOR + lib_file
 
 # Set RInChI Version
-RINCHI_VERSION = '0.03'
+RINCHI_VERSION = '1.00'
 
 # Set RInChI database variables
 RINCHI_DATABASE = ROOT + '{0}database{0}rinchi.db'.format(SEPARATOR)

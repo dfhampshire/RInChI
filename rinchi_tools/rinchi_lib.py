@@ -3,10 +3,10 @@ RInChI C Library Interface Module
 ---------------------------------
 
 This module provides functions defining how RInChIs and RAuxInfos are constructed from InChIs and reaction data.  It
-also interfaces with the RInChI v0.03 software as provided by the InChI trust.
+also interfaces with the RInChI v1.00 software as provided by the InChI trust.
 
-This file is based on that provided with the official v0.03 RInChI software release, but with modifications to ensure
-Python 3 compatibility.  Documentation was adapted from the official v0.03 release document.
+This file is based on that provided with the official v1.00 RInChI software release, but with modifications to ensure
+Python 3 compatibility.  Documentation was adapted from the official v1.00 release document.
 
 Modifications:
 
@@ -156,13 +156,13 @@ class RInChI:
 
         Returns:
             A dictionary of data returned. The structure is as below::
-            
+
                 {'Direction': [direction character],
                  'No-Structures': [list of no-structures],
                  'Reactants': [list of inchis & auxinfos],
                  'Products': [list of inchis & auxinfos],
                  'Agents': [list of inchis] & auxinfos}
-                 
+
             Each Reactant, Product, and Agent list contains a set of (InChI, AuxInfo) tuples. The
             No-Structures list contains No-Structure counts for Reactants, Products, and Agents.
         """

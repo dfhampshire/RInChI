@@ -7,22 +7,22 @@ This module provides a variety of functions for the interconversion of RInChIS, 
 Modifications:
 
  - C.H.G. Allen 2012
- 
+
  - N.A. Parker 2013
- 
+
     minor additional material added (specifically, .rxn to mol file agent conversion and
     subsequent amendments for agents in the .rxn to RInChI converter). added support to the rxn2rinchi function
     for non standard .rxn files containing reaction agents specified separately from the reactants and products.
-    
+
  - B. Hammond 2014
- 
+
     extended support for non standard .rxn files to the rdf parsing functions. Modified all .rxn
     handling functions to no longer discard reaction data in the $DTYPE/$DATUM  format, instead optionally returns
     them.
-    
+
  - D.F. Hampshire 2016
- 
-    Removed functions now included in source v0.03 software (commands that interface with
+
+    Removed functions now included in source v1.00 software (commands that interface with
     RInChI).  Similar python functionality can be found from the rinchi_lib.py interfacing file.  Some functions
     are now modified to use this rinchi_lib.py interface. Major restructuring across library means functions have
     been extensively moved to / from elsewhere.

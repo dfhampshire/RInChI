@@ -1,5 +1,5 @@
 """
-RInChI v0.02 to 0.03 Conversion Module
+RInChI v0.02 to 1.00 Conversion Module
 ---------------------------------------
 
 Modifications:
@@ -11,13 +11,13 @@ from . import _external, tools, utils
 
 def convert_rinchi(rinchi):
     """
-    Convert a v0.02 RInChI into a v0.03 RInChI.
+    Convert a v0.02 RInChI into a v1.00 RInChI.
 
     Args:
         rinchi: A RInChI of version 0.02.
 
     Returns:
-        A RInChI of version 0.03.
+        A RInChI of version 1.00.
     """
     layer2_inchis, layer3_inchis, layer4_inchis, direction, u_structs = _split_rinchi(rinchi)
     rinchi = tools.build_rinchi(layer2_inchis, layer3_inchis, layer4_inchis, direction, u_structs)
@@ -105,13 +105,13 @@ def generate_rauxinfo(rinchi):
 
 def convert_rauxinfo(rauxinfo):
     """
-    Convert a v0.02 RAuxInfo into a v0.03 RAuxInfo.
+    Convert a v0.02 RAuxInfo into a v1.00 RAuxInfo.
 
     Args:
         rauxinfo: A RAuxInfo of version 0.02.
 
     Returns:
-        A RAuxInfo of version 0.03.
+        A RAuxInfo of version 1.00.
     """
     layer2_auxinfos, layer3_auxinfos, layer4_auxinfos = _split_rauxinfo(rauxinfo)
     rauxinfo = tools.build_rauxinfo(layer2_auxinfos, layer3_auxinfos, layer4_auxinfos)
@@ -120,7 +120,7 @@ def convert_rauxinfo(rauxinfo):
 
 def convert_all(rinchi, rauxinfo):
     """
-    Convert a v0.02 RInChI & RAuxInfo into a v0.03 RInChI & RAuxInfo.
+    Convert a v0.02 RInChI & RAuxInfo into a v1.00 RInChI & RAuxInfo.
 
     Args:
         rinchi: A RInChI of version 0.02.
@@ -129,9 +129,9 @@ def convert_all(rinchi, rauxinfo):
     Returns:
         A tuple containing:
             rauxinfo:
-                A RAuxInfo of version 0.03.
+                A RAuxInfo of version 1.00.
             rauxinfo:
-                A RAuxInfo of version 0.03.
+                A RAuxInfo of version 1.00.
     """
     rauxinfo = convert_rauxinfo(rauxinfo)
     rinchi = convert_rauxinfo(rinchi)

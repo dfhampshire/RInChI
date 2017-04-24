@@ -3,7 +3,7 @@
 Webpage Generation Script
 --------------------------
 
-Automates the generation of PHP web-pages that contain RInChIs, RAuxInfos and Keys for both the version 0.02 and 0.03
+Automates the generation of PHP web-pages that contain RInChIs, RAuxInfos and Keys for both the version 0.02 and 1.00
 rinchi versions. Specific to RInChI website so not suitable for wide distribution.
 
 Modifications:

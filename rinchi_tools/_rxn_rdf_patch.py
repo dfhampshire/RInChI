@@ -2,7 +2,7 @@
 RXN & RD Conversion Module
 --------------------------
 
-Patch for the v0.03 C++ release to import non standard RXN and RD files.
+Patch for the v1.00 C++ release to import non standard RXN and RD files.
 
 Modifications:
 
