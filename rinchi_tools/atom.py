@@ -7,9 +7,9 @@ This module contains the Atom class and associated functions
 Modifications:
 
  - B. Hammond 2014
- 
+
  - D. Hampshire 2017
- 
+
     Restructuring and changes as documented in Project Report
 """
 
@@ -34,11 +34,7 @@ class Atom:
     def __str__(self):
         try:
             if self.element is not None:
-                return "<Atom Object 'index':{} 'element':{} 'H':{} 'Mob-H':{} 'MPCC': {}>".format(self.index,
-                                                                                                   self.element,
-                                                                                                   self.protons,
-                                                                                                   self.mobile_protons,
-                                                                                                   self.mpcc)
+                return "<Atom Object 'index':{} 'element':{}>".format(self.index, self.element)
             else:
                 return "<Atom Object 'index':{} 'element':None>".format(self.index)
         except:
@@ -47,11 +43,7 @@ class Atom:
     def __repr__(self):
         try:
             if self.element is not None:
-                return "<Atom Object 'index':{} 'element':{} 'H':{} 'Mob-H':{} 'MPCC': {}>".format(self.index,
-                                                                                                   self.element,
-                                                                                                   self.protons,
-                                                                                                   self.mobile_protons,
-                                                                                                   self.mpcc)
+                return "<Atom Object 'index':{} 'element':{}>".format(self.index, self.element)
             else:
                 return "<Atom Object 'index':{} 'element':None>".format(self.index)
         except:
