@@ -61,7 +61,7 @@ help texts from the executables.</p>
 <li class="toctree-l1"><a class="reference internal" href="rinchi_tools.php#rinchi-tools-module">RInChI Tools Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rinchi_tools.php#rinchi-utilities-module">RInChI Utilities Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rinchi_tools.php#version-0-02-rinchikey-generation-library-module">Version 0.02 RInChIKey Generation Library Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rinchi_tools.php#rinchi-v0-02-to-0-03-conversion-module">RInChI v0.02 to 0.03 Conversion Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rinchi_tools.php#rinchi-v0-02-to-1-00-conversion-module">RInChI v0.02 to 1.00 Conversion Module</a></li>
 </ul>
 </div>
 </div>

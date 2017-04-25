@@ -153,7 +153,7 @@ them.</p>
 </li>
 <li><p class="first">D.F. Hampshire 2016</p>
 <blockquote>
-<div><p>Removed functions now included in source v0.03 software (commands that interface with
+<div><p>Removed functions now included in source v1.00 software (commands that interface with
 RInChI).  Similar python functionality can be found from the rinchi_lib.py interfacing file.  Some functions
 are now modified to use this rinchi_lib.py interface. Major restructuring across library means functions have
 been extensively moved to / from elsewhere.</p>
@@ -1393,7 +1393,7 @@ Counter object</p>
 
 <dl class="method">
 <dt id="rinchi_tools.reaction.Reaction.detect_reaction">
-<code class="descname">detect_reaction</code><span class="sig-paren">(</span><em>hyb_i=None</em>, <em>val_i=None</em>, <em>rings_i=None</em>, <em>formula_i=None</em>, <em>isotopic=False</em>, <em>ring_present=None</em><span class="sig-paren">)</span><a class="headerlink" href="#rinchi_tools.reaction.Reaction.detect_reaction" title="Permalink to this definition">¶</a></dt>
+<code class="descname">detect_reaction</code><span class="sig-paren">(</span><em>hyb_i=None</em>, <em>val_i=None</em>, <em>rings_i=None</em>, <em>formula_i=None</em>, <em>isotopic=False</em>, <em>ring_elements=None</em><span class="sig-paren">)</span><a class="headerlink" href="#rinchi_tools.reaction.Reaction.detect_reaction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Detect if a reaction satisfies certain conditions.  Allows searching for reactions based on ring changes,
 valence changes, formula changes, hybridisation of C atom changes.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -1407,7 +1407,7 @@ valence changes, formula changes, hybridisation of C atom changes.</p>
 <li><strong>rings_i</strong> &#8211; The ring change(s) desired</li>
 <li><strong>formula_i</strong> &#8211; The formula change(s) desired</li>
 <li><strong>isotopic</strong> &#8211; Whether to look for reactions involving an isotopic InChI</li>
-<li><strong>ring_present</strong> &#8211; Look for a ring in the reaction</li>
+<li><strong>ring_elements</strong> &#8211; Look for a ring in the reaction</li>
 </ul>
 </td>
 </tr>
@@ -1619,9 +1619,9 @@ valence changes, formula changes, hybridisation of C atom changes.</p>
 <span class="target" id="module-rinchi_tools.rinchi_lib"></span><div class="section" id="rinchi-c-library-interface-module">
 <h1>RInChI C Library Interface Module<a class="headerlink" href="#rinchi-c-library-interface-module" title="Permalink to this headline">¶</a></h1>
 <p>This module provides functions defining how RInChIs and RAuxInfos are constructed from InChIs and reaction data.  It
-also interfaces with the RInChI v0.03 software as provided by the InChI trust.</p>
-<p>This file is based on that provided with the official v0.03 RInChI software release, but with modifications to ensure
-Python 3 compatibility.  Documentation was adapted from the official v0.03 release document.</p>
+also interfaces with the RInChI v1.00 software as provided by the InChI trust.</p>
+<p>This file is based on that provided with the official v1.00 RInChI software release, but with modifications to ensure
+Python 3 compatibility.  Documentation was adapted from the official v1.00 release document.</p>
 <p>Modifications:</p>
 <blockquote>
 <div><ul class="simple">
@@ -1800,7 +1800,7 @@ key (Short-RInChIKey), “W” for the Web key (Web-RInChIKey)</li>
 <span class="target" id="module-rinchi_tools.tools"></span><div class="section" id="rinchi-tools-module">
 <h1>RInChI Tools Module<a class="headerlink" href="#rinchi-tools-module" title="Permalink to this headline">¶</a></h1>
 <p>This module provides functions defining how RInChIs and RAuxInfos are constructed from InChIs and reaction data.  It
-also interfaces with the RInChI v0.03 software as provided by the InChI trust.</p>
+also interfaces with the RInChI v1.00 software as provided by the InChI trust.</p>
 <p>Modifications:</p>
 <blockquote>
 <div><ul class="simple">
@@ -2442,8 +2442,8 @@ a free python library for the manipulation of chemical formats, now stored perma
 </dd></dl>
 
 </div>
-<span class="target" id="module-rinchi_tools.v02_tools"></span><div class="section" id="rinchi-v0-02-to-0-03-conversion-module">
-<h1>RInChI v0.02 to 0.03 Conversion Module<a class="headerlink" href="#rinchi-v0-02-to-0-03-conversion-module" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-rinchi_tools.v02_tools"></span><div class="section" id="rinchi-v0-02-to-1-00-conversion-module">
+<h1>RInChI v0.02 to 1.00 Conversion Module<a class="headerlink" href="#rinchi-v0-02-to-1-00-conversion-module" title="Permalink to this headline">¶</a></h1>
 <p>Modifications:</p>
 <blockquote>
 <div><ul class="simple">
@@ -2453,7 +2453,7 @@ a free python library for the manipulation of chemical formats, now stored perma
 <dl class="function">
 <dt id="rinchi_tools.v02_tools.convert_all">
 <code class="descclassname">rinchi_tools.v02_tools.</code><code class="descname">convert_all</code><span class="sig-paren">(</span><em>rinchi</em>, <em>rauxinfo</em><span class="sig-paren">)</span><a class="headerlink" href="#rinchi_tools.v02_tools.convert_all" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert a v0.02 RInChI &amp; RAuxInfo into a v0.03 RInChI &amp; RAuxInfo.</p>
+<dd><p>Convert a v0.02 RInChI &amp; RAuxInfo into a v1.00 RInChI &amp; RAuxInfo.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -2466,10 +2466,10 @@ a free python library for the manipulation of chemical formats, now stored perma
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><dl class="docutils">
 <dt>rauxinfo:</dt>
-<dd><p class="first last">A RAuxInfo of version 0.03.</p>
+<dd><p class="first last">A RAuxInfo of version 1.00.</p>
 </dd>
 <dt>rauxinfo:</dt>
-<dd><p class="first last">A RAuxInfo of version 0.03.</p>
+<dd><p class="first last">A RAuxInfo of version 1.00.</p>
 </dd>
 </dl>
 </p>
@@ -2485,14 +2485,14 @@ a free python library for the manipulation of chemical formats, now stored perma
 <dl class="function">
 <dt id="rinchi_tools.v02_tools.convert_rauxinfo">
 <code class="descclassname">rinchi_tools.v02_tools.</code><code class="descname">convert_rauxinfo</code><span class="sig-paren">(</span><em>rauxinfo</em><span class="sig-paren">)</span><a class="headerlink" href="#rinchi_tools.v02_tools.convert_rauxinfo" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert a v0.02 RAuxInfo into a v0.03 RAuxInfo.</p>
+<dd><p>Convert a v0.02 RAuxInfo into a v1.00 RAuxInfo.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>rauxinfo</strong> &#8211; A RAuxInfo of version 0.02.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A RAuxInfo of version 0.03.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A RAuxInfo of version 1.00.</td>
 </tr>
 </tbody>
 </table>
@@ -2501,14 +2501,14 @@ a free python library for the manipulation of chemical formats, now stored perma
 <dl class="function">
 <dt id="rinchi_tools.v02_tools.convert_rinchi">
 <code class="descclassname">rinchi_tools.v02_tools.</code><code class="descname">convert_rinchi</code><span class="sig-paren">(</span><em>rinchi</em><span class="sig-paren">)</span><a class="headerlink" href="#rinchi_tools.v02_tools.convert_rinchi" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert a v0.02 RInChI into a v0.03 RInChI.</p>
+<dd><p>Convert a v0.02 RInChI into a v1.00 RInChI.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>rinchi</strong> &#8211; A RInChI of version 0.02.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A RInChI of version 0.03.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A RInChI of version 1.00.</td>
 </tr>
 </tbody>
 </table>
@@ -2554,7 +2554,7 @@ If the generated AuxInfos are not of the same version.</td>
 <li><a class="reference internal" href="#rinchi-tools-module">RInChI Tools Module</a></li>
 <li><a class="reference internal" href="#rinchi-utilities-module">RInChI Utilities Module</a></li>
 <li><a class="reference internal" href="#version-0-02-rinchikey-generation-library-module">Version 0.02 RInChIKey Generation Library Module</a></li>
-<li><a class="reference internal" href="#rinchi-v0-02-to-0-03-conversion-module">RInChI v0.02 to 0.03 Conversion Module</a></li>
+<li><a class="reference internal" href="#rinchi-v0-02-to-1-00-conversion-module">RInChI v0.02 to 1.00 Conversion Module</a></li>
 </ul>
 <div class="relations">
 <h3>Related Topics</h3>
