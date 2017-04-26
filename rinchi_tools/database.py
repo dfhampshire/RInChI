@@ -356,7 +356,7 @@ def search_rinchis(search_term, db=None, table_name=None, is_sql_db=False, hyb=N
         skip = False
 
     if table_name is None:
-        table_name = "rinchis03"
+        table_name = "rinchis1-00"
     if not (reactant or product or agent):
         reactant = True
         product = True
@@ -393,7 +393,7 @@ def search_rinchis(search_term, db=None, table_name=None, is_sql_db=False, hyb=N
                     not_found = False
             if not_found:
                 result_dict['unknown'].append(rinchi)
-
+    db.close()
     return result_dict
 
 
@@ -550,34 +550,34 @@ def csv_to_sql(csv_name, db_filename, table_name):
     db.close()
 
 
-def convert_v02_v03(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=False, v03_rinchi=False, v03_rauxinfo=False,
-                    v03_longkey=False, v03_shortkey=False, v03_webkey=False):
+def convert_v02_v10(db_filename, table_name, v02_rinchi=False, v02_rauxinfo=False, v10_rinchi=False, v10_rauxinfo=False,
+                    v10_longkey=False, v10_shortkey=False, v10_webkey=False):
     """
-    Converts a db of v02 rinchis into a db of v03 rinchis and associated information.  N.B keys for v02
+    Converts a db of v02 rinchis into a db of v10 rinchis and associated information.  N.B keys for v02
     are not required as new keys must be generated for the db.  Because of the nature of this problem,
     this is achieved by creating a new db for the processed data and then transferring back to the original
 
     Args:
          db_filename: The db filename to which the changes should be made.  The new db is added as a table.
-         table_name: the name for the new v03 rinchi table.
+         table_name: the name for the new v10 rinchi table.
          v02_rinchi: The name of the v02 rinchi column.  Defaults to False (No RInChI in db).
          v02_rauxinfo: The name of the v02 rauxinfo column.  Defaults to False (No rauxinfos in db).
-         v03_rinchi: The name of the v03 new rinchi column.  Defaults to False (No rinchi column will be created).
-         v03_rauxinfo: The name of the v03 new rinchi column.  Defaults to False (No rauxinfo column will be created).
-         v03_longkey: The name of the v03 new rinchi column.  Defaults to False (No longkey column will be created).
-         v03_shortkey: The name of the v03 new rinchi column.  Defaults to False (No shortkey column will be created).
-         v03_webkey: The name of the v03 new webkey column.  Defaults to False (No webkey column will be created).
+         v10_rinchi: The name of the v10 new rinchi column.  Defaults to False (No rinchi column will be created).
+         v10_rauxinfo: The name of the v10 new rinchi column.  Defaults to False (No rauxinfo column will be created).
+         v10_longkey: The name of the v10 new rinchi column.  Defaults to False (No longkey column will be created).
+         v10_shortkey: The name of the v10 new rinchi column.  Defaults to False (No shortkey column will be created).
+         v10_webkey: The name of the v10 new webkey column.  Defaults to False (No webkey column will be created).
 
     """
 
     # Create db connections including for a temporary db and setup logging
-    os.remove("convert0203.log")
-    logging.basicConfig(filename='conv0203.log', level=logging.DEBUG)
+    os.remove("convert0210.log")
+    logging.basicConfig(filename='conv0210.log', level=logging.DEBUG)
     logging.info("\n========\nStarting Conversion Process\n========")
     start_time = time.time()
 
     # Construct SQL strings
-    col_list = [v03_rinchi, v03_rauxinfo, v03_longkey, v03_shortkey, v03_webkey]
+    col_list = [v10_rinchi, v10_rauxinfo, v10_longkey, v10_shortkey, v10_webkey]
     columns = [column for column in col_list if column]
 
     # Check at least one column is desired

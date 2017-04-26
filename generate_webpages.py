@@ -128,7 +128,7 @@ if __name__ == "__main__":
     parser.add_argument('-w', '--webkey', action='store_true', help='Include WebKey')
     parser.add_argument('-c', '--custom', help='Use a different HTML tag e.g. <span> , <h1>')
     parser.add_argument('-n', '--number', default=1000, type=int, help='number of pages to be generated')
-    parser.add_argument('-t', '--table', help='name of the table', default='rinchis03')
+    parser.add_argument('-t', '--table', help='name of the table', default='rinchis1-00')
 
     print(_external.RINCHI_DATABASE)
     args = parser.parse_args()

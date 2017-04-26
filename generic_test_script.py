@@ -52,7 +52,7 @@ def get_aldols():
         Matcher(e, a).sub_count()
     #print(r2.has_substructures_by_populations(reactant_subs={e:1}, product_subs={c:1}))
     #file, path = utils.create_output_file('tester', '.rinchi')
-    #for i in database.search_for_roles_advanced('database/rinchi.db', 'rinchis03',
+    #for i in database.search_for_roles_advanced('database/rinchi.db', 'rinchis1-00',
     #                                            changing_subs={crt:1,fmdh:-1},
     #                                            reactant_subs={p:1,ethanal:1},
     #                                            limit=1000, exclusive=False):

@@ -50,7 +50,7 @@ def add_search(subparser):
     io_options = subparser.add_argument_group('Input / Output Options')
     io_options.add_argument("-db", "--is_database", action="store_true",
                             help="Assert that the input is a database. If the table_name argument is not provided then "
-                                 "the default value of 'rinchis03' is used")
+                                 "the default value of 'rinchis1-00' is used")
     io_options.add_argument("-o", "--output_format", choices=['list', 'file', 'stats'], default="list",
                             help="The format of the output - must be one of 'list', 'file', 'stats'")
 

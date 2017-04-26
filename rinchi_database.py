@@ -30,7 +30,7 @@ def add_db(subparser):
     # Add main input arguments
     subparser.add_argument("database", nargs="?", default=_external.RINCHI_DATABASE,
                            help="The existing database to manipulate, or the name of database to be created")
-    subparser.add_argument("input", nargs="?", default="rinchis03", help="The name of the input data file or table")
+    subparser.add_argument("input", nargs="?", default="rinchis1-00", help="The name of the input data file or table")
     subparser.add_argument('-o', "--output", nargs="?", help="The output table name or something else to output")
 
     # Add data insertion options
@@ -50,7 +50,7 @@ def add_db(subparser):
     # Add converting data operations
     convert = subparser.add_argument_group("Converting operations")
     convert.add_argument('--convert2_to_3', action='store_true',
-                         help='Creates a new table of v.03 rinchis from a table of v.02 rinchis')
+                         help='Creates a new table of v.1-00 rinchis from a table of v.02 rinchis')
     convert.add_argument('--generate_rauxinfo', action='store_true',
                          help='Generate RAuxInfos from rinchis within a SQL database')
     convert.add_argument('-k', '--key', nargs='?', const='L', choices=['L', 'S', 'W'],
@@ -81,9 +81,9 @@ def db_ops(args):
     if args.convert2_to_3:
         # Names hardcoded because significant modification of the arparse system would be needed and would be complex
         v02_column_names = ["rinchi", "rauxinfo"]
-        v03_column_names = ["rinchi", "rauxinfo", "longkey", "shortkey", "webkey"]
-        column_names = v02_column_names + v03_column_names
-        database.convert_v02_v03(args.database, args.input, *column_names)
+        v10_column_names = ["rinchi", "rauxinfo", "longkey", "shortkey", "webkey"]
+        column_names = v02_column_names + v10_column_names
+        database.convert_v02_v10(args.database, args.input, *column_names)
     if args.generate_rauxinfo:
         database.gen_rauxinfo(args.database, args.input)
 
